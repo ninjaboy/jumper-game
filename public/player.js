@@ -477,23 +477,23 @@ class Player {
         ];
         
         const baseX = this.x + this.width/2;
-        const baseY = this.y + this.height + 60;
+        const baseY = this.y + this.height + 80;
         
-        ctx.font = 'bold 14px monospace';
+        ctx.font = 'bold 24px monospace';
         ctx.textAlign = 'center';
         
         for (let i = 0; i < instructions.length; i++) {
             const text = instructions[i];
-            const yOffset = i * 25;
+            const yOffset = i * 35; // Increased line spacing
             
             // Heavy glitch effect
-            const glitchIntensity = Math.sin(this.glitchTimer * 3 + i) * 5;
-            const pixelShift = Math.random() > 0.7 ? Math.floor(Math.random() * 4) - 2 : 0;
+            const glitchIntensity = Math.sin(this.glitchTimer * 3 + i) * 8;
+            const pixelShift = Math.random() > 0.7 ? Math.floor(Math.random() * 6) - 3 : 0;
             
-            // Randomize character corruption
+            // Randomize character corruption (less corruption for readability)
             let corruptedText = "";
             for (let j = 0; j < text.length; j++) {
-                if (Math.random() > 0.85) {
+                if (Math.random() > 0.92) { // Reduced corruption frequency
                     // Random glitch characters
                     const glitchChars = "!@#$%^&*(){}[]|\\:;\"'<>?,./~`";
                     corruptedText += glitchChars[Math.floor(Math.random() * glitchChars.length)];
@@ -502,14 +502,14 @@ class Player {
                 }
             }
             
-            // Multiple color passes for RGB split effect
-            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF'];
+            // Multiple color passes for RGB split effect - much brighter
+            const colors = ['#FF4444', '#44FF44', '#4444FF', '#FFFFFF'];
             for (let c = 0; c < colors.length; c++) {
                 ctx.fillStyle = colors[c];
-                ctx.globalAlpha = 0.7 - c * 0.1;
+                ctx.globalAlpha = 0.95 - c * 0.05; // Much brighter - starts at 95% opacity
                 
-                const xShift = pixelShift + (c - 1) * 2;
-                const yShift = Math.sin(this.glitchTimer * 2 + c) * 2;
+                const xShift = pixelShift + (c - 1) * 3; // Increased shift for more dramatic effect
+                const yShift = Math.sin(this.glitchTimer * 2 + c) * 3;
                 
                 ctx.fillText(
                     corruptedText,
@@ -517,6 +517,16 @@ class Player {
                     baseY + yOffset + yShift
                 );
             }
+            
+            // Add a bright white outline for extra visibility
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.8;
+            ctx.strokeText(
+                corruptedText,
+                baseX + glitchIntensity,
+                baseY + yOffset
+            );
         }
         
         ctx.globalAlpha = 1;
