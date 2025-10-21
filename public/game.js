@@ -66,7 +66,15 @@ class Game {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         
-        if (isMobile || isTouch) {
+        console.log('Mobile detection:', { isMobile, isTouch, userAgent: navigator.userAgent });
+        console.log('Screen dimensions:', { width: window.screen.width, height: window.screen.height });
+        console.log('Viewport dimensions:', { width: window.innerWidth, height: window.innerHeight });
+        
+        // Show controls on mobile OR if screen is small (force mobile for testing)
+        const showMobileControls = isMobile || isTouch || window.innerWidth <= 768;
+        console.log('Should show mobile controls:', showMobileControls);
+        
+        if (showMobileControls) {
             const mobileControls = document.getElementById('mobileControls');
             const mobileHint = document.querySelector('.mobile-hint');
             
@@ -76,9 +84,13 @@ class Game {
                 return;
             }
             
+            console.log('Found mobile controls element, making visible');
             mobileControls.classList.add('visible');
+            mobileControls.style.display = 'flex'; // Force display
+            
             if (mobileHint) {
                 mobileHint.style.display = 'block';
+                console.log('Mobile hint updated');
             }
             
             // Get control buttons
