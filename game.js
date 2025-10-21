@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.3';
+        this.version = '1.2.4';
         this.versionNotes = [
+            'v1.2.4 - UI/UX: Victory screen with firework celebration effects, integrated instructions',
             'v1.2.3 - UI/UX: Show double/triple jump status persistently in Active Effects panel',
             'v1.2.2 - UI/UX: Version on start screen, death instructions integrated with animation',
             'v1.2.1 - Bug Fix: Version number position corrected to top-left corner',
@@ -47,7 +48,11 @@ class Game {
         this.logoGlitchTimer = 0;
         this.logoParticles = [];
         this.maxLogoParticles = 50;
-        
+
+        // Victory celebration system
+        this.victoryParticles = [];
+        this.victoryTimer = 0;
+
         this.lastTime = 0;
         this.isRunning = false;
         
@@ -411,9 +416,15 @@ class Game {
             const collisionResult = this.platforms.checkCollisions(this.player);
             if (collisionResult === 'finish') {
                 this.gameState = 'finished';
+                this.victoryTimer = 0; // Reset victory animation timer
             } else if (collisionResult === 'game_over') {
                 // Death animation will start, game over will be handled by player update
             }
+        }
+
+        // Update victory celebration effects
+        if (this.gameState === 'finished') {
+            this.updateVictoryCelebration();
         }
     }
     
@@ -454,25 +465,97 @@ class Game {
         }
     }
 
-    showVictoryMessage() {
-        this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    updateVictoryCelebration() {
+        this.victoryTimer++;
 
-        this.ctx.fillStyle = '#FFD700';
-        this.ctx.font = '48px Arial';
+        // Spawn firework particles
+        if (this.victoryTimer % 10 === 0) {
+            const colors = ['#FFD700', '#FFA500', '#FF69B4', '#00CED1', '#9370DB', '#32CD32'];
+            for (let i = 0; i < 5; i++) {
+                this.victoryParticles.push({
+                    x: Math.random() * this.canvas.width,
+                    y: this.canvas.height,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: -Math.random() * 15 - 10,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: Math.random() * 80 + 40,
+                    maxLife: Math.random() * 80 + 40,
+                    size: Math.random() * 4 + 2,
+                    gravity: 0.3
+                });
+            }
+        }
+
+        // Update particles
+        for (let i = this.victoryParticles.length - 1; i >= 0; i--) {
+            const p = this.victoryParticles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= 0.99;
+            p.life--;
+
+            if (p.life <= 0) {
+                this.victoryParticles.splice(i, 1);
+            }
+        }
+
+        // Limit particle count
+        if (this.victoryParticles.length > 200) {
+            this.victoryParticles.splice(0, this.victoryParticles.length - 200);
+        }
+    }
+
+    showVictoryInstructions() {
+        // Render celebration particles
+        for (let p of this.victoryParticles) {
+            const alpha = p.life / p.maxLife;
+            this.ctx.fillStyle = p.color;
+            this.ctx.globalAlpha = alpha;
+            this.ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+        }
+        this.ctx.globalAlpha = 1;
+
+        // Show instructions overlaid on game (celebrating!)
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('LEVEL COMPLETE!', this.canvas.width/2, this.canvas.height/2 - 70);
 
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '24px Arial';
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, this.canvas.width/2, this.canvas.height/2 - 20);
-        this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
-        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
+        // Pulsing celebration effect
+        const pulse = Math.sin(this.victoryTimer / 10) * 0.3 + 0.7;
+        const bounce = Math.abs(Math.sin(this.victoryTimer / 15)) * 20;
 
-        // Show version number at bottom
+        // Large, golden "LEVEL COMPLETE!" text
+        this.ctx.fillStyle = `rgba(255, 215, 0, ${pulse})`;
+        this.ctx.font = 'bold 56px Arial';
+        this.ctx.shadowColor = '#FFA500';
+        this.ctx.shadowBlur = 30;
+        this.ctx.fillText('LEVEL COMPLETE!', this.canvas.width/2, 120 - bounce);
+        this.ctx.shadowBlur = 0;
+
+        // Celebration emoji/stars
+        this.ctx.font = '40px Arial';
+        const starPulse = Math.sin(this.victoryTimer / 8) * 0.5 + 0.5;
+        this.ctx.globalAlpha = starPulse;
+        this.ctx.fillText('⭐', this.canvas.width/2 - 150, 120 - bounce);
+        this.ctx.fillText('⭐', this.canvas.width/2 + 150, 120 - bounce);
+        this.ctx.globalAlpha = 1;
+
+        // Large, bright instruction text
+        this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+        this.ctx.font = 'bold 36px Arial';
+        this.ctx.shadowColor = '#FFD700';
+        this.ctx.shadowBlur = 20;
+        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height - 150);
+        this.ctx.shadowBlur = 0;
+
+        // Mode and seed info below (smaller)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        this.ctx.font = '20px Arial';
+        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} • Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height - 100);
+
+        // Version at bottom
         this.ctx.fillStyle = '#95a5a6';
         this.ctx.font = '14px Arial';
-        this.ctx.fillText(`Version ${this.version}`, this.canvas.width/2, this.canvas.height - 30);
+        this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 60);
 
         this.ctx.textAlign = 'left';
     }
@@ -521,6 +604,10 @@ class Game {
             this.player.moveSpeed = this.player.originalMoveSpeed;
             this.player.originalMoveSpeed = null;
         }
+
+        // Clear victory particles
+        this.victoryParticles = [];
+        this.victoryTimer = 0;
 
         this.camera.x = 0;
         this.camera.y = 0;
@@ -795,9 +882,9 @@ class Game {
         this.ctx.font = '12px Arial';
         this.ctx.fillText(`v${this.version}`, 320, 20);
 
-        // Show victory screen if game is finished
+        // Show victory celebration and instructions if game is finished
         if (this.gameState === 'finished') {
-            this.showVictoryMessage();
+            this.showVictoryInstructions();
         }
 
         // Show restart instructions during and after final death animation (not separate screen)
