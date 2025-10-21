@@ -25,6 +25,12 @@ class Game {
         this.menuItems = ['Start Game', 'Settings'];
         this.settingsVisible = false;
         
+        // Logo animation system
+        this.logoAnimationTimer = 0;
+        this.logoGlitchTimer = 0;
+        this.logoParticles = [];
+        this.maxLogoParticles = 50;
+        
         this.lastTime = 0;
         this.isRunning = false;
         
@@ -358,6 +364,11 @@ class Game {
     }
 
     update(deltaTime) {
+        // Update logo animations on start screen
+        if (this.gameState === 'start_screen') {
+            this.updateLogoAnimations();
+        }
+        
         if (this.gameState === 'playing') {
             this.platforms.update();
             
@@ -377,6 +388,43 @@ class Game {
                 this.gameState = 'finished';
             } else if (collisionResult === 'game_over') {
                 // Death animation will start, game over will be handled by player update
+            }
+        }
+    }
+    
+    updateLogoAnimations() {
+        // Update animation timers
+        this.logoAnimationTimer++;
+        this.logoGlitchTimer += 0.15;
+        
+        // Add new particles randomly
+        if (Math.random() < 0.3 && this.logoParticles.length < this.maxLogoParticles) {
+            this.logoParticles.push({
+                x: this.canvas.width/2 + (Math.random() - 0.5) * 400,
+                y: this.canvas.height/3 + (Math.random() - 0.5) * 100,
+                velocityX: (Math.random() - 0.5) * 4,
+                velocityY: (Math.random() - 0.5) * 4,
+                size: Math.random() * 3 + 1,
+                life: Math.random() * 60 + 30,
+                maxLife: Math.random() * 60 + 30,
+                color: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'][Math.floor(Math.random() * 6)]
+            });
+        }
+        
+        // Update existing particles
+        for (let i = this.logoParticles.length - 1; i >= 0; i--) {
+            const particle = this.logoParticles[i];
+            particle.x += particle.velocityX;
+            particle.y += particle.velocityY;
+            particle.life--;
+            
+            // Add some drift and fade
+            particle.velocityX *= 0.99;
+            particle.velocityY *= 0.99;
+            
+            // Remove dead particles
+            if (particle.life <= 0) {
+                this.logoParticles.splice(i, 1);
             }
         }
     }
@@ -454,39 +502,125 @@ class Game {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Game title "GROUNDED"
+        // Render background particles
+        this.renderLogoParticles();
+        
+        // Animated "GROUNDED" logo with effects
+        this.renderAnimatedLogo();
+        
+        // Subtitle with glow effect
         this.ctx.textAlign = 'center';
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText('GROUNDED', this.canvas.width/2, this.canvas.height/3);
-        
-        // Subtitle
-        this.ctx.fillStyle = '#bdc3c7';
+        const subtitlePulse = Math.sin(this.logoGlitchTimer) * 0.3 + 0.7;
+        this.ctx.fillStyle = `rgba(189, 195, 199, ${subtitlePulse})`;
         this.ctx.font = '20px Arial';
-        this.ctx.fillText('Master the Art of Jumping', this.canvas.width/2, this.canvas.height/3 + 50);
         
-        // Menu items
+        // Add glow effect to subtitle
+        this.ctx.shadowColor = '#3498db';
+        this.ctx.shadowBlur = 10;
+        this.ctx.fillText('Master the Art of Jumping', this.canvas.width/2, this.canvas.height/3 + 80);
+        this.ctx.shadowBlur = 0;
+        
+        // Menu items with enhanced effects
         const startY = this.canvas.height/2 + 50;
         for (let i = 0; i < this.menuItems.length; i++) {
             const isSelected = i === this.selectedMenuItem;
             
-            this.ctx.fillStyle = isSelected ? '#3498db' : '#7f8c8d';
-            this.ctx.font = isSelected ? 'bold 32px Arial' : '28px Arial';
-            
-            // Highlight selected item
             if (isSelected) {
+                // Animated selection with glow
+                const selectionPulse = Math.sin(this.logoGlitchTimer * 2) * 0.5 + 0.5;
+                this.ctx.fillStyle = `rgba(52, 152, 219, ${0.8 + selectionPulse * 0.2})`;
+                this.ctx.font = 'bold 32px Arial';
+                
+                // Add glow effect to selected item
+                this.ctx.shadowColor = '#3498db';
+                this.ctx.shadowBlur = 15;
                 this.ctx.fillText('> ' + this.menuItems[i] + ' <', this.canvas.width/2, startY + i * 60);
+                this.ctx.shadowBlur = 0;
             } else {
+                this.ctx.fillStyle = '#7f8c8d';
+                this.ctx.font = '28px Arial';
                 this.ctx.fillText(this.menuItems[i], this.canvas.width/2, startY + i * 60);
             }
         }
         
-        // Controls hint
-        this.ctx.fillStyle = '#95a5a6';
+        // Controls hint with subtle animation
+        const hintAlpha = Math.sin(this.logoGlitchTimer * 0.5) * 0.2 + 0.8;
+        this.ctx.fillStyle = `rgba(149, 165, 166, ${hintAlpha})`;
         this.ctx.font = '16px Arial';
         this.ctx.fillText('Use W/S or ↑/↓ to navigate • SPACE/ENTER to select', this.canvas.width/2, this.canvas.height - 50);
         
         this.ctx.textAlign = 'left';
+    }
+    
+    renderLogoParticles() {
+        // Render background particle effects
+        for (let particle of this.logoParticles) {
+            const alpha = particle.life / particle.maxLife;
+            this.ctx.fillStyle = particle.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+            this.ctx.globalAlpha = alpha;
+            
+            // Create glowing particle effect
+            this.ctx.shadowColor = particle.color;
+            this.ctx.shadowBlur = particle.size * 2;
+            this.ctx.fillRect(particle.x - particle.size/2, particle.y - particle.size/2, particle.size, particle.size);
+        }
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalAlpha = 1;
+    }
+    
+    renderAnimatedLogo() {
+        const centerX = this.canvas.width/2;
+        const centerY = this.canvas.height/3;
+        
+        this.ctx.textAlign = 'center';
+        this.ctx.font = 'bold 72px Arial';
+        
+        // Create multiple layers for depth and glitch effect
+        const layers = [
+            { offset: { x: 0, y: 0 }, color: '#ffffff', blur: 0 },
+            { offset: { x: Math.sin(this.logoGlitchTimer) * 3, y: 0 }, color: '#ff0044', blur: 5 },
+            { offset: { x: Math.cos(this.logoGlitchTimer * 1.2) * -2, y: Math.sin(this.logoGlitchTimer * 0.8) }, color: '#0044ff', blur: 3 },
+            { offset: { x: Math.sin(this.logoGlitchTimer * 1.5) * 4, y: Math.cos(this.logoGlitchTimer) * 2 }, color: '#44ff00', blur: 4 }
+        ];
+        
+        // Render each layer with effects
+        for (let i = 0; i < layers.length; i++) {
+            const layer = layers[i];
+            const alpha = i === 0 ? 1 : 0.3 + Math.sin(this.logoGlitchTimer + i) * 0.2;
+            
+            this.ctx.fillStyle = layer.color;
+            this.ctx.globalAlpha = alpha;
+            
+            // Add glitch blur effect
+            if (layer.blur > 0) {
+                this.ctx.shadowColor = layer.color;
+                this.ctx.shadowBlur = layer.blur;
+            }
+            
+            // Glitch effect - occasionally corrupt characters
+            let text = 'GROUNDED';
+            if (i > 0 && Math.random() < 0.1) {
+                // Random character corruption
+                const glitchChars = '@#$%^&*(){}[]|\\:;\"\'<>?,./~`';
+                const glitchPos = Math.floor(Math.random() * text.length);
+                text = text.substring(0, glitchPos) + 
+                       glitchChars[Math.floor(Math.random() * glitchChars.length)] + 
+                       text.substring(glitchPos + 1);
+            }
+            
+            // Scale effect - slight pulsing
+            const scale = 1 + Math.sin(this.logoGlitchTimer * 0.5) * 0.05;
+            this.ctx.save();
+            this.ctx.translate(centerX, centerY);
+            this.ctx.scale(scale, scale);
+            
+            this.ctx.fillText(text, layer.offset.x, layer.offset.y);
+            
+            this.ctx.restore();
+            this.ctx.shadowBlur = 0;
+        }
+        
+        this.ctx.globalAlpha = 1;
     }
     
     renderSettingsScreen() {
