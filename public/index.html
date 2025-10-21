@@ -111,6 +111,109 @@
         input[type="range"] {
             width: 100px;
         }
+        
+        .mobile-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .mobile-controls.visible {
+            display: flex;
+        }
+        
+        .d-pad {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px;
+            gap: 5px;
+            align-items: center;
+            justify-items: center;
+        }
+        
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(52, 73, 94, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            transition: all 0.1s ease;
+        }
+        
+        .control-btn:active {
+            background-color: rgba(52, 152, 219, 0.9);
+            transform: scale(0.95);
+        }
+        
+        .jump-btn {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(231, 76, 60, 0.8);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            transition: all 0.1s ease;
+        }
+        
+        .jump-btn:active {
+            background-color: rgba(192, 57, 43, 0.9);
+            transform: scale(0.95);
+        }
+        
+        .empty-cell {
+            width: 50px;
+            height: 50px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            .mobile-controls {
+                display: flex;
+            }
+            
+            .physics-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .control-group {
+                flex-direction: row;
+                gap: 10px;
+            }
+            
+            input[type="range"] {
+                width: 150px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -120,6 +223,19 @@
     <div class="controls">
         <h3>Controls:</h3>
         <p>Move: WASD or Arrow Keys | Jump: Space Bar</p>
+        <p class="mobile-hint" style="display: none;">Mobile: Use on-screen controls</p>
+    </div>
+    
+    <div class="mobile-controls" id="mobileControls">
+        <div class="d-pad">
+            <div class="empty-cell"></div>
+            <div class="control-btn" id="upBtn">↑</div>
+            <div class="empty-cell"></div>
+            <div class="control-btn" id="leftBtn">←</div>
+            <div class="empty-cell"></div>
+            <div class="control-btn" id="rightBtn">→</div>
+        </div>
+        <div class="jump-btn" id="jumpBtn">JUMP</div>
     </div>
 
     <div class="jump-modes">

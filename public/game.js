@@ -59,6 +59,84 @@ class Game {
                 e.preventDefault();
             }
         }, false);
+        
+        // Mobile touch controls
+        this.setupMobileControls();
+    }
+    
+    setupMobileControls() {
+        // Detect mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        if (isMobile || isTouch) {
+            const mobileControls = document.getElementById('mobileControls');
+            const mobileHint = document.querySelector('.mobile-hint');
+            mobileControls.classList.add('visible');
+            mobileHint.style.display = 'block';
+            
+            // Get control buttons
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const upBtn = document.getElementById('upBtn');
+            const jumpBtn = document.getElementById('jumpBtn');
+            
+            // Helper function to handle touch events
+            const handleTouchStart = (e, action) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action();
+            };
+            
+            const handleTouchEnd = (e, action) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action();
+            };
+            
+            // Left button
+            leftBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('ArrowLeft', true);
+                this.player.setKeyState('KeyA', true);
+            }));
+            leftBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('ArrowLeft', false);
+                this.player.setKeyState('KeyA', false);
+            }));
+            
+            // Right button
+            rightBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('ArrowRight', true);
+                this.player.setKeyState('KeyD', true);
+            }));
+            rightBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('ArrowRight', false);
+                this.player.setKeyState('KeyD', false);
+            }));
+            
+            // Up button (alternative jump)
+            upBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('ArrowUp', true);
+                this.player.setKeyState('KeyW', true);
+            }));
+            upBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('ArrowUp', false);
+                this.player.setKeyState('KeyW', false);
+            }));
+            
+            // Jump button
+            jumpBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('Space', true);
+            }));
+            jumpBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('Space', false);
+            }));
+            
+            // Prevent context menu on long press
+            [leftBtn, rightBtn, upBtn, jumpBtn].forEach(btn => {
+                btn.addEventListener('contextmenu', (e) => e.preventDefault());
+            });
+        }
     }
 
     setupPhysicsControls() {
