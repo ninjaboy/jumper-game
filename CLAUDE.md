@@ -11,22 +11,20 @@ This is a simple Node.js game project for learning different jump mechanics. The
 - `npm run dev` - Start with auto-reload for development
 
 ## Project Structure
-**Game Files (in public/ directory):**
-- `public/game.js` - Main game logic and engine
-- `public/player.js` - Player character implementation
-- `public/physics.js` - Physics and movement mechanics
-- `public/platforms.js` - Platform and hazard management
-- `public/consumables.js` - Consumable/powerup system
-- `public/index.html` - Game canvas and HTML structure
-
-**Root Files:**
+**All files in ROOT directory:**
+- `game.js` - Main game logic and engine
+- `player.js` - Player character implementation
+- `physics.js` - Physics and movement mechanics
+- `platforms.js` - Platform and hazard management
+- `consumables.js` - Consumable/powerup system
+- `index.html` - Game canvas and HTML structure
 - `server.js` - Local development server (Express)
 - `package.json` - Project dependencies and scripts
 - `vercel.json` - Vercel deployment config
 - `CLAUDE.md` - This file
 - `VERSION_PROTOCOL.md` - Version update guidelines
 
-**Important:** All game code lives in `public/` directory. This is what Vercel deploys.
+**Important:** All game code lives in ROOT. No public/ directory. Keep it simple.
 
 ## Game Framework
 Uses a lightweight HTML5 Canvas-based game framework for simplicity and educational purposes. The game loop handles rendering, input, and physics updates at 60 FPS.
@@ -40,12 +38,10 @@ Uses a lightweight HTML5 Canvas-based game framework for simplicity and educatio
 
 ## ⚠️ IMPORTANT: Version Management
 **When making ANY code changes to game features:**
-1. Update version number in `public/game.js` constructor (line 4)
-2. Add version note to `this.versionNotes` array (lines 5-11)
+1. Update version number in `game.js` constructor (line 4)
+2. Add version note to `this.versionNotes` array (lines 5-10)
 3. Follow semantic versioning (see VERSION_PROTOCOL.md)
 4. Include version in commit message
-
-**CRITICAL:** Game files are in `public/` directory - edit `public/game.js`, NOT `game.js` in root!
 
 **Quick Reference:**
 - New feature → Bump MINOR (1.1.0 → 1.2.0)
