@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.6';
+        this.version = '1.2.7';
         this.versionNotes = [
+            'v1.2.7 - Enhancement: Particles now physics-based, spray opposite to movement direction',
             'v1.2.6 - Enhancement: Particles now red/orange with glow effects for better visibility',
             'v1.2.5 - New Feature: Particle splash effects when jumping and landing',
             'v1.2.4 - UI/UX: Victory screen with firework celebration effects, integrated instructions',

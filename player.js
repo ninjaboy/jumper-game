@@ -326,17 +326,26 @@ class Player {
     }
 
     spawnJumpParticles() {
-        // Spawn particles when jumping
+        // Spawn particles when jumping - spray opposite to movement direction
         const particleCount = 12;
         const colors = ['#FF4444', '#FF6666', '#FF8888', '#FFAA00']; // Red and orange tones
+
         for (let i = 0; i < particleCount; i++) {
-            const angle = Math.PI + (Math.random() - 0.5) * Math.PI; // Downward spread
-            const speed = Math.random() * 4 + 2;
+            // Spray downward and opposite to player's horizontal movement
+            const baseAngle = Math.PI / 2; // Downward
+            const spread = (Math.random() - 0.5) * Math.PI * 0.8; // Wide spread
+            const angle = baseAngle + spread;
+
+            const speed = Math.random() * 4 + 3;
+            // Push particles opposite to player velocity
+            const vx = Math.cos(angle) * speed - this.velocityX * 0.5;
+            const vy = Math.abs(Math.sin(angle) * speed); // Always downward
+
             this.particles.push({
                 x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
                 y: this.y + this.height,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
+                vx: vx,
+                vy: vy,
                 life: 30 + Math.random() * 15,
                 maxLife: 30 + Math.random() * 15,
                 size: Math.random() * 5 + 3,
@@ -346,20 +355,32 @@ class Player {
     }
 
     spawnLandingParticles() {
-        // Spawn particles when landing
+        // Spawn particles when landing - spray forward based on landing velocity
         const particleCount = 18;
         const colors = ['#FF0000', '#FF3333', '#FF6666', '#FF8800']; // Bright reds and orange
+
+        // Impact intensity based on landing velocity
+        const impactForce = Math.abs(this.velocityY) * 0.3;
+
         for (let i = 0; i < particleCount; i++) {
-            const angle = Math.PI + (Math.random() - 0.5) * Math.PI * 0.8; // Wide downward spread
-            const speed = Math.random() * 5 + 3;
+            // Spray forward and to the sides based on movement direction
+            const baseAngle = Math.PI / 2; // Start downward/sideways
+            const spread = (Math.random() - 0.5) * Math.PI; // Full spread
+            const angle = baseAngle + spread;
+
+            const speed = Math.random() * 5 + 3 + impactForce;
+            // Push particles forward with player velocity
+            const vx = Math.cos(angle) * speed + this.velocityX * 0.8;
+            const vy = Math.abs(Math.sin(angle) * speed * 0.3); // Mostly sideways
+
             this.particles.push({
                 x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
                 y: this.y + this.height,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed * 0.5, // Less upward velocity
+                vx: vx,
+                vy: vy,
                 life: 35 + Math.random() * 20,
                 maxLife: 35 + Math.random() * 20,
-                size: Math.random() * 6 + 3,
+                size: Math.random() * 6 + 3 + impactForce * 0.5,
                 color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
