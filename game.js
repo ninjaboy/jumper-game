@@ -1,5 +1,12 @@
 class Game {
     constructor() {
+        // Version tracking
+        this.version = '1.1.0';
+        this.versionNotes = [
+            'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
+            'v1.0.0 - Base Game: Multiple jump mechanics, hazards, lives system'
+        ];
+
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
 
@@ -8,6 +15,10 @@ class Game {
         this.platforms = new PlatformManager();
         this.consumables = new ConsumableManager();
         this.player = new Player(100, this.physics.groundLevel - 40);
+
+        // Spawn initial consumables
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
+
         this.updateSeedDisplay();
 
         // Camera system for side-scrolling
@@ -239,36 +250,46 @@ class Game {
     showVictoryMessage() {
         this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         this.ctx.fillStyle = '#FFD700';
         this.ctx.font = '48px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('LEVEL COMPLETE!', this.canvas.width/2, this.canvas.height/2 - 70);
-        
+
         this.ctx.fillStyle = 'white';
         this.ctx.font = '24px Arial';
         this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, this.canvas.width/2, this.canvas.height/2 - 20);
         this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
         this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
-        
+
+        // Show latest version notes
+        this.ctx.fillStyle = '#888888';
+        this.ctx.font = '12px Arial';
+        this.ctx.fillText(`Game v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
+
         this.ctx.textAlign = 'left';
     }
 
     showGameOverMessage() {
         this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         this.ctx.fillStyle = '#FF0000';
         this.ctx.font = '48px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('GAME OVER', this.canvas.width/2, this.canvas.height/2 - 70);
-        
+
         this.ctx.fillStyle = 'white';
         this.ctx.font = '24px Arial';
         this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, this.canvas.width/2, this.canvas.height/2 - 20);
         this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
         this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
-        
+
+        // Show latest version notes
+        this.ctx.fillStyle = '#888888';
+        this.ctx.font = '12px Arial';
+        this.ctx.fillText(`Game v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
+
         this.ctx.textAlign = 'left';
     }
 
@@ -337,13 +358,18 @@ class Game {
         
         // Draw UI elements (fixed position)
         this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        this.ctx.fillRect(5, 5, 300, 120);
-        
+        this.ctx.fillRect(5, 5, 300, 135);
+
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px Arial';
         this.ctx.fillText('WASD/Arrow Keys: Move | Space: Jump', 10, 25);
         this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, 10, 45);
         this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 65);
+
+        // Version number
+        this.ctx.fillStyle = '#888888';
+        this.ctx.font = '11px Arial';
+        this.ctx.fillText(`v${this.version}`, 10, 130);
         
         // Draw lives
         this.ctx.fillText('Lives:', 10, 85);
