@@ -777,10 +777,10 @@ class Game {
         // Render consumables UI (active effects, notifications)
         this.consumables.renderUI(this.ctx, this.canvas);
 
-        // Show version number in top-left (small gray text)
+        // Show version number in top-left corner (small gray text)
         this.ctx.fillStyle = '#95a5a6';
         this.ctx.font = '12px Arial';
-        this.ctx.fillText(`v${this.version}`, 10, this.canvas.height - 10);
+        this.ctx.fillText(`v${this.version}`, 320, 20);
 
         // Show victory screen if game is finished
         if (this.gameState === 'finished') {
