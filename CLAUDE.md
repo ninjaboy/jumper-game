@@ -44,4 +44,12 @@ Uses a lightweight HTML5 Canvas-based game framework for simplicity and educatio
 
 See `VERSION_PROTOCOL.md` for complete guidelines.
 
+## 🚨 CRITICAL: Deployment Rules
+**NEVER manually redeploy to Vercel. EVER.**
+- GitHub integration handles auto-deployment
+- After git push, wait for Vercel to auto-deploy (usually 30-60 seconds)
+- Do NOT use: `vercel --prod`, `vercel deploy`, or any manual deployment commands
+- Do NOT trigger redeployments manually
+- Just push to GitHub and let the automation work
+
       IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
