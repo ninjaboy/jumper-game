@@ -19,6 +19,8 @@
             border: 2px solid #34495e;
             background-color: #87CEEB;
             display: block;
+            max-width: 100%;
+            height: auto;
         }
         .controls {
             margin-top: 20px;
@@ -214,11 +216,29 @@
                 width: 150px;
             }
         }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <h1>Jumper Game - Learning Jump Mechanics</h1>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <!-- Loading indicator -->
+    <div id="loadingIndicator" style="text-align: center; padding: 20px;">
+        <p>Loading game...</p>
+        <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    </div>
+    
+    <!-- Error display -->
+    <div id="errorDisplay" style="display: none; background-color: #e74c3c; color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
+        <h3>Error Loading Game:</h3>
+        <pre id="errorText"></pre>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600" style="display: none;"></canvas>
     
     <div class="controls">
         <h3>Controls:</h3>
@@ -289,9 +309,80 @@
         </div>
     </div>
 
+    <script>
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            showError('JavaScript Error: ' + e.message + '\nFile: ' + e.filename + '\nLine: ' + e.lineno);
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            showError('Promise Error: ' + e.reason);
+        });
+        
+        function showError(message) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorDisplay = document.getElementById('errorDisplay');
+            const errorText = document.getElementById('errorText');
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (errorDisplay) {
+                errorDisplay.style.display = 'block';
+                if (errorText) errorText.textContent = message;
+            }
+            
+            // Also show in console for debugging
+            console.error(message);
+        }
+        
+        function hideLoading() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const canvas = document.getElementById('gameCanvas');
+            
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (canvas) canvas.style.display = 'block';
+        }
+        
+        // Debug mobile detection
+        console.log('User Agent:', navigator.userAgent);
+        console.log('Touch support:', 'ontouchstart' in window);
+        console.log('Max touch points:', navigator.maxTouchPoints);
+        console.log('Screen size:', window.screen.width + 'x' + window.screen.height);
+        console.log('Viewport size:', window.innerWidth + 'x' + window.innerHeight);
+    </script>
+    
     <script src="physics.js"></script>
     <script src="platforms.js"></script>
     <script src="player.js"></script>
     <script src="game.js"></script>
+    
+    <script>
+        // Initialize game after all scripts load
+        window.addEventListener('load', function() {
+            try {
+                console.log('All scripts loaded, initializing game...');
+                
+                // Check if all classes are available
+                if (typeof Physics === 'undefined') throw new Error('Physics class not loaded');
+                if (typeof PlatformManager === 'undefined') throw new Error('PlatformManager class not loaded');
+                if (typeof Player === 'undefined') throw new Error('Player class not loaded');
+                if (typeof Game === 'undefined') throw new Error('Game class not loaded');
+                
+                console.log('All classes available, creating game instance...');
+                const game = new Game();
+                
+                console.log('Game created, starting...');
+                game.start();
+                
+                hideLoading();
+                console.log('Game started successfully!');
+                
+            } catch (error) {
+                console.error('Failed to initialize game:', error);
+                showError('Failed to initialize game: ' + error.message);
+            }
+        });
+    </script>
 </body>
 </html>
