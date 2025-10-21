@@ -1,12 +1,10 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.1.6';
+        this.version = '1.2.0';
         this.versionNotes = [
+            'v1.2.0 - New Feature: Start screen with animated GROUNDED logo restored + Consumables',
             'v1.1.6 - Bug Fix: Explicitly configure Vercel for static hosting',
-            'v1.1.5 - Bug Fix: Files back in root, removed public/ - keep it simple',
-            'v1.1.4 - Cleanup: Removed duplicate files from root, public/ is source of truth',
-            'v1.1.3 - Bug Fix: Move files to public/ directory for Vercel static hosting',
             'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
             'v1.0.0 - Base Game: Multiple jump mechanics, hazards, lives system'
         ];
@@ -24,7 +22,7 @@ class Game {
         this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
 
         this.updateSeedDisplay();
-
+        
         // Camera system for side-scrolling
         this.camera = {
             x: 0,
@@ -32,13 +30,24 @@ class Game {
             followPlayer: true,
             levelWidth: 3000 // Total level width
         };
-
+        
         // Game state
-        this.gameState = 'playing'; // 'playing', 'finished'
-
+        this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'finished', 'game_over'
+        
+        // Start screen and menu system
+        this.selectedMenuItem = 0;
+        this.menuItems = ['Start Game', 'Settings'];
+        this.settingsVisible = false;
+        
+        // Logo animation system
+        this.logoAnimationTimer = 0;
+        this.logoGlitchTimer = 0;
+        this.logoParticles = [];
+        this.maxLogoParticles = 50;
+        
         this.lastTime = 0;
         this.isRunning = false;
-
+        
         this.setupEventListeners();
         this.setupPhysicsControls();
         this.setupJumpModes();
@@ -49,6 +58,26 @@ class Game {
         // Keyboard input
         document.addEventListener('keydown', (e) => {
             e.preventDefault();
+            
+            // Handle start screen navigation
+            if (this.gameState === 'start_screen') {
+                if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+                    this.selectedMenuItem = Math.max(0, this.selectedMenuItem - 1);
+                } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+                    this.selectedMenuItem = Math.min(this.menuItems.length - 1, this.selectedMenuItem + 1);
+                } else if (e.code === 'Space' || e.code === 'Enter') {
+                    this.handleMenuSelection();
+                }
+                return;
+            }
+            
+            // Handle settings menu
+            if (this.gameState === 'settings') {
+                if (e.code === 'Escape' || e.code === 'Backspace') {
+                    this.gameState = 'start_screen';
+                }
+                return;
+            }
             
             // Handle restart and new level
             if (this.gameState === 'finished' || this.gameState === 'game_over') {
@@ -61,12 +90,18 @@ class Game {
                 }
             }
             
-            this.player.setKeyState(e.code, true);
+            // Only pass keys to player if actually playing
+            if (this.gameState === 'playing') {
+                this.player.setKeyState(e.code, true);
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             e.preventDefault();
-            this.player.setKeyState(e.code, false);
+            // Only pass key releases to player if actually playing
+            if (this.gameState === 'playing') {
+                this.player.setKeyState(e.code, false);
+            }
         });
 
         // Prevent default behavior for space and arrow keys
@@ -75,6 +110,125 @@ class Game {
                 e.preventDefault();
             }
         }, false);
+    }
+    
+    setupMobileControls() {
+        // Detect mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        console.log('Mobile detection:', { isMobile, isTouch, userAgent: navigator.userAgent });
+        console.log('Screen dimensions:', { width: window.screen.width, height: window.screen.height });
+        console.log('Viewport dimensions:', { width: window.innerWidth, height: window.innerHeight });
+        
+        // Show controls on mobile OR if screen is small (force mobile for testing)
+        const showMobileControls = true; // Force show for testing
+        console.log('Should show mobile controls:', showMobileControls);
+        console.log('Forcing mobile controls to show for debugging');
+        
+        if (showMobileControls) {
+            const mobileControls = document.getElementById('mobileControls');
+            const mobileHint = document.querySelector('.mobile-hint');
+            
+            // Check if elements exist before accessing them
+            if (!mobileControls) {
+                console.warn('Mobile controls element not found');
+                return;
+            }
+            
+            console.log('Found mobile controls element, making visible');
+            mobileControls.classList.add('visible');
+            mobileControls.style.display = 'flex'; // Force display
+            
+            if (mobileHint) {
+                mobileHint.style.display = 'block';
+                console.log('Mobile hint updated');
+            }
+            
+            // Get control buttons
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const upBtn = document.getElementById('upBtn');
+            const jumpBtn = document.getElementById('jumpBtn');
+            
+            // Check if all buttons exist
+            if (!leftBtn || !rightBtn || !upBtn || !jumpBtn) {
+                console.warn('Some mobile control buttons not found');
+                return;
+            }
+            
+            // Helper function to handle touch events
+            const handleTouchStart = (e, action) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action();
+            };
+            
+            const handleTouchEnd = (e, action) => {
+                e.preventDefault();
+                e.stopPropagation();
+                action();
+            };
+            
+            // Left button
+            leftBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('ArrowLeft', true);
+                this.player.setKeyState('KeyA', true);
+            }));
+            leftBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('ArrowLeft', false);
+                this.player.setKeyState('KeyA', false);
+            }));
+            
+            // Right button
+            rightBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('ArrowRight', true);
+                this.player.setKeyState('KeyD', true);
+            }));
+            rightBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('ArrowRight', false);
+                this.player.setKeyState('KeyD', false);
+            }));
+            
+            // Up button (alternative jump)
+            upBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('ArrowUp', true);
+                this.player.setKeyState('KeyW', true);
+            }));
+            upBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('ArrowUp', false);
+                this.player.setKeyState('KeyW', false);
+            }));
+            
+            // Jump button
+            jumpBtn.addEventListener('touchstart', (e) => handleTouchStart(e, () => {
+                this.player.setKeyState('Space', true);
+            }));
+            jumpBtn.addEventListener('touchend', (e) => handleTouchEnd(e, () => {
+                this.player.setKeyState('Space', false);
+            }));
+            
+            // Prevent context menu on long press
+            [leftBtn, rightBtn, upBtn, jumpBtn].forEach(btn => {
+                btn.addEventListener('contextmenu', (e) => e.preventDefault());
+            });
+        }
+    }
+    
+    handleMenuSelection() {
+        switch (this.selectedMenuItem) {
+            case 0: // Start Game
+                this.startGame();
+                break;
+            case 1: // Settings
+                this.gameState = 'settings';
+                break;
+        }
+    }
+    
+    startGame() {
+        this.gameState = 'playing';
+        this.restart(); // Reset player position and generate level
     }
 
     setupPhysicsControls() {
@@ -215,10 +369,12 @@ class Game {
 
     generateNewLevel(seed = null) {
         this.platforms = new PlatformManager(seed);
-        this.consumables.reset();
-        // Spawn consumables in the level
-        this.consumables.spawnRandomConsumables(this.camera.levelWidth, this.platforms.rng);
         this.updateSeedDisplay();
+
+        // Reset and respawn consumables for new level
+        this.consumables.reset();
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
+
         this.restart();
     }
 
@@ -227,8 +383,15 @@ class Game {
     }
 
     update(deltaTime) {
+        // Update logo animations on start screen
+        if (this.gameState === 'start_screen') {
+            this.updateLogoAnimations();
+        }
+
         if (this.gameState === 'playing') {
             this.platforms.update();
+
+            // Update consumables (handles pickup collision, active effects)
             this.consumables.update(this.player, this);
 
             const playerResult = this.player.update(this.physics, this.platforms);
@@ -250,6 +413,43 @@ class Game {
             }
         }
     }
+    
+    updateLogoAnimations() {
+        // Update animation timers
+        this.logoAnimationTimer++;
+        this.logoGlitchTimer += 0.15;
+        
+        // Add new particles randomly
+        if (Math.random() < 0.3 && this.logoParticles.length < this.maxLogoParticles) {
+            this.logoParticles.push({
+                x: this.canvas.width/2 + (Math.random() - 0.5) * 400,
+                y: this.canvas.height/3 + (Math.random() - 0.5) * 100,
+                velocityX: (Math.random() - 0.5) * 4,
+                velocityY: (Math.random() - 0.5) * 4,
+                size: Math.random() * 3 + 1,
+                life: Math.random() * 60 + 30,
+                maxLife: Math.random() * 60 + 30,
+                color: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'][Math.floor(Math.random() * 6)]
+            });
+        }
+        
+        // Update existing particles
+        for (let i = this.logoParticles.length - 1; i >= 0; i--) {
+            const particle = this.logoParticles[i];
+            particle.x += particle.velocityX;
+            particle.y += particle.velocityY;
+            particle.life--;
+            
+            // Add some drift and fade
+            particle.velocityX *= 0.99;
+            particle.velocityY *= 0.99;
+            
+            // Remove dead particles
+            if (particle.life <= 0) {
+                this.logoParticles.splice(i, 1);
+            }
+        }
+    }
 
     showVictoryMessage() {
         this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
@@ -266,10 +466,10 @@ class Game {
         this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
         this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
 
-        // Show latest version notes
-        this.ctx.fillStyle = '#888888';
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`Game v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
+        // Show version number at bottom
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '14px Arial';
+        this.ctx.fillText(`Version ${this.version}`, this.canvas.width/2, this.canvas.height - 30);
 
         this.ctx.textAlign = 'left';
     }
@@ -278,7 +478,7 @@ class Game {
         this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.ctx.fillStyle = '#FF0000';
+        this.ctx.fillStyle = '#e74c3c';
         this.ctx.font = '48px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('GAME OVER', this.canvas.width/2, this.canvas.height/2 - 70);
@@ -289,10 +489,10 @@ class Game {
         this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
         this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
 
-        // Show latest version notes
-        this.ctx.fillStyle = '#888888';
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`Game v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
+        // Show version number at bottom
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '14px Arial';
+        this.ctx.fillText(`Version ${this.version}`, this.canvas.width/2, this.canvas.height - 30);
 
         this.ctx.textAlign = 'left';
     }
@@ -305,9 +505,15 @@ class Game {
         this.player.velocityY = 0;
         this.player.onGround = true;
         this.player.resetLives(); // Reset lives to 3
-        this.player.maxJumps = 1; // Reset to single jump
+
+        // Reset consumable effects on player
+        this.player.maxJumps = 1;
         this.player.jumpsRemaining = 1;
-        this.player.consumableEffects = { doubleJump: false, tripleJump: false };
+        if (this.player.originalMoveSpeed !== null) {
+            this.player.moveSpeed = this.player.originalMoveSpeed;
+            this.player.originalMoveSpeed = null;
+        }
+
         this.camera.x = 0;
         this.camera.y = 0;
     }
@@ -330,6 +536,174 @@ class Game {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
+        // Render different screens based on game state
+        switch (this.gameState) {
+            case 'start_screen':
+                this.renderStartScreen();
+                break;
+            case 'settings':
+                this.renderSettingsScreen();
+                break;
+            case 'playing':
+            case 'finished':
+            case 'game_over':
+                this.renderGameScreen();
+                break;
+        }
+    }
+    
+    renderStartScreen() {
+        // Dark background with subtle gradient
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#1a1a1a');
+        gradient.addColorStop(1, '#2c3e50');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Render background particles
+        this.renderLogoParticles();
+        
+        // Animated "GROUNDED" logo with effects
+        this.renderAnimatedLogo();
+        
+        // Subtitle with glow effect
+        this.ctx.textAlign = 'center';
+        const subtitlePulse = Math.sin(this.logoGlitchTimer) * 0.3 + 0.7;
+        this.ctx.fillStyle = `rgba(189, 195, 199, ${subtitlePulse})`;
+        this.ctx.font = '20px Arial';
+        
+        // Add glow effect to subtitle
+        this.ctx.shadowColor = '#3498db';
+        this.ctx.shadowBlur = 10;
+        this.ctx.fillText('Master the Art of Jumping', this.canvas.width/2, this.canvas.height/3 + 80);
+        this.ctx.shadowBlur = 0;
+        
+        // Menu items with enhanced effects
+        const startY = this.canvas.height/2 + 50;
+        for (let i = 0; i < this.menuItems.length; i++) {
+            const isSelected = i === this.selectedMenuItem;
+            
+            if (isSelected) {
+                // Animated selection with glow
+                const selectionPulse = Math.sin(this.logoGlitchTimer * 2) * 0.5 + 0.5;
+                this.ctx.fillStyle = `rgba(52, 152, 219, ${0.8 + selectionPulse * 0.2})`;
+                this.ctx.font = 'bold 32px Arial';
+                
+                // Add glow effect to selected item
+                this.ctx.shadowColor = '#3498db';
+                this.ctx.shadowBlur = 15;
+                this.ctx.fillText('> ' + this.menuItems[i] + ' <', this.canvas.width/2, startY + i * 60);
+                this.ctx.shadowBlur = 0;
+            } else {
+                this.ctx.fillStyle = '#7f8c8d';
+                this.ctx.font = '28px Arial';
+                this.ctx.fillText(this.menuItems[i], this.canvas.width/2, startY + i * 60);
+            }
+        }
+        
+        // Controls hint with subtle animation
+        const hintAlpha = Math.sin(this.logoGlitchTimer * 0.5) * 0.2 + 0.8;
+        this.ctx.fillStyle = `rgba(149, 165, 166, ${hintAlpha})`;
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText('Use W/S or ↑/↓ to navigate • SPACE/ENTER to select', this.canvas.width/2, this.canvas.height - 50);
+        
+        this.ctx.textAlign = 'left';
+    }
+    
+    renderLogoParticles() {
+        // Render background particle effects
+        for (let particle of this.logoParticles) {
+            const alpha = particle.life / particle.maxLife;
+            this.ctx.fillStyle = particle.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+            this.ctx.globalAlpha = alpha;
+            
+            // Create glowing particle effect
+            this.ctx.shadowColor = particle.color;
+            this.ctx.shadowBlur = particle.size * 2;
+            this.ctx.fillRect(particle.x - particle.size/2, particle.y - particle.size/2, particle.size, particle.size);
+        }
+        this.ctx.shadowBlur = 0;
+        this.ctx.globalAlpha = 1;
+    }
+    
+    renderAnimatedLogo() {
+        const centerX = this.canvas.width/2;
+        const centerY = this.canvas.height/3;
+        
+        this.ctx.textAlign = 'center';
+        this.ctx.font = 'bold 72px Arial';
+        
+        // Create multiple layers for depth and glitch effect
+        const layers = [
+            { offset: { x: 0, y: 0 }, color: '#ffffff', blur: 0 },
+            { offset: { x: Math.sin(this.logoGlitchTimer) * 3, y: 0 }, color: '#ff0044', blur: 5 },
+            { offset: { x: Math.cos(this.logoGlitchTimer * 1.2) * -2, y: Math.sin(this.logoGlitchTimer * 0.8) }, color: '#0044ff', blur: 3 },
+            { offset: { x: Math.sin(this.logoGlitchTimer * 1.5) * 4, y: Math.cos(this.logoGlitchTimer) * 2 }, color: '#44ff00', blur: 4 }
+        ];
+        
+        // Render each layer with effects
+        for (let i = 0; i < layers.length; i++) {
+            const layer = layers[i];
+            const alpha = i === 0 ? 1 : 0.3 + Math.sin(this.logoGlitchTimer + i) * 0.2;
+            
+            this.ctx.fillStyle = layer.color;
+            this.ctx.globalAlpha = alpha;
+            
+            // Add glitch blur effect
+            if (layer.blur > 0) {
+                this.ctx.shadowColor = layer.color;
+                this.ctx.shadowBlur = layer.blur;
+            }
+            
+            // Glitch effect - occasionally corrupt characters
+            let text = 'GROUNDED';
+            if (i > 0 && Math.random() < 0.1) {
+                // Random character corruption
+                const glitchChars = '@#$%^&*(){}[]|\\:;\"\'<>?,./~`';
+                const glitchPos = Math.floor(Math.random() * text.length);
+                text = text.substring(0, glitchPos) + 
+                       glitchChars[Math.floor(Math.random() * glitchChars.length)] + 
+                       text.substring(glitchPos + 1);
+            }
+            
+            // Scale effect - slight pulsing
+            const scale = 1 + Math.sin(this.logoGlitchTimer * 0.5) * 0.05;
+            this.ctx.save();
+            this.ctx.translate(centerX, centerY);
+            this.ctx.scale(scale, scale);
+            
+            this.ctx.fillText(text, layer.offset.x, layer.offset.y);
+            
+            this.ctx.restore();
+            this.ctx.shadowBlur = 0;
+        }
+        
+        this.ctx.globalAlpha = 1;
+    }
+    
+    renderSettingsScreen() {
+        // Dark background
+        this.ctx.fillStyle = '#2c3e50';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 48px Arial';
+        this.ctx.fillText('SETTINGS', this.canvas.width/2, 100);
+        
+        this.ctx.fillStyle = '#bdc3c7';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillText('Settings will be implemented here!', this.canvas.width/2, this.canvas.height/2);
+        this.ctx.fillText('For now, you can adjust settings in-game', this.canvas.width/2, this.canvas.height/2 + 40);
+        
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText('Press ESC or BACKSPACE to return', this.canvas.width/2, this.canvas.height - 50);
+        
+        this.ctx.textAlign = 'left';
+    }
+    
+    renderGameScreen() {
         // Draw scrolling background
         this.ctx.save();
         this.ctx.translate(-this.camera.x, -this.camera.y);
@@ -351,7 +725,7 @@ class Game {
         // Draw platforms (handles its own camera translation)
         this.platforms.render(this.ctx, this.camera);
 
-        // Draw consumables (handles its own camera translation)
+        // Draw consumables with camera translation
         this.consumables.render(this.ctx, this.camera);
 
         // Draw player with camera translation
@@ -362,18 +736,13 @@ class Game {
         
         // Draw UI elements (fixed position)
         this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        this.ctx.fillRect(5, 5, 300, 135);
-
+        this.ctx.fillRect(5, 5, 300, 120);
+        
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px Arial';
         this.ctx.fillText('WASD/Arrow Keys: Move | Space: Jump', 10, 25);
         this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, 10, 45);
         this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 65);
-
-        // Version number
-        this.ctx.fillStyle = '#888888';
-        this.ctx.font = '11px Arial';
-        this.ctx.fillText(`v${this.version}`, 10, 130);
         
         // Draw lives
         this.ctx.fillText('Lives:', 10, 85);
@@ -405,16 +774,18 @@ class Game {
             this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, 125);
         }
 
-        // Show consumable effects UI
+        // Render consumables UI (active effects, notifications)
         this.consumables.renderUI(this.ctx, this.canvas);
+
+        // Show version number in top-left (small gray text)
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '12px Arial';
+        this.ctx.fillText(`v${this.version}`, 10, this.canvas.height - 10);
 
         // Show victory screen if game is finished
         if (this.gameState === 'finished') {
             this.showVictoryMessage();
-        }
-
-        // Show game over screen if player died
-        if (this.gameState === 'game_over') {
+        } else if (this.gameState === 'game_over') {
             this.showGameOverMessage();
         }
     }
