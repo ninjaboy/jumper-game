@@ -18,7 +18,12 @@ class Game {
         };
         
         // Game state
-        this.gameState = 'playing'; // 'playing', 'finished'
+        this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'finished', 'game_over'
+        
+        // Start screen and menu system
+        this.selectedMenuItem = 0;
+        this.menuItems = ['Start Game', 'Settings'];
+        this.settingsVisible = false;
         
         this.lastTime = 0;
         this.isRunning = false;
@@ -34,6 +39,26 @@ class Game {
         document.addEventListener('keydown', (e) => {
             e.preventDefault();
             
+            // Handle start screen navigation
+            if (this.gameState === 'start_screen') {
+                if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+                    this.selectedMenuItem = Math.max(0, this.selectedMenuItem - 1);
+                } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+                    this.selectedMenuItem = Math.min(this.menuItems.length - 1, this.selectedMenuItem + 1);
+                } else if (e.code === 'Space' || e.code === 'Enter') {
+                    this.handleMenuSelection();
+                }
+                return;
+            }
+            
+            // Handle settings menu
+            if (this.gameState === 'settings') {
+                if (e.code === 'Escape' || e.code === 'Backspace') {
+                    this.gameState = 'start_screen';
+                }
+                return;
+            }
+            
             // Handle restart and new level
             if (this.gameState === 'finished' || this.gameState === 'game_over') {
                 if (e.code === 'KeyR') {
@@ -45,12 +70,18 @@ class Game {
                 }
             }
             
-            this.player.setKeyState(e.code, true);
+            // Only pass keys to player if actually playing
+            if (this.gameState === 'playing') {
+                this.player.setKeyState(e.code, true);
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             e.preventDefault();
-            this.player.setKeyState(e.code, false);
+            // Only pass key releases to player if actually playing
+            if (this.gameState === 'playing') {
+                this.player.setKeyState(e.code, false);
+            }
         });
 
         // Prevent default behavior for space and arrow keys
@@ -162,6 +193,22 @@ class Game {
                 btn.addEventListener('contextmenu', (e) => e.preventDefault());
             });
         }
+    }
+    
+    handleMenuSelection() {
+        switch (this.selectedMenuItem) {
+            case 0: // Start Game
+                this.startGame();
+                break;
+            case 1: // Settings
+                this.gameState = 'settings';
+                break;
+        }
+    }
+    
+    startGame() {
+        this.gameState = 'playing';
+        this.restart(); // Reset player position and generate level
     }
 
     setupPhysicsControls() {
@@ -383,6 +430,88 @@ class Game {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
+        // Render different screens based on game state
+        switch (this.gameState) {
+            case 'start_screen':
+                this.renderStartScreen();
+                break;
+            case 'settings':
+                this.renderSettingsScreen();
+                break;
+            case 'playing':
+            case 'finished':
+            case 'game_over':
+                this.renderGameScreen();
+                break;
+        }
+    }
+    
+    renderStartScreen() {
+        // Dark background with subtle gradient
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#1a1a1a');
+        gradient.addColorStop(1, '#2c3e50');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Game title "GROUNDED"
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText('GROUNDED', this.canvas.width/2, this.canvas.height/3);
+        
+        // Subtitle
+        this.ctx.fillStyle = '#bdc3c7';
+        this.ctx.font = '20px Arial';
+        this.ctx.fillText('Master the Art of Jumping', this.canvas.width/2, this.canvas.height/3 + 50);
+        
+        // Menu items
+        const startY = this.canvas.height/2 + 50;
+        for (let i = 0; i < this.menuItems.length; i++) {
+            const isSelected = i === this.selectedMenuItem;
+            
+            this.ctx.fillStyle = isSelected ? '#3498db' : '#7f8c8d';
+            this.ctx.font = isSelected ? 'bold 32px Arial' : '28px Arial';
+            
+            // Highlight selected item
+            if (isSelected) {
+                this.ctx.fillText('> ' + this.menuItems[i] + ' <', this.canvas.width/2, startY + i * 60);
+            } else {
+                this.ctx.fillText(this.menuItems[i], this.canvas.width/2, startY + i * 60);
+            }
+        }
+        
+        // Controls hint
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText('Use W/S or ↑/↓ to navigate • SPACE/ENTER to select', this.canvas.width/2, this.canvas.height - 50);
+        
+        this.ctx.textAlign = 'left';
+    }
+    
+    renderSettingsScreen() {
+        // Dark background
+        this.ctx.fillStyle = '#2c3e50';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 48px Arial';
+        this.ctx.fillText('SETTINGS', this.canvas.width/2, 100);
+        
+        this.ctx.fillStyle = '#bdc3c7';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillText('Settings will be implemented here!', this.canvas.width/2, this.canvas.height/2);
+        this.ctx.fillText('For now, you can adjust settings in-game', this.canvas.width/2, this.canvas.height/2 + 40);
+        
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText('Press ESC or BACKSPACE to return', this.canvas.width/2, this.canvas.height - 50);
+        
+        this.ctx.textAlign = 'left';
+    }
+    
+    renderGameScreen() {
         // Draw scrolling background
         this.ctx.save();
         this.ctx.translate(-this.camera.x, -this.camera.y);
@@ -454,9 +583,6 @@ class Game {
         if (this.gameState === 'finished') {
             this.showVictoryMessage();
         }
-        
-        // Show game over screen if player died
-        // No overlay for game_over - death animation handles everything
     }
 
     gameLoop(currentTime) {
