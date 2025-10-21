@@ -49,6 +49,10 @@ class Player {
             up: false,
             jump: false
         };
+
+        // Particle system for jump/landing effects
+        this.particles = [];
+        this.wasOnGround = false; // Track landing
     }
 
     updateMoveSpeed(value) {
@@ -241,6 +245,7 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            this.spawnJumpParticles();
         }
     }
 
@@ -252,6 +257,7 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            this.spawnJumpParticles();
         }
 
         // Continue adding upward velocity while holding jump
@@ -274,6 +280,7 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            this.spawnJumpParticles();
         }
 
         // Build up jump power while holding
@@ -298,6 +305,7 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            this.spawnJumpParticles();
         }
     }
 
@@ -308,6 +316,7 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            this.spawnJumpParticles();
         }
 
         // Reduce air control
@@ -316,33 +325,87 @@ class Player {
         }
     }
 
+    spawnJumpParticles() {
+        // Spawn particles when jumping
+        const particleCount = 8;
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.PI + (Math.random() - 0.5) * Math.PI; // Downward spread
+            const speed = Math.random() * 3 + 2;
+            this.particles.push({
+                x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
+                y: this.y + this.height,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 20 + Math.random() * 10,
+                maxLife: 20 + Math.random() * 10,
+                size: Math.random() * 3 + 2,
+                color: '#95a5a6' // Gray dust
+            });
+        }
+    }
+
+    spawnLandingParticles() {
+        // Spawn particles when landing
+        const particleCount = 12;
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.PI + (Math.random() - 0.5) * Math.PI * 0.8; // Wide downward spread
+            const speed = Math.random() * 4 + 2;
+            this.particles.push({
+                x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
+                y: this.y + this.height,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed * 0.5, // Less upward velocity
+                life: 25 + Math.random() * 15,
+                maxLife: 25 + Math.random() * 15,
+                size: Math.random() * 4 + 2,
+                color: '#7f8c8d' // Darker dust for landing
+            });
+        }
+    }
+
+    updateParticles() {
+        // Update and remove dead particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; // Gravity
+            p.vx *= 0.98; // Air resistance
+            p.life--;
+
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+
     update(physics, platforms) {
         // Update timers
         if (this.isDying) {
             this.deathAnimationTimer--;
-            
+
             // Handle final death animation with special effects
             if (this.finalDeath) {
                 this.updateFinalDeathAnimation();
             }
-            
+
             if (this.deathAnimationTimer <= 0) {
                 return 'death_complete';
             }
         }
-        
+
         if (this.invulnerable) {
             this.invulnerabilityTimer--;
             if (this.invulnerabilityTimer <= 0) {
                 this.invulnerable = false;
             }
         }
-        
+
         this.handleInput();
-        
+
         physics.applyGravity(this);
         physics.updatePosition(this);
-        
+
         // Check platform collisions first
         if (platforms) {
             platforms.checkCollisions(this);
@@ -355,16 +418,34 @@ class Player {
             physics.checkCollisions(this);
             physics.applyFriction(this);
         }
-        
+
+        // Detect landing and spawn particles
+        if (this.onGround && !this.wasOnGround) {
+            this.spawnLandingParticles();
+        }
+        this.wasOnGround = this.onGround;
+
+        // Update particles
+        this.updateParticles();
+
         return 'playing';
     }
 
     render(ctx) {
+        // Render particles first (behind player)
+        for (let p of this.particles) {
+            const alpha = p.life / p.maxLife;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        }
+        ctx.globalAlpha = 1;
+
         // Flicker effect during invulnerability
         if (this.invulnerable && Math.floor(this.invulnerabilityTimer / 5) % 2 === 0) {
             ctx.globalAlpha = 0.5;
         }
-        
+
         if (this.isDying) {
             if (this.finalDeath) {
                 this.renderFinalDeath(ctx);
@@ -374,10 +455,10 @@ class Player {
         } else {
             this.renderNormal(ctx);
         }
-        
+
         // Reset alpha
         ctx.globalAlpha = 1;
-        
+
         // Show velocity info (only when alive)
         if (!this.isDying) {
             ctx.fillStyle = 'black';

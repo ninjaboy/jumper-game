@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.4';
+        this.version = '1.2.5';
         this.versionNotes = [
+            'v1.2.5 - New Feature: Particle splash effects when jumping and landing',
             'v1.2.4 - UI/UX: Victory screen with firework celebration effects, integrated instructions',
             'v1.2.3 - UI/UX: Show double/triple jump status persistently in Active Effects panel',
             'v1.2.2 - UI/UX: Version on start screen, death instructions integrated with animation',
