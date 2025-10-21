@@ -59,9 +59,6 @@ class Game {
                 e.preventDefault();
             }
         }, false);
-        
-        // Mobile touch controls
-        this.setupMobileControls();
     }
     
     setupMobileControls() {
@@ -72,14 +69,29 @@ class Game {
         if (isMobile || isTouch) {
             const mobileControls = document.getElementById('mobileControls');
             const mobileHint = document.querySelector('.mobile-hint');
+            
+            // Check if elements exist before accessing them
+            if (!mobileControls) {
+                console.warn('Mobile controls element not found');
+                return;
+            }
+            
             mobileControls.classList.add('visible');
-            mobileHint.style.display = 'block';
+            if (mobileHint) {
+                mobileHint.style.display = 'block';
+            }
             
             // Get control buttons
             const leftBtn = document.getElementById('leftBtn');
             const rightBtn = document.getElementById('rightBtn');
             const upBtn = document.getElementById('upBtn');
             const jumpBtn = document.getElementById('jumpBtn');
+            
+            // Check if all buttons exist
+            if (!leftBtn || !rightBtn || !upBtn || !jumpBtn) {
+                console.warn('Some mobile control buttons not found');
+                return;
+            }
             
             // Helper function to handle touch events
             const handleTouchStart = (e, action) => {

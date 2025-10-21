@@ -370,10 +370,14 @@
                 if (typeof Game === 'undefined') throw new Error('Game class not loaded');
                 
                 console.log('All classes available, creating game instance...');
-                const game = new Game();
+                window.game = new Game();
                 
-                console.log('Game created, starting...');
-                game.start();
+                console.log('Game created, setting up mobile controls...');
+                // Setup mobile controls after DOM is ready
+                window.game.setupMobileControls();
+                
+                console.log('Starting game...');
+                window.game.start();
                 
                 hideLoading();
                 console.log('Game started successfully!');
