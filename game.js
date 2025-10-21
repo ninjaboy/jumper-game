@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.0';
+        this.version = '1.2.1';
         this.versionNotes = [
+            'v1.2.1 - Bug Fix: Version number position corrected to top-left corner',
             'v1.2.0 - New Feature: Start screen with animated GROUNDED logo restored + Consumables',
             'v1.1.6 - Bug Fix: Explicitly configure Vercel for static hosting',
             'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
