@@ -1,12 +1,11 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.1.4';
+        this.version = '1.1.5';
         this.versionNotes = [
+            'v1.1.5 - Bug Fix: Files back in root, removed public/ - keep it simple',
             'v1.1.4 - Cleanup: Removed duplicate files from root, public/ is source of truth',
             'v1.1.3 - Bug Fix: Move files to public/ directory for Vercel static hosting',
-            'v1.1.2 - Bug Fix: Removed old public/ directory causing deployment conflicts',
-            'v1.1.1 - Bug Fix: Fixed Vercel deployment MIME type for consumables.js',
             'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
             'v1.0.0 - Base Game: Multiple jump mechanics, hazards, lives system'
         ];
