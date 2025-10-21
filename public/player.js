@@ -26,7 +26,7 @@ class Player {
         this.maxLives = 3;
         this.isDying = false;
         this.deathAnimationTimer = 0;
-        this.maxDeathAnimationTime = 60; // frames
+        this.maxDeathAnimationTime = 480; // Much longer - 8 seconds at 60fps
         this.invulnerable = false;
         this.invulnerabilityTimer = 0;
         this.maxInvulnerabilityTime = 120; // 2 seconds at 60fps
@@ -439,15 +439,18 @@ class Player {
         const timeLeft = this.deathAnimationTimer;
         const progress = 1 - (timeLeft / this.maxDeathAnimationTime);
         
-        // Phase-based rendering
-        if (timeLeft > 120) {
-            // Phase 1: Flaming zigzag hero
+        // Extended phase-based rendering (8 seconds total)
+        if (timeLeft > 360) {
+            // Phase 1: Flaming zigzag hero (3 seconds)
             this.renderFlamingHero(ctx, progress);
-        } else if (timeLeft > 60) {
-            // Phase 2: Growing with intense flames
+        } else if (timeLeft > 240) {
+            // Phase 2: Growing with intense flames (2 seconds)
             this.renderGrowingFlames(ctx, progress);
+        } else if (timeLeft > 120) {
+            // Phase 3: Expanding explosion (2 seconds)
+            this.renderExpandingExplosion(ctx, progress);
         } else {
-            // Phase 3: Final explosion and glitchy cross
+            // Phase 4: Final glitchy cross with instructions (2 seconds)
             this.renderFinalExplosion(ctx, progress);
         }
         
@@ -463,6 +466,61 @@ class Player {
         }
         
         ctx.globalAlpha = 1;
+    }
+
+    renderGlitchyInstructions(ctx) {
+        const instructions = [
+            "PRESS R TO RESTART",
+            "PRESS N FOR NEW LEVEL",
+            "SYSTEM FAILURE...",
+            "REALITY.EXE STOPPED"
+        ];
+        
+        const baseX = this.x + this.width/2;
+        const baseY = this.y + this.height + 60;
+        
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        
+        for (let i = 0; i < instructions.length; i++) {
+            const text = instructions[i];
+            const yOffset = i * 25;
+            
+            // Heavy glitch effect
+            const glitchIntensity = Math.sin(this.glitchTimer * 3 + i) * 5;
+            const pixelShift = Math.random() > 0.7 ? Math.floor(Math.random() * 4) - 2 : 0;
+            
+            // Randomize character corruption
+            let corruptedText = "";
+            for (let j = 0; j < text.length; j++) {
+                if (Math.random() > 0.85) {
+                    // Random glitch characters
+                    const glitchChars = "!@#$%^&*(){}[]|\\:;\"'<>?,./~`";
+                    corruptedText += glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                } else {
+                    corruptedText += text[j];
+                }
+            }
+            
+            // Multiple color passes for RGB split effect
+            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF'];
+            for (let c = 0; c < colors.length; c++) {
+                ctx.fillStyle = colors[c];
+                ctx.globalAlpha = 0.7 - c * 0.1;
+                
+                const xShift = pixelShift + (c - 1) * 2;
+                const yShift = Math.sin(this.glitchTimer * 2 + c) * 2;
+                
+                ctx.fillText(
+                    corruptedText,
+                    baseX + glitchIntensity + xShift,
+                    baseY + yOffset + yShift
+                );
+            }
+        }
+        
+        ctx.globalAlpha = 1;
+        ctx.textAlign = 'left';
     }
 
     renderFlamingHero(ctx, progress) {
@@ -510,6 +568,53 @@ class Player {
         ctx.restore();
     }
 
+    renderExpandingExplosion(ctx, progress) {
+        // Phase 3: Massive expanding explosion
+        const explosionSize = this.originalSize * (5 + progress * 15); // Grows to 20x size
+        const rotationSpeed = progress * Math.PI * 8;
+        
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        
+        // Create explosive rings
+        for (let ring = 0; ring < 5; ring++) {
+            const ringProgress = (progress * 5 - ring);
+            if (ringProgress <= 0) continue;
+            
+            const ringSize = explosionSize * ringProgress * (1 - ring * 0.2);
+            const alpha = Math.max(0, 1 - ringProgress);
+            
+            ctx.save();
+            ctx.rotate(rotationSpeed * (ring % 2 === 0 ? 1 : -1));
+            ctx.globalAlpha = alpha;
+            
+            // Explosion colors - white hot center to red edges
+            const colors = ['#FFFFFF', '#FFFF00', '#FF8800', '#FF0000', '#CC0000'];
+            ctx.fillStyle = colors[ring] || '#CC0000';
+            ctx.fillRect(-ringSize/2, -ringSize/2, ringSize, ringSize);
+            
+            // Add some spiky edges
+            for (let spike = 0; spike < 8; spike++) {
+                const angle = (spike / 8) * Math.PI * 2;
+                const spikeLength = ringSize * 0.3;
+                const spikeX = Math.cos(angle) * ringSize * 0.6;
+                const spikeY = Math.sin(angle) * ringSize * 0.6;
+                
+                ctx.fillRect(spikeX - 3, spikeY - 3, 6, spikeLength);
+            }
+            
+            ctx.restore();
+        }
+        
+        // Screen shake effect simulation with white flash
+        if (progress > 0.8) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${(progress - 0.8) * 2})`;
+            ctx.fillRect(-400, -300, 800, 600);
+        }
+        
+        ctx.restore();
+    }
+
     renderFinalExplosion(ctx, progress) {
         // Glitch effect on position
         const glitchX = Math.sin(this.glitchTimer) * 5;
@@ -548,9 +653,14 @@ class Player {
         
         ctx.restore();
         
-        // Render glitchy "Divided by zero" text
-        if (this.deathAnimationTimer < 50) {
+        // Render glitchy "Divided by zero" text and instructions
+        if (this.deathAnimationTimer < 80) {
             this.renderGlitchText(ctx);
+        }
+        
+        // Add glitchy instructions text that appears near the end
+        if (this.deathAnimationTimer < 60) {
+            this.renderGlitchyInstructions(ctx);
         }
     }
 

@@ -352,23 +352,6 @@ class Game {
         this.ctx.textAlign = 'left';
     }
 
-    showGameOverMessage() {
-        this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        this.ctx.fillStyle = '#FF0000';
-        this.ctx.font = '48px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('GAME OVER', this.canvas.width/2, this.canvas.height/2 - 70);
-        
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '24px Arial';
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, this.canvas.width/2, this.canvas.height/2 - 20);
-        this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
-        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
-        
-        this.ctx.textAlign = 'left';
-    }
 
     restart() {
         this.gameState = 'playing';
@@ -473,9 +456,7 @@ class Game {
         }
         
         // Show game over screen if player died
-        if (this.gameState === 'game_over') {
-            this.showGameOverMessage();
-        }
+        // No overlay for game_over - death animation handles everything
     }
 
     gameLoop(currentTime) {
