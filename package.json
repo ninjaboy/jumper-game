@@ -1,0 +1,15 @@
+{
+  "name": "jumper-game",
+  "version": "1.0.0",
+  "description": "A simple platformer game for learning jump mechanics",
+  "main": "game.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "author": "",
+  "license": "MIT"
+}
