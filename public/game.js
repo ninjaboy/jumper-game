@@ -71,8 +71,9 @@ class Game {
         console.log('Viewport dimensions:', { width: window.innerWidth, height: window.innerHeight });
         
         // Show controls on mobile OR if screen is small (force mobile for testing)
-        const showMobileControls = isMobile || isTouch || window.innerWidth <= 768;
+        const showMobileControls = true; // Force show for testing
         console.log('Should show mobile controls:', showMobileControls);
+        console.log('Forcing mobile controls to show for debugging');
         
         if (showMobileControls) {
             const mobileControls = document.getElementById('mobileControls');
