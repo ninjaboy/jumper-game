@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.1.5';
+        this.version = '1.1.6';
         this.versionNotes = [
+            'v1.1.6 - Bug Fix: Explicitly configure Vercel for static hosting',
             'v1.1.5 - Bug Fix: Files back in root, removed public/ - keep it simple',
             'v1.1.4 - Cleanup: Removed duplicate files from root, public/ is source of truth',
             'v1.1.3 - Bug Fix: Move files to public/ directory for Vercel static hosting',
