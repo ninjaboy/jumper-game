@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.2';
+        this.version = '1.2.3';
         this.versionNotes = [
+            'v1.2.3 - UI/UX: Show double/triple jump status persistently in Active Effects panel',
             'v1.2.2 - UI/UX: Version on start screen, death instructions integrated with animation',
             'v1.2.1 - Bug Fix: Version number position corrected to top-left corner',
             'v1.2.0 - New Feature: Start screen with animated GROUNDED logo restored + Consumables',
@@ -787,7 +788,7 @@ class Game {
         }
 
         // Render consumables UI (active effects, notifications)
-        this.consumables.renderUI(this.ctx, this.canvas);
+        this.consumables.renderUI(this.ctx, this.canvas, this.player);
 
         // Show version number in top-left corner (small gray text)
         this.ctx.fillStyle = '#95a5a6';

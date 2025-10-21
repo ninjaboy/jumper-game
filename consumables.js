@@ -380,29 +380,55 @@ class ConsumableManager {
         ctx.globalAlpha = 1;
     }
 
-    renderUI(ctx, canvas) {
+    renderUI(ctx, canvas, player) {
         // Display active effects in UI
-        if (this.activeEffects.length === 0) return;
+        const hasActiveEffects = this.activeEffects.length > 0;
+        const hasJumpUpgrade = player && player.maxJumps > 1;
+
+        if (!hasActiveEffects && !hasJumpUpgrade) return;
 
         const startY = 140;
+        let currentY = startY;
+
+        // Calculate total height needed
+        let totalHeight = 30;
+        if (hasActiveEffects) totalHeight += this.activeEffects.length * 25;
+        if (hasJumpUpgrade) totalHeight += 25;
 
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(5, startY, 250, 30 + this.activeEffects.length * 25);
+        ctx.fillRect(5, startY, 250, totalHeight);
 
         ctx.fillStyle = 'white';
         ctx.font = 'bold 14px Arial';
         ctx.fillText('Active Effects:', 10, startY + 20);
+        currentY = startY + 40;
 
+        // Show jump upgrade (permanent)
+        if (hasJumpUpgrade) {
+            ctx.font = '12px Arial';
+            if (player.maxJumps === 2) {
+                ctx.fillStyle = '#00CED1';
+                ctx.fillText('⬆ Double Jump', 15, currentY);
+            } else if (player.maxJumps === 3) {
+                ctx.fillStyle = '#9370DB';
+                ctx.fillText('⬆⬆ Triple Jump', 15, currentY);
+            }
+            ctx.fillStyle = 'white';
+            ctx.fillText('∞', 200, currentY);
+            currentY += 25;
+        }
+
+        // Show temporary effects
         ctx.font = '12px Arial';
         for (let i = 0; i < this.activeEffects.length; i++) {
             const effect = this.activeEffects[i];
-            const y = startY + 40 + i * 25;
             const timeLeft = Math.ceil(effect.timeRemaining / 60);
 
             ctx.fillStyle = effect.consumable.color;
-            ctx.fillText(`${effect.info.icon} ${effect.info.name}`, 15, y);
+            ctx.fillText(`${effect.info.icon} ${effect.info.name}`, 15, currentY);
             ctx.fillStyle = 'white';
-            ctx.fillText(`${timeLeft}s`, 200, y);
+            ctx.fillText(`${timeLeft}s`, 200, currentY);
+            currentY += 25;
         }
     }
 
