@@ -327,38 +327,40 @@ class Player {
 
     spawnJumpParticles() {
         // Spawn particles when jumping
-        const particleCount = 8;
+        const particleCount = 12;
+        const colors = ['#FF4444', '#FF6666', '#FF8888', '#FFAA00']; // Red and orange tones
         for (let i = 0; i < particleCount; i++) {
             const angle = Math.PI + (Math.random() - 0.5) * Math.PI; // Downward spread
-            const speed = Math.random() * 3 + 2;
+            const speed = Math.random() * 4 + 2;
             this.particles.push({
                 x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
                 y: this.y + this.height,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                life: 20 + Math.random() * 10,
-                maxLife: 20 + Math.random() * 10,
-                size: Math.random() * 3 + 2,
-                color: '#95a5a6' // Gray dust
+                life: 30 + Math.random() * 15,
+                maxLife: 30 + Math.random() * 15,
+                size: Math.random() * 5 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
     }
 
     spawnLandingParticles() {
         // Spawn particles when landing
-        const particleCount = 12;
+        const particleCount = 18;
+        const colors = ['#FF0000', '#FF3333', '#FF6666', '#FF8800']; // Bright reds and orange
         for (let i = 0; i < particleCount; i++) {
             const angle = Math.PI + (Math.random() - 0.5) * Math.PI * 0.8; // Wide downward spread
-            const speed = Math.random() * 4 + 2;
+            const speed = Math.random() * 5 + 3;
             this.particles.push({
                 x: this.x + this.width / 2 + (Math.random() - 0.5) * this.width,
                 y: this.y + this.height,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed * 0.5, // Less upward velocity
-                life: 25 + Math.random() * 15,
-                maxLife: 25 + Math.random() * 15,
-                size: Math.random() * 4 + 2,
-                color: '#7f8c8d' // Darker dust for landing
+                life: 35 + Math.random() * 20,
+                maxLife: 35 + Math.random() * 20,
+                size: Math.random() * 6 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
     }
@@ -432,13 +434,21 @@ class Player {
     }
 
     render(ctx) {
-        // Render particles first (behind player)
+        // Render particles first (behind player) with glow
         for (let p of this.particles) {
             const alpha = p.life / p.maxLife;
+
+            // Add glow effect
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+
             ctx.fillStyle = p.color;
-            ctx.globalAlpha = alpha * 0.8;
+            ctx.globalAlpha = alpha;
             ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
         }
+
+        // Reset shadow and alpha
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
 
         // Flicker effect during invulnerability
