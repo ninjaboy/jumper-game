@@ -8,11 +8,12 @@ class Player {
         this.velocityY = 0;
         this.onGround = false;
         this.color = '#e74c3c';
-        
+
         // Configurable properties
         this.moveSpeed = 5;
         this.jumpPower = 15;
-        
+        this.originalMoveSpeed = null; // For temporary speed boosts
+
         // Jump mechanics
         this.jumpMode = 'mario';
         this.jumpHeld = false;
@@ -20,7 +21,17 @@ class Player {
         this.maxJumpTime = 20; // frames for variable height jumps
         this.coyoteTime = 0;
         this.maxCoyoteTime = 6; // frames of coyote time
-        
+
+        // Multi-jump system (for consumables)
+        this.maxJumps = 1; // Default: single jump
+        this.jumpsRemaining = 1;
+
+        // Consumable effects tracking
+        this.consumableEffects = {
+            doubleJump: false,
+            tripleJump: false
+        };
+
         // Life system
         this.lives = 3;
         this.maxLives = 3;
@@ -30,7 +41,7 @@ class Player {
         this.invulnerable = false;
         this.invulnerabilityTimer = 0;
         this.maxInvulnerabilityTime = 120; // 2 seconds at 60fps
-        
+
         // Input state
         this.keys = {
             left: false,
@@ -188,8 +199,9 @@ class Player {
     }
 
     handleJumpMechanics() {
-        // Update coyote time
+        // Reset jumps when landing
         if (this.onGround) {
+            this.jumpsRemaining = this.maxJumps;
             this.coyoteTime = this.maxCoyoteTime;
         } else if (this.coyoteTime > 0) {
             this.coyoteTime--;
@@ -197,7 +209,7 @@ class Player {
 
         // Check if jump was just pressed (transition from not pressed to pressed)
         const jumpPressed = this.keys.jump && !this.jumpHeld;
-        
+
         // Update jump held state AFTER checking for press
         this.jumpHeld = this.keys.jump;
 
@@ -223,29 +235,31 @@ class Player {
     }
 
     handleMarioJump(jumpPressed) {
-        // Classic fixed-height jump
-        if (jumpPressed && (this.onGround || this.coyoteTime > 0)) {
+        // Classic fixed-height jump with multi-jump support
+        if (jumpPressed && this.jumpsRemaining > 0) {
             this.velocityY = -this.jumpPower;
             this.onGround = false;
             this.coyoteTime = 0;
+            this.jumpsRemaining--;
         }
     }
 
     handleHollowKnightJump(jumpPressed) {
-        // Initial jump with minimum height
-        if (jumpPressed && (this.onGround || this.coyoteTime > 0)) {
+        // Initial jump with minimum height and multi-jump support
+        if (jumpPressed && this.jumpsRemaining > 0) {
             this.velocityY = -this.jumpPower * 0.4; // Start with minimum jump
             this.jumpTimer = this.maxJumpTime;
             this.onGround = false;
             this.coyoteTime = 0;
+            this.jumpsRemaining--;
         }
-        
+
         // Continue adding upward velocity while holding jump
         if (this.keys.jump && this.jumpTimer > 0 && this.velocityY < 0) {
             this.velocityY -= 0.4; // Continuous lift while holding
             this.jumpTimer--;
         }
-        
+
         // If jump is released early, reduce upward velocity for quick descent
         if (!this.keys.jump && this.velocityY < -2) {
             this.velocityY *= 0.6; // Quick fall when releasing early
@@ -253,20 +267,21 @@ class Player {
     }
 
     handleCelesteJump(jumpPressed) {
-        // Precise variable height with quick release
-        if (jumpPressed && (this.onGround || this.coyoteTime > 0)) {
+        // Precise variable height with quick release and multi-jump support
+        if (jumpPressed && this.jumpsRemaining > 0) {
             this.velocityY = -this.jumpPower * 0.6; // Start with lower power
             this.jumpTimer = this.maxJumpTime;
             this.onGround = false;
             this.coyoteTime = 0;
+            this.jumpsRemaining--;
         }
-        
+
         // Build up jump power while holding
         if (this.keys.jump && this.jumpTimer > 0 && this.velocityY < 0) {
             this.velocityY -= 0.5;
             this.jumpTimer--;
         }
-        
+
         // Quick fall when releasing
         if (!this.keys.jump && this.velocityY < 0) {
             this.velocityY *= 0.7;
@@ -274,25 +289,27 @@ class Player {
     }
 
     handleSonicJump(jumpPressed) {
-        // Momentum-based jumping
+        // Momentum-based jumping with multi-jump support
         const speedMultiplier = Math.abs(this.velocityX) / this.moveSpeed;
         const jumpBoost = 1 + speedMultiplier * 0.3;
-        
-        if (jumpPressed && (this.onGround || this.coyoteTime > 0)) {
+
+        if (jumpPressed && this.jumpsRemaining > 0) {
             this.velocityY = -this.jumpPower * jumpBoost;
             this.onGround = false;
             this.coyoteTime = 0;
+            this.jumpsRemaining--;
         }
     }
 
     handleMegaManJump(jumpPressed) {
-        // Fixed arc jump - no air control
-        if (jumpPressed && (this.onGround || this.coyoteTime > 0)) {
+        // Fixed arc jump with multi-jump support - no air control
+        if (jumpPressed && this.jumpsRemaining > 0) {
             this.velocityY = -this.jumpPower;
             this.onGround = false;
             this.coyoteTime = 0;
+            this.jumpsRemaining--;
         }
-        
+
         // Reduce air control
         if (!this.onGround) {
             this.velocityX *= 0.98;

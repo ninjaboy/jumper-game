@@ -2,13 +2,14 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        
+
         this.physics = new Physics();
         this.currentSeed = null;
         this.platforms = new PlatformManager();
+        this.consumables = new ConsumableManager();
         this.player = new Player(100, this.physics.groundLevel - 40);
         this.updateSeedDisplay();
-        
+
         // Camera system for side-scrolling
         this.camera = {
             x: 0,
@@ -16,13 +17,13 @@ class Game {
             followPlayer: true,
             levelWidth: 3000 // Total level width
         };
-        
+
         // Game state
         this.gameState = 'playing'; // 'playing', 'finished'
-        
+
         this.lastTime = 0;
         this.isRunning = false;
-        
+
         this.setupEventListeners();
         this.setupPhysicsControls();
         this.setupJumpModes();
@@ -199,6 +200,9 @@ class Game {
 
     generateNewLevel(seed = null) {
         this.platforms = new PlatformManager(seed);
+        this.consumables.reset();
+        // Spawn consumables in the level
+        this.consumables.spawnRandomConsumables(this.camera.levelWidth, this.platforms.rng);
         this.updateSeedDisplay();
         this.restart();
     }
@@ -210,17 +214,18 @@ class Game {
     update(deltaTime) {
         if (this.gameState === 'playing') {
             this.platforms.update();
-            
+            this.consumables.update(this.player, this);
+
             const playerResult = this.player.update(this.physics, this.platforms);
-            
+
             // Handle player death animation completion
             if (playerResult === 'death_complete') {
                 this.gameState = 'game_over';
                 return;
             }
-            
+
             this.updateCamera();
-            
+
             // Check if player finished the level or died
             const collisionResult = this.platforms.checkCollisions(this.player);
             if (collisionResult === 'finish') {
@@ -275,6 +280,9 @@ class Game {
         this.player.velocityY = 0;
         this.player.onGround = true;
         this.player.resetLives(); // Reset lives to 3
+        this.player.maxJumps = 1; // Reset to single jump
+        this.player.jumpsRemaining = 1;
+        this.player.consumableEffects = { doubleJump: false, tripleJump: false };
         this.camera.x = 0;
         this.camera.y = 0;
     }
@@ -317,7 +325,10 @@ class Game {
         
         // Draw platforms (handles its own camera translation)
         this.platforms.render(this.ctx, this.camera);
-        
+
+        // Draw consumables (handles its own camera translation)
+        this.consumables.render(this.ctx, this.camera);
+
         // Draw player with camera translation
         this.ctx.save();
         this.ctx.translate(-this.camera.x, -this.camera.y);
@@ -363,12 +374,15 @@ class Game {
         } else if (this.player.jumpMode === 'megaman') {
             this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, 125);
         }
-        
+
+        // Show consumable effects UI
+        this.consumables.renderUI(this.ctx, this.canvas);
+
         // Show victory screen if game is finished
         if (this.gameState === 'finished') {
             this.showVictoryMessage();
         }
-        
+
         // Show game over screen if player died
         if (this.gameState === 'game_over') {
             this.showGameOverMessage();
