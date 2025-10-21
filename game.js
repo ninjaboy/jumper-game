@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.1.0';
+        this.version = '1.1.1';
         this.versionNotes = [
+            'v1.1.1 - Bug Fix: Fixed Vercel deployment MIME type for consumables.js',
             'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
             'v1.0.0 - Base Game: Multiple jump mechanics, hazards, lives system'
         ];
