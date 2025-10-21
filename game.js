@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.1';
+        this.version = '1.2.2';
         this.versionNotes = [
+            'v1.2.2 - UI/UX: Version on start screen, death instructions integrated with animation',
             'v1.2.1 - Bug Fix: Version number position corrected to top-left corner',
             'v1.2.0 - New Feature: Start screen with animated GROUNDED logo restored + Consumables',
             'v1.1.6 - Bug Fix: Explicitly configure Vercel for static hosting',
@@ -475,25 +476,30 @@ class Game {
         this.ctx.textAlign = 'left';
     }
 
-    showGameOverMessage() {
-        this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        this.ctx.fillStyle = '#e74c3c';
-        this.ctx.font = '48px Arial';
+    showDeathInstructions() {
+        // Show instructions overlaid on death animation (big and bright)
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('GAME OVER', this.canvas.width/2, this.canvas.height/2 - 70);
 
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '24px Arial';
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, this.canvas.width/2, this.canvas.height/2 - 20);
-        this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
-        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
+        // Make instructions very visible - pulsing brightness
+        const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
 
-        // Show version number at bottom
+        // Large, bright instruction text
+        this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+        this.ctx.font = 'bold 36px Arial';
+        this.ctx.shadowColor = '#FF0000';
+        this.ctx.shadowBlur = 20;
+        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height - 150);
+        this.ctx.shadowBlur = 0;
+
+        // Mode and seed info below (smaller)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        this.ctx.font = '20px Arial';
+        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} • Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height - 100);
+
+        // Version at bottom
         this.ctx.fillStyle = '#95a5a6';
         this.ctx.font = '14px Arial';
-        this.ctx.fillText(`Version ${this.version}`, this.canvas.width/2, this.canvas.height - 30);
+        this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 60);
 
         this.ctx.textAlign = 'left';
     }
@@ -607,7 +613,12 @@ class Game {
         this.ctx.fillStyle = `rgba(149, 165, 166, ${hintAlpha})`;
         this.ctx.font = '16px Arial';
         this.ctx.fillText('Use W/S or ↑/↓ to navigate • SPACE/ENTER to select', this.canvas.width/2, this.canvas.height - 50);
-        
+
+        // Version number at bottom
+        this.ctx.fillStyle = '#7f8c8d';
+        this.ctx.font = '14px Arial';
+        this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
+
         this.ctx.textAlign = 'left';
     }
     
@@ -786,8 +797,11 @@ class Game {
         // Show victory screen if game is finished
         if (this.gameState === 'finished') {
             this.showVictoryMessage();
-        } else if (this.gameState === 'game_over') {
-            this.showGameOverMessage();
+        }
+
+        // Show restart instructions during and after final death animation (not separate screen)
+        if (this.gameState === 'game_over' || (this.player.finalDeath && this.player.isDying)) {
+            this.showDeathInstructions();
         }
     }
 
