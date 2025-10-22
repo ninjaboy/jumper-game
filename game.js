@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.3.0';
+        this.version = '1.3.1';
         this.versionNotes = [
+            'v1.3.1 - Enhancement: Progressive difficulty scaling - each level gets harder, prominent level badge display in top-right corner',
             'v1.3.0 - New Feature: Level progression system with 5 biases (Wide Gap, Hazard Heavy, Safe Zone, High Route, Tight Spaces), powerups persist between levels',
             'v1.2.7 - Enhancement: Particles now physics-based, spray opposite to movement direction',
             'v1.2.6 - Enhancement: Particles now red/orange with glow effects for better visibility',
@@ -24,7 +25,7 @@ class Game {
         this.currentSeed = null;
         this.currentLevel = 1;
         this.currentBias = 'normal';
-        this.platforms = new PlatformManager(null, this.currentBias);
+        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel);
         this.consumables = new ConsumableManager();
         this.player = new Player(100, this.physics.groundLevel - 40);
 
@@ -392,7 +393,7 @@ class Game {
     generateNewLevel(seed = null) {
         this.currentLevel = 1;
         this.currentBias = this.getRandomBias();
-        this.platforms = new PlatformManager(seed, this.currentBias);
+        this.platforms = new PlatformManager(seed, this.currentBias, this.currentLevel);
         this.updateSeedDisplay();
 
         // Reset and respawn consumables for new level
@@ -412,7 +413,7 @@ class Game {
         // Increment level and generate new level
         this.currentLevel++;
         this.currentBias = this.getRandomBias();
-        this.platforms = new PlatformManager(null, this.currentBias);
+        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel);
         this.updateSeedDisplay();
 
         // Reset and respawn consumables for new level
@@ -679,14 +680,51 @@ class Game {
         if (this.camera.followPlayer) {
             // Center camera on player horizontally
             this.camera.x = this.player.x - this.canvas.width / 2;
-            
+
             // Clamp camera to level bounds
             this.camera.x = Math.max(0, Math.min(this.camera.x, this.camera.levelWidth - this.canvas.width));
-            
+
             // Keep camera y position stable (slight following vertically)
             const targetY = Math.max(0, this.player.y - this.canvas.height * 0.7);
             this.camera.y += (targetY - this.camera.y) * 0.1;
         }
+    }
+
+    renderLevelBadge() {
+        // Draw a prominent level badge in the top-right corner
+        const badgeX = this.canvas.width - 120;
+        const badgeY = 15;
+        const badgeWidth = 110;
+        const badgeHeight = 50;
+
+        // Badge background with gradient
+        const gradient = this.ctx.createLinearGradient(badgeX, badgeY, badgeX, badgeY + badgeHeight);
+        gradient.addColorStop(0, '#3498db');
+        gradient.addColorStop(1, '#2980b9');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+
+        // Badge border
+        this.ctx.strokeStyle = '#2c3e50';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
+
+        // "LEVEL" text (small)
+        this.ctx.fillStyle = '#ecf0f1';
+        this.ctx.font = 'bold 12px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('LEVEL', badgeX + badgeWidth / 2, badgeY + 18);
+
+        // Level number (large)
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.shadowColor = '#000000';
+        this.ctx.shadowBlur = 3;
+        this.ctx.fillText(this.currentLevel, badgeX + badgeWidth / 2, badgeY + 42);
+        this.ctx.shadowBlur = 0;
+
+        // Reset text align
+        this.ctx.textAlign = 'left';
     }
 
     render() {
@@ -948,6 +986,9 @@ class Game {
         this.ctx.fillStyle = '#95a5a6';
         this.ctx.font = '12px Arial';
         this.ctx.fillText(`v${this.version}`, 320, 20);
+
+        // Draw prominent level badge in top-right corner
+        this.renderLevelBadge();
 
         // Show victory celebration and instructions if game is finished
         if (this.gameState === 'finished') {

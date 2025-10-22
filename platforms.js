@@ -280,7 +280,7 @@ class PoisonCloud {
 }
 
 class PlatformManager {
-    constructor(seed = null, bias = 'normal') {
+    constructor(seed = null, bias = 'normal', level = 1) {
         this.platforms = [];
         this.spikes = [];
         this.sawBlades = [];
@@ -289,6 +289,7 @@ class PlatformManager {
         this.seed = seed || Math.floor(Math.random() * 1000000);
         this.rng = new SimpleRNG(this.seed);
         this.bias = bias;
+        this.level = level;
         this.generateRandomLevel();
     }
 
@@ -349,14 +350,24 @@ class PlatformManager {
     }
 
     getBiasParameters() {
+        // Progressive difficulty scaling: each level increases difficulty by 10%
+        const difficultyScale = 1 + ((this.level - 1) * 0.1);
+        const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
         switch (this.bias) {
             case 'wide_gap':
                 return {
                     name: 'Wide Gap',
-                    gapSize: { min: 100, max: 250 },
-                    platformWidth: { min: 100, max: 200 },
+                    gapSize: {
+                        min: Math.floor(100 + (this.level - 1) * 10), // Gaps get wider
+                        max: Math.floor(250 + (this.level - 1) * 15)
+                    },
+                    platformWidth: {
+                        min: Math.floor(100 - (this.level - 1) * 5), // Platforms get narrower
+                        max: Math.floor(200 - (this.level - 1) * 8)
+                    },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.7,
+                    hazardChance: clamp(0.7 + (this.level - 1) * 0.05, 0, 1),
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'hazard_heavy':
@@ -365,16 +376,22 @@ class PlatformManager {
                     gapSize: { min: 50, max: 150 },
                     platformWidth: { min: 150, max: 250 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.95,
+                    hazardChance: clamp(0.95 + (this.level - 1) * 0.02, 0, 1.5), // More hazards spawn
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'safe_zone':
                 return {
                     name: 'Safe Zone',
-                    gapSize: { min: 40, max: 120 },
-                    platformWidth: { min: 180, max: 280 },
+                    gapSize: {
+                        min: Math.floor(40 + (this.level - 1) * 5), // Gets slightly harder
+                        max: Math.floor(120 + (this.level - 1) * 8)
+                    },
+                    platformWidth: {
+                        min: Math.floor(Math.max(100, 180 - (this.level - 1) * 5)),
+                        max: Math.floor(Math.max(150, 280 - (this.level - 1) * 8))
+                    },
                     platformsPerSection: { min: 3, max: 5 },
-                    hazardChance: 0.3,
+                    hazardChance: clamp(0.3 + (this.level - 1) * 0.03, 0, 0.7), // Slowly adds hazards
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'high_route':
@@ -383,25 +400,44 @@ class PlatformManager {
                     gapSize: { min: 50, max: 150 },
                     platformWidth: { min: 150, max: 250 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.6,
-                    highPlatforms: { min: 8, max: 14 }
+                    hazardChance: clamp(0.6 + (this.level - 1) * 0.05, 0, 1),
+                    highPlatforms: {
+                        min: 8 + Math.floor((this.level - 1) * 1), // More high platforms
+                        max: 14 + Math.floor((this.level - 1) * 2)
+                    },
+                    higherY: Math.max(50, 150 - (this.level - 1) * 5) // Platforms spawn higher up
                 };
             case 'tight_spaces':
                 return {
                     name: 'Tight Spaces',
-                    gapSize: { min: 30, max: 80 },
-                    platformWidth: { min: 120, max: 200 },
-                    platformsPerSection: { min: 3, max: 5 },
-                    hazardChance: 0.7,
+                    gapSize: {
+                        min: Math.floor(Math.max(20, 30 - (this.level - 1) * 2)), // Tighter gaps
+                        max: Math.floor(Math.max(40, 80 - (this.level - 1) * 4))
+                    },
+                    platformWidth: {
+                        min: Math.floor(Math.max(60, 120 - (this.level - 1) * 5)), // Narrower platforms
+                        max: Math.floor(Math.max(100, 200 - (this.level - 1) * 8))
+                    },
+                    platformsPerSection: {
+                        min: 3 + Math.floor((this.level - 1) * 0.2), // More platforms
+                        max: 5 + Math.floor((this.level - 1) * 0.3)
+                    },
+                    hazardChance: clamp(0.7 + (this.level - 1) * 0.05, 0, 1),
                     highPlatforms: { min: 4, max: 8 }
                 };
             default: // normal
                 return {
                     name: 'Normal',
-                    gapSize: { min: 50, max: 150 },
-                    platformWidth: { min: 150, max: 250 },
+                    gapSize: {
+                        min: Math.floor(50 + (this.level - 1) * 5),
+                        max: Math.floor(150 + (this.level - 1) * 10)
+                    },
+                    platformWidth: {
+                        min: Math.floor(Math.max(80, 150 - (this.level - 1) * 3)),
+                        max: Math.floor(Math.max(120, 250 - (this.level - 1) * 5))
+                    },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.7,
+                    hazardChance: clamp(0.7 + (this.level - 1) * 0.04, 0, 1),
                     highPlatforms: { min: 4, max: 8 }
                 };
         }
@@ -500,9 +536,13 @@ class PlatformManager {
         // Generate upper level platforms for advanced players based on bias
         const highPlatforms = this.rng.randomInt(biasParams.highPlatforms.min, biasParams.highPlatforms.max);
 
+        // Use higher Y range for high_route bias if specified
+        const minY = biasParams.higherY || 150;
+        const maxY = 250;
+
         for (let i = 0; i < highPlatforms; i++) {
             const x = this.rng.randomInt(400, levelWidth - 400);
-            const y = this.rng.randomInt(150, 250);
+            const y = this.rng.randomInt(minY, maxY);
             const width = this.rng.randomInt(70, 100);
 
             this.platforms.push(new Platform(x, y, width, 20, 'normal'));
