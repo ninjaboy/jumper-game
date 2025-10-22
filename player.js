@@ -84,9 +84,10 @@ class Player {
     startDeathAnimation() {
         this.isDying = true;
 
-        // Play death sound
+        // Play death sound and stop all ambient sounds
         if (this.soundManager) {
             this.soundManager.playDeath();
+            this.soundManager.stopAllAmbient();
         }
 
         // Different death animations based on lives remaining
