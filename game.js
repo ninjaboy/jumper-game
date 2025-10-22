@@ -185,9 +185,34 @@ class Game {
                     return;
                 }
             }
-            
-            // Only pass keys to player if actually playing
+
+            // Handle pause menu
+            if (this.gameState === 'paused') {
+                if (this.settingsVisible) {
+                    this.handleSettingsInput(e);
+                } else {
+                    // Pause menu navigation
+                    if (e.code === 'Escape' || e.code === 'KeyP') {
+                        this.togglePause();
+                    } else if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+                        this.selectedPauseMenuItem = Math.max(0, this.selectedPauseMenuItem - 1);
+                    } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+                        this.selectedPauseMenuItem = Math.min(this.pauseMenuItems.length - 1, this.selectedPauseMenuItem + 1);
+                    } else if (e.code === 'Space' || e.code === 'Enter') {
+                        this.handlePauseMenuSelection();
+                    }
+                }
+                return;
+            }
+
+            // Handle playing state
             if (this.gameState === 'playing') {
+                // ESC or P key toggles pause
+                if (e.code === 'Escape' || e.code === 'KeyP') {
+                    this.togglePause();
+                    return;
+                }
+                // Pass other keys to player
                 this.player.setKeyState(e.code, true);
             }
         });
