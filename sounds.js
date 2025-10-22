@@ -59,6 +59,12 @@ class SoundManager {
     // Toggle mute
     toggleMute() {
         this.muted = !this.muted;
+
+        // When muting, also stop all ambient sounds
+        if (this.muted) {
+            this.stopAllAmbient();
+        }
+
         return this.muted;
     }
 

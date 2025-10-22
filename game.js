@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.5.0';
+        this.version = '1.5.1';
         this.versionNotes = [
+            'v1.5.1 - Enhancement: Audio controls - M to toggle mute, B to toggle background music, ambient sound cleanup fixes',
             'v1.5.0 - Major Update: Ambient trap sounds with proximity detection, background music, unlimited lives, trap-specific interaction sounds',
             'v1.4.1 - Enhancement: Complete sound system - death, collect, victory, spring bounce sounds added',
             'v1.4.0 - New Feature: Sound system with Web Audio API - jump and landing sounds for all jump modes',
@@ -84,7 +85,29 @@ class Game {
 
         // Keyboard input
         document.addEventListener('keydown', (e) => {
-            e.preventDefault();
+            // Allow M and B keys without preventDefault for audio controls
+            const isAudioControl = e.code === 'KeyM' || e.code === 'KeyB';
+            if (!isAudioControl) {
+                e.preventDefault();
+            }
+
+            // Global audio controls (work in any state)
+            if (e.code === 'KeyM') {
+                // Toggle mute
+                const muted = this.soundManager.toggleMute();
+                console.log(`Audio ${muted ? 'muted' : 'unmuted'}`);
+                return;
+            } else if (e.code === 'KeyB') {
+                // Toggle background music
+                if (this.soundManager.musicPlaying) {
+                    this.soundManager.stopBackgroundMusic();
+                    console.log('Background music stopped');
+                } else {
+                    this.soundManager.startBackgroundMusic();
+                    console.log('Background music started');
+                }
+                return;
+            }
 
             // Handle start screen navigation
             if (this.gameState === 'start_screen') {
@@ -723,6 +746,27 @@ class Game {
         }
     }
 
+    renderAudioControls() {
+        // Draw audio control indicators at bottom-left
+        const x = 10;
+        const y = this.canvas.height - 40;
+
+        this.ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        this.ctx.fillRect(x, y, 160, 30);
+
+        // Audio status
+        this.ctx.fillStyle = '#ecf0f1';
+        this.ctx.font = '11px Arial';
+
+        // Mute status
+        const muteIcon = this.soundManager.muted ? '🔇' : '🔊';
+        this.ctx.fillText(`M: ${muteIcon} ${this.soundManager.muted ? 'Muted' : 'Sound'}`, x + 5, y + 12);
+
+        // Music status
+        const musicIcon = this.soundManager.musicPlaying ? '🎵' : '🔕';
+        this.ctx.fillText(`B: ${musicIcon} ${this.soundManager.musicPlaying ? 'Music' : 'No Music'}`, x + 5, y + 24);
+    }
+
     renderLevelBadge() {
         // Draw a prominent level badge in the top-right corner
         const badgeX = this.canvas.width - 120;
@@ -1031,6 +1075,9 @@ class Game {
         this.ctx.fillStyle = '#95a5a6';
         this.ctx.font = '12px Arial';
         this.ctx.fillText(`v${this.version}`, 320, 20);
+
+        // Draw audio controls indicator (bottom-left)
+        this.renderAudioControls();
 
         // Draw prominent level badge in top-right corner
         this.renderLevelBadge();
