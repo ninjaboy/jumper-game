@@ -1,5 +1,5 @@
 class Player {
-    constructor(x, y) {
+    constructor(x, y, soundManager = null) {
         this.x = x;
         this.y = y;
         this.width = 40;
@@ -8,6 +8,7 @@ class Player {
         this.velocityY = 0;
         this.onGround = false;
         this.color = '#e74c3c';
+        this.soundManager = soundManager;
 
         // Configurable properties
         this.moveSpeed = 5;
@@ -246,6 +247,11 @@ class Player {
             this.coyoteTime = 0;
             this.jumpsRemaining--;
             this.spawnJumpParticles();
+
+            // Play jump sound
+            if (this.soundManager) {
+                this.soundManager.playJump();
+            }
         }
     }
 
@@ -258,6 +264,11 @@ class Player {
             this.coyoteTime = 0;
             this.jumpsRemaining--;
             this.spawnJumpParticles();
+
+            // Play jump sound
+            if (this.soundManager) {
+                this.soundManager.playJump();
+            }
         }
 
         // Continue adding upward velocity while holding jump
@@ -281,6 +292,11 @@ class Player {
             this.coyoteTime = 0;
             this.jumpsRemaining--;
             this.spawnJumpParticles();
+
+            // Play jump sound
+            if (this.soundManager) {
+                this.soundManager.playJump();
+            }
         }
 
         // Build up jump power while holding
@@ -306,6 +322,11 @@ class Player {
             this.coyoteTime = 0;
             this.jumpsRemaining--;
             this.spawnJumpParticles();
+
+            // Play jump sound
+            if (this.soundManager) {
+                this.soundManager.playJump();
+            }
         }
     }
 
@@ -317,6 +338,11 @@ class Player {
             this.coyoteTime = 0;
             this.jumpsRemaining--;
             this.spawnJumpParticles();
+
+            // Play jump sound
+            if (this.soundManager) {
+                this.soundManager.playJump();
+            }
         }
 
         // Reduce air control
@@ -445,6 +471,11 @@ class Player {
         // Detect landing and spawn particles
         if (this.onGround && !this.wasOnGround) {
             this.spawnLandingParticles();
+
+            // Play landing sound
+            if (this.soundManager) {
+                this.soundManager.playLand();
+            }
         }
         this.wasOnGround = this.onGround;
 

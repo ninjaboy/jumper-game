@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.3.1';
+        this.version = '1.4.0';
         this.versionNotes = [
+            'v1.4.0 - New Feature: Sound system with Web Audio API - jump and landing sounds for all jump modes',
             'v1.3.1 - Enhancement: Progressive difficulty scaling - each level gets harder, prominent level badge display in top-right corner',
             'v1.3.0 - New Feature: Level progression system with 5 biases (Wide Gap, Hazard Heavy, Safe Zone, High Route, Tight Spaces), powerups persist between levels',
             'v1.2.7 - Enhancement: Particles now physics-based, spray opposite to movement direction',
@@ -21,13 +22,16 @@ class Game {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
 
+        // Initialize sound system
+        this.soundManager = new SoundManager();
+
         this.physics = new Physics();
         this.currentSeed = null;
         this.currentLevel = 1;
         this.currentBias = 'normal';
         this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel);
         this.consumables = new ConsumableManager();
-        this.player = new Player(100, this.physics.groundLevel - 40);
+        this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
         // Spawn initial consumables
         this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
@@ -70,10 +74,15 @@ class Game {
     }
 
     setupEventListeners() {
+        // Initialize sound on first user interaction
+        document.addEventListener('keydown', () => {
+            this.soundManager.init();
+        }, { once: true });
+
         // Keyboard input
         document.addEventListener('keydown', (e) => {
             e.preventDefault();
-            
+
             // Handle start screen navigation
             if (this.gameState === 'start_screen') {
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') {
