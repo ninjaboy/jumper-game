@@ -680,6 +680,11 @@ class Game {
     }
 
     restart() {
+        // Stop all ambient sounds when restarting
+        if (this.soundManager) {
+            this.soundManager.stopAllAmbient();
+        }
+
         this.gameState = 'playing';
         this.player.x = 100;
         this.player.y = this.physics.groundLevel - 40;
