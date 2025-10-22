@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.8.3';
+        this.version = '1.8.4';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -518,6 +518,13 @@ class Game {
         this.player.velocityY = 0;
         this.player.onGround = true;
         this.player.resetLives(); // Reset lives to 3
+
+        // Reset all key states to prevent auto-movement
+        this.player.keys.left = false;
+        this.player.keys.right = false;
+        this.player.keys.up = false;
+        this.player.keys.jump = false;
+        this.player.keys.shift = false;
 
         // Restore powerups
         this.player.maxJumps = savedMaxJumps;
