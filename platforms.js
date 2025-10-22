@@ -294,15 +294,44 @@ class PlatformManager {
         this.generateRandomLevel();
     }
 
-    update() {
+    update(player = null) {
         for (let platform of this.platforms) {
             platform.update();
         }
 
-        // Update all hazards
-        for (let sawBlade of this.sawBlades) {
-            sawBlade.update();
+        // Check if hazards should be frozen or slowed
+        const freezeHazards = player && player.consumableEffects && player.consumableEffects.freezeHazards;
+        const slowTime = player && player.consumableEffects && player.consumableEffects.slowTime;
+
+        // Update all hazards (skip if frozen, slow if time slowed)
+        if (!freezeHazards) {
+            for (let sawBlade of this.sawBlades) {
+                if (slowTime) {
+                    // Store original speeds if not already stored
+                    if (!sawBlade.originalSpeed) {
+                        sawBlade.originalSpeed = sawBlade.speed;
+                    }
+                    sawBlade.speed = sawBlade.originalSpeed * 0.3; // 30% speed
+                } else {
+                    // Restore original speed if was slowed
+                    if (sawBlade.originalSpeed) {
+                        sawBlade.speed = sawBlade.originalSpeed;
+                        sawBlade.originalSpeed = null;
+                    }
+                }
+                sawBlade.update();
+            }
+        } else {
+            // Frozen - restore speeds but don't update
+            for (let sawBlade of this.sawBlades) {
+                if (sawBlade.originalSpeed) {
+                    sawBlade.speed = sawBlade.originalSpeed;
+                    sawBlade.originalSpeed = null;
+                }
+            }
         }
+
+        // Always update visual effects
         for (let lavaPit of this.lavaPits) {
             lavaPit.update();
         }
@@ -632,8 +661,12 @@ class PlatformManager {
                 // Apply friction based on platform type
                 switch (platform.type) {
                     case 'ice':
-                        // Less friction on ice
-                        player.velocityX *= 0.95;
+                        // Less friction on ice (unless sticky gloves active)
+                        if (player.consumableEffects && player.consumableEffects.stickyGloves) {
+                            player.velocityX *= 0.8; // Normal friction with sticky gloves
+                        } else {
+                            player.velocityX *= 0.95; // Slippery without gloves
+                        }
                         break;
                     case 'spring':
                         // Spring boost
@@ -706,7 +739,12 @@ class PlatformManager {
     checkHazardCollisions(player) {
         // Skip collision check if player is invulnerable or dying
         if (player.invulnerable || player.isDying) return null;
-        
+
+        // Ghost mode - phase through all hazards
+        if (player.consumableEffects && player.consumableEffects.ghostMode) {
+            return null;
+        }
+
         // Check spike collisions
         for (let spike of this.spikes) {
             if (player.x + player.width > spike.x &&
@@ -766,8 +804,19 @@ class PlatformManager {
     }
 
     respawnPlayer(player) {
+        // Check for shield charges - consume one instead of taking damage
+        if (player.consumableEffects && player.consumableEffects.shieldCharges > 0) {
+            player.consumableEffects.shieldCharges--;
+            // Make player briefly invulnerable
+            player.invulnerable = true;
+            setTimeout(() => {
+                player.invulnerable = false;
+            }, 1000);
+            return null; // No damage taken
+        }
+
         const result = player.takeDamage();
-        
+
         if (result === 'respawn') {
             // Reset player position (respawn at start with remaining lives)
             player.x = 100;
@@ -776,7 +825,7 @@ class PlatformManager {
             player.velocityY = 0;
             player.onGround = true;
         }
-        
+
         return result; // 'respawn' or 'game_over'
     }
 

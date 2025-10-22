@@ -920,9 +920,26 @@ class ConsumableManager {
     }
 
     update(player, game) {
+        // Get magnet radius if active
+        const magnetRadius = (player.consumableEffects && player.consumableEffects.magnetRadius) || 0;
+
         // Update all consumables
         for (let consumable of this.consumables) {
             consumable.update();
+
+            // Magnet effect - pull consumables towards player
+            if (!consumable.collected && magnetRadius > 0) {
+                const dx = player.x + player.width / 2 - (consumable.x + consumable.width / 2);
+                const dy = player.y + player.height / 2 - (consumable.y + consumable.height / 2);
+                const distance = Math.hypot(dx, dy);
+
+                if (distance < magnetRadius && distance > 0) {
+                    // Pull towards player
+                    const pullStrength = 0.15;
+                    consumable.x += (dx / distance) * pullStrength * (magnetRadius - distance) / magnetRadius * 5;
+                    consumable.y += (dy / distance) * pullStrength * (magnetRadius - distance) / magnetRadius * 5;
+                }
+            }
 
             // Check collision with player
             if (!consumable.collected && consumable.checkCollision(player)) {

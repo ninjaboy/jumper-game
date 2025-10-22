@@ -1,48 +1,12 @@
 class Game {
     constructor() {
-        // Version tracking
-        this.version = '1.7.1';
-        this.versionNotes = [
-            'v1.7.1 - Enhancement: All consumable mechanics now fully functional! Shield blocks hazards, ghost phases through, magnet attracts items, sticky gloves grip ice, spring shoes bounce, freeze/slow hazards, dash (Shift), wings glide, drunk wobbles, reversed controls',
-            'v1.7.0 - Major Update: 20+ new consumables with roguelike rarity system! Gravity/physics modifiers, size changes, level manipulation, cursed items. Stacking duration logic, 1 rare max per level',
-            'v1.6.1 - Enhancement: Randomized platform placement with wider vertical range (100-480), smaller platforms (60-100) to reduce overlap, more chaotic and engaging level generation',
-            'v1.6.0 - Major Update: Multi-floor level design with 4 distinct floors, evenly spaced platforms creating multiple vertical paths, improved camera for vertical gameplay',
-            'v1.5.1 - Enhancement: Audio controls - M to toggle mute, B to toggle background music, ambient sound cleanup fixes',
-            'v1.5.0 - Major Update: Ambient trap sounds with proximity detection, background music, unlimited lives, trap-specific interaction sounds',
-            'v1.4.1 - Enhancement: Complete sound system - death, collect, victory, spring bounce sounds added',
-            'v1.4.0 - New Feature: Sound system with Web Audio API - jump and landing sounds for all jump modes',
-            'v1.3.1 - Enhancement: Progressive difficulty scaling - each level gets harder, prominent level badge display in top-right corner',
-            'v1.3.0 - New Feature: Level progression system with 5 biases (Wide Gap, Hazard Heavy, Safe Zone, High Route, Tight Spaces), powerups persist between levels',
-            'v1.2.7 - Enhancement: Particles now physics-based, spray opposite to movement direction',
-            'v1.2.6 - Enhancement: Particles now red/orange with glow effects for better visibility',
-            'v1.2.5 - New Feature: Particle splash effects when jumping and landing',
-            'v1.2.4 - UI/UX: Victory screen with firework celebration effects, integrated instructions',
-            'v1.2.3 - UI/UX: Show double/triple jump status persistently in Active Effects panel',
-            'v1.2.2 - UI/UX: Version on start screen, death instructions integrated with animation',
-            'v1.2.1 - Bug Fix: Version number position corrected to top-left corner',
-            'v1.2.0 - New Feature: Start screen with animated GROUNDED logo restored + Consumables',
-            'v1.1.6 - Bug Fix: Explicitly configure Vercel for static hosting',
-            'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
-            'v1.0.0 - Base Game: Multiple jump mechanics, hazards, lives system'
-        ];
-
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-
-        // Initialize sound system
-        this.soundManager = new SoundManager();
-
+        
         this.physics = new Physics();
         this.currentSeed = null;
-        this.currentLevel = 1;
-        this.currentBias = 'normal';
-        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
-        this.consumables = new ConsumableManager(this.soundManager);
-        this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
-
-        // Spawn initial consumables
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
-
+        this.platforms = new PlatformManager();
+        this.player = new Player(100, this.physics.groundLevel - 40);
         this.updateSeedDisplay();
         
         // Camera system for side-scrolling
@@ -66,11 +30,7 @@ class Game {
         this.logoGlitchTimer = 0;
         this.logoParticles = [];
         this.maxLogoParticles = 50;
-
-        // Victory celebration system
-        this.victoryParticles = [];
-        this.victoryTimer = 0;
-
+        
         this.lastTime = 0;
         this.isRunning = false;
         
@@ -81,38 +41,10 @@ class Game {
     }
 
     setupEventListeners() {
-        // Initialize sound on first user interaction and start background music
-        document.addEventListener('keydown', () => {
-            this.soundManager.init();
-            this.soundManager.startBackgroundMusic();
-        }, { once: true });
-
         // Keyboard input
         document.addEventListener('keydown', (e) => {
-            // Allow M and B keys without preventDefault for audio controls
-            const isAudioControl = e.code === 'KeyM' || e.code === 'KeyB';
-            if (!isAudioControl) {
-                e.preventDefault();
-            }
-
-            // Global audio controls (work in any state)
-            if (e.code === 'KeyM') {
-                // Toggle mute
-                const muted = this.soundManager.toggleMute();
-                console.log(`Audio ${muted ? 'muted' : 'unmuted'}`);
-                return;
-            } else if (e.code === 'KeyB') {
-                // Toggle background music
-                if (this.soundManager.musicPlaying) {
-                    this.soundManager.stopBackgroundMusic();
-                    console.log('Background music stopped');
-                } else {
-                    this.soundManager.startBackgroundMusic();
-                    console.log('Background music started');
-                }
-                return;
-            }
-
+            e.preventDefault();
+            
             // Handle start screen navigation
             if (this.gameState === 'start_screen') {
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') {
@@ -133,21 +65,13 @@ class Game {
                 return;
             }
             
-            // Handle restart and next level
+            // Handle restart and new level
             if (this.gameState === 'finished' || this.gameState === 'game_over') {
                 if (e.code === 'KeyR') {
                     this.restart();
                     return;
                 } else if (e.code === 'KeyN') {
-                    if (this.gameState === 'finished') {
-                        this.nextLevel();
-                    } else {
-                        this.generateNewLevel();
-                    }
-                    return;
-                } else if (e.code === 'Space' && this.gameState === 'finished') {
-                    // Allow space to advance to next level on victory
-                    this.nextLevel();
+                    this.generateNewLevel();
                     return;
                 }
             }
@@ -430,72 +354,9 @@ class Game {
     }
 
     generateNewLevel(seed = null) {
-        // Stop all ambient sounds before generating new level
-        if (this.soundManager) {
-            this.soundManager.stopAllAmbient();
-        }
-
-        this.currentLevel = 1;
-        this.currentBias = this.getRandomBias();
-        this.platforms = new PlatformManager(seed, this.currentBias, this.currentLevel, this.soundManager);
+        this.platforms = new PlatformManager(seed);
         this.updateSeedDisplay();
-
-        // Reset and respawn consumables for new level
-        this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
-
         this.restart();
-    }
-
-    nextLevel() {
-        // Stop all ambient sounds before going to next level
-        if (this.soundManager) {
-            this.soundManager.stopAllAmbient();
-        }
-
-        // Save player's current powerups
-        const savedMaxJumps = this.player.maxJumps;
-        const savedMoveSpeed = this.player.moveSpeed;
-        const savedOriginalMoveSpeed = this.player.originalMoveSpeed;
-        const savedConsumableEffects = { ...this.player.consumableEffects };
-
-        // Increment level and generate new level
-        this.currentLevel++;
-        this.currentBias = this.getRandomBias();
-        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
-        this.updateSeedDisplay();
-
-        // Reset and respawn consumables for new level
-        this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
-
-        // Reset player position but keep powerups
-        this.gameState = 'playing';
-        this.player.x = 100;
-        this.player.y = this.physics.groundLevel - 40;
-        this.player.velocityX = 0;
-        this.player.velocityY = 0;
-        this.player.onGround = true;
-        this.player.resetLives(); // Reset lives to 3
-
-        // Restore powerups
-        this.player.maxJumps = savedMaxJumps;
-        this.player.jumpsRemaining = savedMaxJumps;
-        this.player.moveSpeed = savedMoveSpeed;
-        this.player.originalMoveSpeed = savedOriginalMoveSpeed;
-        this.player.consumableEffects = savedConsumableEffects;
-
-        // Clear victory particles
-        this.victoryParticles = [];
-        this.victoryTimer = 0;
-
-        this.camera.x = 0;
-        this.camera.y = 0;
-    }
-
-    getRandomBias() {
-        const biases = ['normal', 'wide_gap', 'hazard_heavy', 'safe_zone', 'high_route', 'tight_spaces'];
-        return biases[Math.floor(Math.random() * biases.length)];
     }
 
     regenerateCurrentLevel() {
@@ -507,42 +368,27 @@ class Game {
         if (this.gameState === 'start_screen') {
             this.updateLogoAnimations();
         }
-
+        
         if (this.gameState === 'playing') {
-            this.platforms.update(this.player);
-
-            // Update consumables (handles pickup collision, active effects)
-            this.consumables.update(this.player, this);
-
+            this.platforms.update();
+            
             const playerResult = this.player.update(this.physics, this.platforms);
-
+            
             // Handle player death animation completion
             if (playerResult === 'death_complete') {
                 this.gameState = 'game_over';
                 return;
             }
-
-            // Update ambient hazard sounds based on proximity
-            this.platforms.updateAmbientSounds(this.player);
-
+            
             this.updateCamera();
-
+            
             // Check if player finished the level or died
             const collisionResult = this.platforms.checkCollisions(this.player);
             if (collisionResult === 'finish') {
                 this.gameState = 'finished';
-                this.victoryTimer = 0; // Reset victory animation timer
-
-                // Play victory sound
-                this.soundManager.playVictory();
             } else if (collisionResult === 'game_over') {
                 // Death animation will start, game over will be handled by player update
             }
-        }
-
-        // Update victory celebration effects
-        if (this.gameState === 'finished') {
-            this.updateVictoryCelebration();
         }
     }
     
@@ -583,135 +429,26 @@ class Game {
         }
     }
 
-    updateVictoryCelebration() {
-        this.victoryTimer++;
-
-        // Spawn firework particles
-        if (this.victoryTimer % 10 === 0) {
-            const colors = ['#FFD700', '#FFA500', '#FF69B4', '#00CED1', '#9370DB', '#32CD32'];
-            for (let i = 0; i < 5; i++) {
-                this.victoryParticles.push({
-                    x: Math.random() * this.canvas.width,
-                    y: this.canvas.height,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: -Math.random() * 15 - 10,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    life: Math.random() * 80 + 40,
-                    maxLife: Math.random() * 80 + 40,
-                    size: Math.random() * 4 + 2,
-                    gravity: 0.3
-                });
-            }
-        }
-
-        // Update particles
-        for (let i = this.victoryParticles.length - 1; i >= 0; i--) {
-            const p = this.victoryParticles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += p.gravity;
-            p.vx *= 0.99;
-            p.life--;
-
-            if (p.life <= 0) {
-                this.victoryParticles.splice(i, 1);
-            }
-        }
-
-        // Limit particle count
-        if (this.victoryParticles.length > 200) {
-            this.victoryParticles.splice(0, this.victoryParticles.length - 200);
-        }
-    }
-
-    showVictoryInstructions() {
-        // Render celebration particles
-        for (let p of this.victoryParticles) {
-            const alpha = p.life / p.maxLife;
-            this.ctx.fillStyle = p.color;
-            this.ctx.globalAlpha = alpha;
-            this.ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
-        }
-        this.ctx.globalAlpha = 1;
-
-        // Show instructions overlaid on game (celebrating!)
+    showVictoryMessage() {
+        this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.font = '48px Arial';
         this.ctx.textAlign = 'center';
-
-        // Pulsing celebration effect
-        const pulse = Math.sin(this.victoryTimer / 10) * 0.3 + 0.7;
-        const bounce = Math.abs(Math.sin(this.victoryTimer / 15)) * 20;
-
-        // Large, golden "LEVEL COMPLETE!" text
-        this.ctx.fillStyle = `rgba(255, 215, 0, ${pulse})`;
-        this.ctx.font = 'bold 56px Arial';
-        this.ctx.shadowColor = '#FFA500';
-        this.ctx.shadowBlur = 30;
-        this.ctx.fillText('LEVEL COMPLETE!', this.canvas.width/2, 120 - bounce);
-        this.ctx.shadowBlur = 0;
-
-        // Celebration emoji/stars
-        this.ctx.font = '40px Arial';
-        const starPulse = Math.sin(this.victoryTimer / 8) * 0.5 + 0.5;
-        this.ctx.globalAlpha = starPulse;
-        this.ctx.fillText('⭐', this.canvas.width/2 - 150, 120 - bounce);
-        this.ctx.fillText('⭐', this.canvas.width/2 + 150, 120 - bounce);
-        this.ctx.globalAlpha = 1;
-
-        // Large, bright instruction text
-        this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
-        this.ctx.font = 'bold 36px Arial';
-        this.ctx.shadowColor = '#FFD700';
-        this.ctx.shadowBlur = 20;
-        this.ctx.fillText('Press SPACE or N for next level!', this.canvas.width/2, this.canvas.height - 150);
-        this.ctx.shadowBlur = 0;
-
-        // Mode and seed info below (smaller)
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.font = '20px Arial';
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} • Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height - 100);
-
-        // Version at bottom
-        this.ctx.fillStyle = '#95a5a6';
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 60);
-
+        this.ctx.fillText('LEVEL COMPLETE!', this.canvas.width/2, this.canvas.height/2 - 70);
+        
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, this.canvas.width/2, this.canvas.height/2 - 20);
+        this.ctx.fillText(`Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height/2 + 10);
+        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height/2 + 50);
+        
         this.ctx.textAlign = 'left';
     }
 
-    showDeathInstructions() {
-        // Show instructions overlaid on death animation (big and bright)
-        this.ctx.textAlign = 'center';
-
-        // Make instructions very visible - pulsing brightness
-        const pulse = Math.sin(Date.now() / 200) * 0.3 + 0.7;
-
-        // Large, bright instruction text
-        this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
-        this.ctx.font = 'bold 36px Arial';
-        this.ctx.shadowColor = '#FF0000';
-        this.ctx.shadowBlur = 20;
-        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height - 150);
-        this.ctx.shadowBlur = 0;
-
-        // Mode and seed info below (smaller)
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.font = '20px Arial';
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} • Seed: ${this.currentSeed}`, this.canvas.width/2, this.canvas.height - 100);
-
-        // Version at bottom
-        this.ctx.fillStyle = '#95a5a6';
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 60);
-
-        this.ctx.textAlign = 'left';
-    }
 
     restart() {
-        // Stop all ambient sounds when restarting
-        if (this.soundManager) {
-            this.soundManager.stopAllAmbient();
-        }
-
         this.gameState = 'playing';
         this.player.x = 100;
         this.player.y = this.physics.groundLevel - 40;
@@ -719,19 +456,6 @@ class Game {
         this.player.velocityY = 0;
         this.player.onGround = true;
         this.player.resetLives(); // Reset lives to 3
-
-        // Reset consumable effects on player
-        this.player.maxJumps = 1;
-        this.player.jumpsRemaining = 1;
-        if (this.player.originalMoveSpeed !== null) {
-            this.player.moveSpeed = this.player.originalMoveSpeed;
-            this.player.originalMoveSpeed = null;
-        }
-
-        // Clear victory particles
-        this.victoryParticles = [];
-        this.victoryTimer = 0;
-
         this.camera.x = 0;
         this.camera.y = 0;
     }
@@ -740,82 +464,14 @@ class Game {
         if (this.camera.followPlayer) {
             // Center camera on player horizontally
             this.camera.x = this.player.x - this.canvas.width / 2;
-
-            // Clamp camera to level bounds horizontally
+            
+            // Clamp camera to level bounds
             this.camera.x = Math.max(0, Math.min(this.camera.x, this.camera.levelWidth - this.canvas.width));
-
-            // Improved vertical camera following for multi-floor platforming
-            // Center player in middle of screen (50%) for better vertical view
-            const targetY = this.player.y - this.canvas.height * 0.5;
-
-            // Smooth camera movement with faster response for vertical
-            this.camera.y += (targetY - this.camera.y) * 0.15;
-
-            // Clamp camera vertically to show level bounds
-            // Allow camera to go up to show high platforms
-            const minCameraY = -200; // Can see 200px above level top
-            const maxCameraY = 520 - this.canvas.height + 100; // Don't go too far down
-
-            this.camera.y = Math.max(minCameraY, Math.min(maxCameraY, this.camera.y));
+            
+            // Keep camera y position stable (slight following vertically)
+            const targetY = Math.max(0, this.player.y - this.canvas.height * 0.7);
+            this.camera.y += (targetY - this.camera.y) * 0.1;
         }
-    }
-
-    renderAudioControls() {
-        // Draw audio control indicators at bottom-left
-        const x = 10;
-        const y = this.canvas.height - 40;
-
-        this.ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        this.ctx.fillRect(x, y, 160, 30);
-
-        // Audio status
-        this.ctx.fillStyle = '#ecf0f1';
-        this.ctx.font = '11px Arial';
-
-        // Mute status
-        const muteIcon = this.soundManager.muted ? '🔇' : '🔊';
-        this.ctx.fillText(`M: ${muteIcon} ${this.soundManager.muted ? 'Muted' : 'Sound'}`, x + 5, y + 12);
-
-        // Music status
-        const musicIcon = this.soundManager.musicPlaying ? '🎵' : '🔕';
-        this.ctx.fillText(`B: ${musicIcon} ${this.soundManager.musicPlaying ? 'Music' : 'No Music'}`, x + 5, y + 24);
-    }
-
-    renderLevelBadge() {
-        // Draw a prominent level badge in the top-right corner
-        const badgeX = this.canvas.width - 120;
-        const badgeY = 15;
-        const badgeWidth = 110;
-        const badgeHeight = 50;
-
-        // Badge background with gradient
-        const gradient = this.ctx.createLinearGradient(badgeX, badgeY, badgeX, badgeY + badgeHeight);
-        gradient.addColorStop(0, '#3498db');
-        gradient.addColorStop(1, '#2980b9');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
-
-        // Badge border
-        this.ctx.strokeStyle = '#2c3e50';
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
-
-        // "LEVEL" text (small)
-        this.ctx.fillStyle = '#ecf0f1';
-        this.ctx.font = 'bold 12px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('LEVEL', badgeX + badgeWidth / 2, badgeY + 18);
-
-        // Level number (large)
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 24px Arial';
-        this.ctx.shadowColor = '#000000';
-        this.ctx.shadowBlur = 3;
-        this.ctx.fillText(this.currentLevel, badgeX + badgeWidth / 2, badgeY + 42);
-        this.ctx.shadowBlur = 0;
-
-        // Reset text align
-        this.ctx.textAlign = 'left';
     }
 
     render() {
@@ -892,12 +548,7 @@ class Game {
         this.ctx.fillStyle = `rgba(149, 165, 166, ${hintAlpha})`;
         this.ctx.font = '16px Arial';
         this.ctx.fillText('Use W/S or ↑/↓ to navigate • SPACE/ENTER to select', this.canvas.width/2, this.canvas.height - 50);
-
-        // Version number at bottom
-        this.ctx.fillStyle = '#7f8c8d';
-        this.ctx.font = '14px Arial';
-        this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
-
+        
         this.ctx.textAlign = 'left';
     }
     
@@ -1015,95 +666,56 @@ class Game {
         
         // Draw platforms (handles its own camera translation)
         this.platforms.render(this.ctx, this.camera);
-
-        // Draw consumables with camera translation
-        this.consumables.render(this.ctx, this.camera);
-
+        
         // Draw player with camera translation
         this.ctx.save();
         this.ctx.translate(-this.camera.x, -this.camera.y);
         this.player.render(this.ctx);
         this.ctx.restore();
         
-        // Draw UI elements (fixed position) - expand box for multiple heart rows
-        const heartsPerRow = 10; // Max hearts per row
-        const heartsRows = Math.ceil(this.player.maxLives / heartsPerRow);
-        const uiHeight = 115 + (heartsRows - 1) * 18; // Expand for multiple rows
+        // Draw UI elements (fixed position)
         this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        this.ctx.fillRect(5, 5, 300, uiHeight);
-
+        this.ctx.fillRect(5, 5, 300, 120);
+        
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px Arial';
         this.ctx.fillText('WASD/Arrow Keys: Move | Space: Jump', 10, 25);
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} | Level: ${this.currentLevel}`, 10, 45);
-
-        // Show level bias
-        const biasName = this.platforms.getBiasParameters().name;
-        this.ctx.fillText(`Type: ${biasName}`, 10, 60);
-
-        this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 75);
-
-        // Draw lives (support unlimited with multiple rows)
-        this.ctx.fillText('Lives:', 10, 95);
-
+        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, 10, 45);
+        this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 65);
+        
+        // Draw lives
+        this.ctx.fillText('Lives:', 10, 85);
         for (let i = 0; i < this.player.maxLives; i++) {
-            const row = Math.floor(i / heartsPerRow);
-            const col = i % heartsPerRow;
-            const x = 60 + col * 20;
-            const y = 95 + row * 18;
-
             if (i < this.player.lives) {
                 this.ctx.fillStyle = '#FF0000'; // Red heart for remaining lives
-                this.ctx.fillText('♥', x, y);
+                this.ctx.fillText('♥', 60 + i * 20, 85);
             } else {
                 this.ctx.fillStyle = '#444444'; // Dark heart for lost lives
-                this.ctx.fillText('♥', x, y);
+                this.ctx.fillText('♥', 60 + i * 20, 85);
             }
         }
         this.ctx.fillStyle = 'white';
-
-        // Show progress bar (adjust position based on heart rows)
-        const progressY = 95 + heartsRows * 18 + 5;
-
+        
+        // Show progress bar
         const progress = this.player.x / this.camera.levelWidth;
         this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        this.ctx.fillRect(10, progressY, 200, 10);
+        this.ctx.fillRect(10, 105, 200, 10);
         this.ctx.fillStyle = '#00FF00';
-        this.ctx.fillRect(10, progressY, progress * 200, 10);
-
+        this.ctx.fillRect(10, 105, progress * 200, 10);
+        
         // Show jump mechanics info
         this.ctx.font = '12px Arial';
-        const infoY = progressY + 20;
         if (this.player.jumpMode === 'hollow' || this.player.jumpMode === 'celeste') {
-            this.ctx.fillText(`Hold jump for variable height!`, 10, infoY);
+            this.ctx.fillText(`Hold jump for variable height!`, 10, 125);
         } else if (this.player.jumpMode === 'sonic') {
-            this.ctx.fillText(`Run faster to jump higher!`, 10, infoY);
+            this.ctx.fillText(`Run faster to jump higher!`, 10, 125);
         } else if (this.player.jumpMode === 'megaman') {
-            this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, infoY);
+            this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, 125);
         }
-
-        // Render consumables UI (active effects, notifications)
-        this.consumables.renderUI(this.ctx, this.canvas, this.player);
-
-        // Show version number in top-left corner (small gray text)
-        this.ctx.fillStyle = '#95a5a6';
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`v${this.version}`, 320, 20);
-
-        // Draw audio controls indicator (bottom-left)
-        this.renderAudioControls();
-
-        // Draw prominent level badge in top-right corner
-        this.renderLevelBadge();
-
-        // Show victory celebration and instructions if game is finished
+        
+        // Show victory screen if game is finished
         if (this.gameState === 'finished') {
-            this.showVictoryInstructions();
-        }
-
-        // Show restart instructions during and after final death animation (not separate screen)
-        if (this.gameState === 'game_over' || (this.player.finalDeath && this.player.isDying)) {
-            this.showDeathInstructions();
+            this.showVictoryMessage();
         }
     }
 

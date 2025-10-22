@@ -48,8 +48,10 @@ class Player {
             left: false,
             right: false,
             up: false,
-            jump: false
+            jump: false,
+            shift: false
         };
+        this.dashCooldown = 0;
 
         // Particle system for jump/landing effects
         this.particles = [];
@@ -182,23 +184,50 @@ class Player {
     handleInput() {
         // Don't handle input during death animation
         if (this.isDying) return;
-        
-        // Horizontal movement with better air control
-        if (this.keys.left) {
+
+        // Check for reversed controls
+        const reversedControls = this.consumableEffects && this.consumableEffects.reversedControls;
+        const leftPressed = reversedControls ? this.keys.right : this.keys.left;
+        const rightPressed = reversedControls ? this.keys.left : this.keys.right;
+
+        // Drunk effect - add wobble to movement
+        let drunkOffset = 0;
+        if (this.consumableEffects && this.consumableEffects.drunk) {
+            this.consumableEffects.drunkTimer = (this.consumableEffects.drunkTimer || 0) + 0.1;
+            drunkOffset = Math.sin(this.consumableEffects.drunkTimer) * 0.5;
+        }
+
+        // Dash ability (Shift key)
+        if (this.keys.shift && !this.dashCooldown && this.consumableEffects && this.consumableEffects.dashCharges > 0) {
+            this.consumableEffects.dashCharges--;
+            this.dashCooldown = 30; // 0.5 second cooldown
+            const dashDirection = leftPressed ? -1 : (rightPressed ? 1 : (this.velocityX < 0 ? -1 : 1));
+            this.velocityX = dashDirection * this.moveSpeed * 3;
+            this.velocityY = 0; // Horizontal dash
+        }
+
+        // Update dash cooldown
+        if (this.dashCooldown > 0) {
+            this.dashCooldown--;
+        }
+
+        // Horizontal movement with better air control (with drunk wobble)
+        const moveSpeedMod = 1 + drunkOffset;
+        if (leftPressed) {
             if (this.onGround) {
-                this.velocityX = -this.moveSpeed;
+                this.velocityX = -this.moveSpeed * moveSpeedMod;
             } else {
                 // Air control - gradually adjust velocity
-                this.velocityX += -this.moveSpeed * 0.3;
-                this.velocityX = Math.max(this.velocityX, -this.moveSpeed);
+                this.velocityX += -this.moveSpeed * 0.3 * moveSpeedMod;
+                this.velocityX = Math.max(this.velocityX, -this.moveSpeed * moveSpeedMod);
             }
-        } else if (this.keys.right) {
+        } else if (rightPressed) {
             if (this.onGround) {
-                this.velocityX = this.moveSpeed;
+                this.velocityX = this.moveSpeed * moveSpeedMod;
             } else {
                 // Air control - gradually adjust velocity
-                this.velocityX += this.moveSpeed * 0.3;
-                this.velocityX = Math.min(this.velocityX, this.moveSpeed);
+                this.velocityX += this.moveSpeed * 0.3 * moveSpeedMod;
+                this.velocityX = Math.min(this.velocityX, this.moveSpeed * moveSpeedMod);
             }
         } else if (!this.onGround) {
             // Air drag when no input
@@ -214,6 +243,12 @@ class Player {
         if (this.onGround) {
             this.jumpsRemaining = this.maxJumps;
             this.coyoteTime = this.maxCoyoteTime;
+
+            // Spring shoes effect - bounce on landing
+            if (this.consumableEffects && this.consumableEffects.springShoes && this.velocityY > 5) {
+                this.velocityY = -this.jumpPower * 0.7; // 70% bounce
+                this.onGround = false;
+            }
         } else if (this.coyoteTime > 0) {
             this.coyoteTime--;
         }
@@ -459,6 +494,12 @@ class Player {
         this.handleInput();
 
         physics.applyGravity(this);
+
+        // Wings glide mechanic - reduce fall speed when holding jump in air
+        if (this.consumableEffects && this.consumableEffects.wings && !this.onGround && this.keys.jump && this.velocityY > 0) {
+            this.velocityY *= 0.5; // Reduce fall speed by 50%
+        }
+
         physics.updatePosition(this);
 
         // Check platform collisions first
@@ -768,6 +809,10 @@ class Player {
             case 'KeyW':
             case 'Space':
                 this.keys.jump = pressed;
+                break;
+            case 'ShiftLeft':
+            case 'ShiftRight':
+                this.keys.shift = pressed;
                 break;
         }
     }
