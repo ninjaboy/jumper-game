@@ -579,6 +579,11 @@ class PlatformManager {
                         if (player.velocityY >= 0) {
                             player.velocityY = -player.jumpPower * 1.5;
                             player.onGround = false;
+
+                            // Play spring sound
+                            if (player.soundManager) {
+                                player.soundManager.playSpring();
+                            }
                         } else {
                             // Normal friction when not bouncing
                             player.velocityX *= 0.8;

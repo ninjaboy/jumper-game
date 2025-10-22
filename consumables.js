@@ -252,10 +252,11 @@ class HealthConsumable extends Consumable {
 // ============================================================================
 
 class ConsumableManager {
-    constructor() {
+    constructor(soundManager = null) {
         this.consumables = [];
         this.activeEffects = [];
         this.pickupNotifications = [];
+        this.soundManager = soundManager;
     }
 
     // Spawn a consumable
@@ -294,6 +295,11 @@ class ConsumableManager {
             // Check collision with player
             if (!consumable.collected && consumable.checkCollision(player)) {
                 const pickupInfo = consumable.onPickup(player, game);
+
+                // Play collect sound
+                if (this.soundManager) {
+                    this.soundManager.playCollect();
+                }
 
                 // Add to active effects if it has a duration
                 if (consumable.duration > 0) {

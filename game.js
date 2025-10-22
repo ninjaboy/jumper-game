@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.4.0';
+        this.version = '1.4.1';
         this.versionNotes = [
+            'v1.4.1 - Enhancement: Complete sound system - death, collect, victory, spring bounce sounds added',
             'v1.4.0 - New Feature: Sound system with Web Audio API - jump and landing sounds for all jump modes',
             'v1.3.1 - Enhancement: Progressive difficulty scaling - each level gets harder, prominent level badge display in top-right corner',
             'v1.3.0 - New Feature: Level progression system with 5 biases (Wide Gap, Hazard Heavy, Safe Zone, High Route, Tight Spaces), powerups persist between levels',
@@ -30,7 +31,7 @@ class Game {
         this.currentLevel = 1;
         this.currentBias = 'normal';
         this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel);
-        this.consumables = new ConsumableManager();
+        this.consumables = new ConsumableManager(this.soundManager);
         this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
         // Spawn initial consumables
@@ -489,6 +490,9 @@ class Game {
             if (collisionResult === 'finish') {
                 this.gameState = 'finished';
                 this.victoryTimer = 0; // Reset victory animation timer
+
+                // Play victory sound
+                this.soundManager.playVictory();
             } else if (collisionResult === 'game_over') {
                 // Death animation will start, game over will be handled by player update
             }

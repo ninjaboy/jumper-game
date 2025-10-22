@@ -83,7 +83,12 @@ class Player {
 
     startDeathAnimation() {
         this.isDying = true;
-        
+
+        // Play death sound
+        if (this.soundManager) {
+            this.soundManager.playDeath();
+        }
+
         // Different death animations based on lives remaining
         if (this.lives === 0) {
             // Final death - epic animation
