@@ -280,7 +280,7 @@ class PoisonCloud {
 }
 
 class PlatformManager {
-    constructor(seed = null, bias = 'normal', level = 1) {
+    constructor(seed = null, bias = 'normal', level = 1, soundManager = null) {
         this.platforms = [];
         this.spikes = [];
         this.sawBlades = [];
@@ -290,6 +290,7 @@ class PlatformManager {
         this.rng = new SimpleRNG(this.seed);
         this.bias = bias;
         this.level = level;
+        this.soundManager = soundManager;
         this.generateRandomLevel();
     }
 
@@ -297,7 +298,7 @@ class PlatformManager {
         for (let platform of this.platforms) {
             platform.update();
         }
-        
+
         // Update all hazards
         for (let sawBlade of this.sawBlades) {
             sawBlade.update();
@@ -308,6 +309,60 @@ class PlatformManager {
         for (let poisonCloud of this.poisonClouds) {
             poisonCloud.update();
         }
+    }
+
+    /**
+     * Update ambient sounds based on player proximity to hazards
+     */
+    updateAmbientSounds(player) {
+        if (!this.soundManager) return;
+
+        const maxDistance = 400; // Maximum distance to hear ambient sounds
+
+        // Update saw blade ambient sounds
+        this.sawBlades.forEach((sawBlade, index) => {
+            const bounds = sawBlade.getBounds();
+            const centerX = bounds.x + bounds.width / 2;
+            const centerY = bounds.y + bounds.height / 2;
+
+            const distance = Math.sqrt(
+                Math.pow(player.x + player.width / 2 - centerX, 2) +
+                Math.pow(player.y + player.height / 2 - centerY, 2)
+            );
+
+            const proximity = Math.max(0, 1 - (distance / maxDistance));
+            this.soundManager.updateAmbientHazard(`saw_${index}`, 'saw', proximity);
+        });
+
+        // Update lava pit ambient sounds
+        this.lavaPits.forEach((lavaPit, index) => {
+            const bounds = lavaPit.getBounds();
+            const centerX = bounds.x + bounds.width / 2;
+            const centerY = bounds.y + bounds.height / 2;
+
+            const distance = Math.sqrt(
+                Math.pow(player.x + player.width / 2 - centerX, 2) +
+                Math.pow(player.y + player.height / 2 - centerY, 2)
+            );
+
+            const proximity = Math.max(0, 1 - (distance / maxDistance));
+            this.soundManager.updateAmbientHazard(`lava_${index}`, 'lava', proximity);
+        });
+
+        // Update poison cloud ambient sounds
+        this.poisonClouds.forEach((poisonCloud, index) => {
+            const bounds = poisonCloud.getBounds();
+            const centerX = bounds.x + bounds.width / 2;
+            const centerY = bounds.y + bounds.height / 2;
+
+            const distance = Math.sqrt(
+                Math.pow(player.x + player.width / 2 - centerX, 2) +
+                Math.pow(player.y + player.height / 2 - centerY, 2)
+            );
+
+            const proximity = Math.max(0, 1 - (distance / maxDistance));
+            this.soundManager.updateAmbientHazard(`poison_${index}`, 'poison', proximity);
+        });
     }
 
     generateRandomLevel() {
@@ -663,6 +718,10 @@ class PlatformManager {
                 player.x < bounds.x + bounds.width &&
                 player.y + player.height > bounds.y &&
                 player.y < bounds.y + bounds.height) {
+                // Play saw hit sound
+                if (this.soundManager) {
+                    this.soundManager.playSawHit();
+                }
                 return this.respawnPlayer(player);
             }
         }
@@ -674,6 +733,10 @@ class PlatformManager {
                 player.x < bounds.x + bounds.width &&
                 player.y + player.height > bounds.y &&
                 player.y < bounds.y + bounds.height) {
+                // Play lava sizzle sound
+                if (this.soundManager) {
+                    this.soundManager.playLavaSizzle();
+                }
                 return this.respawnPlayer(player);
             }
         }
@@ -685,6 +748,10 @@ class PlatformManager {
                 player.x < bounds.x + bounds.width &&
                 player.y + player.height > bounds.y &&
                 player.y < bounds.y + bounds.height) {
+                // Play poison hiss sound
+                if (this.soundManager) {
+                    this.soundManager.playPoisonHiss();
+                }
                 return this.respawnPlayer(player);
             }
         }

@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.4.1';
+        this.version = '1.5.0';
         this.versionNotes = [
+            'v1.5.0 - Major Update: Ambient trap sounds with proximity detection, background music, unlimited lives, trap-specific interaction sounds',
             'v1.4.1 - Enhancement: Complete sound system - death, collect, victory, spring bounce sounds added',
             'v1.4.0 - New Feature: Sound system with Web Audio API - jump and landing sounds for all jump modes',
             'v1.3.1 - Enhancement: Progressive difficulty scaling - each level gets harder, prominent level badge display in top-right corner',
@@ -30,7 +31,7 @@ class Game {
         this.currentSeed = null;
         this.currentLevel = 1;
         this.currentBias = 'normal';
-        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel);
+        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
         this.consumables = new ConsumableManager(this.soundManager);
         this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
@@ -75,9 +76,10 @@ class Game {
     }
 
     setupEventListeners() {
-        // Initialize sound on first user interaction
+        // Initialize sound on first user interaction and start background music
         document.addEventListener('keydown', () => {
             this.soundManager.init();
+            this.soundManager.startBackgroundMusic();
         }, { once: true });
 
         // Keyboard input
@@ -403,7 +405,7 @@ class Game {
     generateNewLevel(seed = null) {
         this.currentLevel = 1;
         this.currentBias = this.getRandomBias();
-        this.platforms = new PlatformManager(seed, this.currentBias, this.currentLevel);
+        this.platforms = new PlatformManager(seed, this.currentBias, this.currentLevel, this.soundManager);
         this.updateSeedDisplay();
 
         // Reset and respawn consumables for new level
@@ -423,7 +425,7 @@ class Game {
         // Increment level and generate new level
         this.currentLevel++;
         this.currentBias = this.getRandomBias();
-        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel);
+        this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
         this.updateSeedDisplay();
 
         // Reset and respawn consumables for new level
@@ -482,6 +484,9 @@ class Game {
                 this.gameState = 'game_over';
                 return;
             }
+
+            // Update ambient hazard sounds based on proximity
+            this.platforms.updateAmbientSounds(this.player);
 
             this.updateCamera();
 
@@ -947,9 +952,11 @@ class Game {
         this.player.render(this.ctx);
         this.ctx.restore();
         
-        // Draw UI elements (fixed position)
+        // Draw UI elements (fixed position) - expand box for multiple heart rows
+        const heartsRows = Math.ceil(this.player.maxLives / 10);
+        const uiHeight = 115 + (heartsRows - 1) * 18; // Expand for multiple rows
         this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        this.ctx.fillRect(5, 5, 300, 130);
+        this.ctx.fillRect(5, 5, 300, uiHeight);
         
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px Arial';
@@ -962,34 +969,44 @@ class Game {
 
         this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 75);
 
-        // Draw lives
+        // Draw lives (support unlimited with multiple rows)
         this.ctx.fillText('Lives:', 10, 95);
+        const heartsPerRow = 10; // Max hearts per row
         for (let i = 0; i < this.player.maxLives; i++) {
+            const row = Math.floor(i / heartsPerRow);
+            const col = i % heartsPerRow;
+            const x = 60 + col * 20;
+            const y = 95 + row * 18;
+
             if (i < this.player.lives) {
                 this.ctx.fillStyle = '#FF0000'; // Red heart for remaining lives
-                this.ctx.fillText('♥', 60 + i * 20, 95);
+                this.ctx.fillText('♥', x, y);
             } else {
                 this.ctx.fillStyle = '#444444'; // Dark heart for lost lives
-                this.ctx.fillText('♥', 60 + i * 20, 95);
+                this.ctx.fillText('♥', x, y);
             }
         }
         this.ctx.fillStyle = 'white';
 
-        // Show progress bar
+        // Show progress bar (adjust position based on heart rows)
+        const heartsRows = Math.ceil(this.player.maxLives / 10);
+        const progressY = 95 + heartsRows * 18 + 5;
+
         const progress = this.player.x / this.camera.levelWidth;
         this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        this.ctx.fillRect(10, 115, 200, 10);
+        this.ctx.fillRect(10, progressY, 200, 10);
         this.ctx.fillStyle = '#00FF00';
-        this.ctx.fillRect(10, 115, progress * 200, 10);
-        
+        this.ctx.fillRect(10, progressY, progress * 200, 10);
+
         // Show jump mechanics info
         this.ctx.font = '12px Arial';
+        const infoY = progressY + 20;
         if (this.player.jumpMode === 'hollow' || this.player.jumpMode === 'celeste') {
-            this.ctx.fillText(`Hold jump for variable height!`, 10, 135);
+            this.ctx.fillText(`Hold jump for variable height!`, 10, infoY);
         } else if (this.player.jumpMode === 'sonic') {
-            this.ctx.fillText(`Run faster to jump higher!`, 10, 135);
+            this.ctx.fillText(`Run faster to jump higher!`, 10, infoY);
         } else if (this.player.jumpMode === 'megaman') {
-            this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, 135);
+            this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, infoY);
         }
 
         // Render consumables UI (active effects, notifications)

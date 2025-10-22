@@ -4,11 +4,18 @@ class SoundManager {
         this.audioContext = null;
         this.masterVolume = 0.3; // Default volume (0.0 to 1.0)
         this.sfxVolume = 1.0;
-        this.musicVolume = 1.0;
+        this.musicVolume = 0.4; // Background music slightly quieter
         this.muted = false;
 
         // Initialize on first user interaction (browser requirement)
         this.initialized = false;
+
+        // Background music state
+        this.backgroundMusic = null;
+        this.musicPlaying = false;
+
+        // Ambient sound state (for proximity-based sounds)
+        this.ambientSounds = new Map(); // hazardId -> {oscillator, gainNode, currentVolume}
     }
 
     // Initialize AudioContext (must be called after user interaction)
@@ -41,6 +48,12 @@ class SoundManager {
     getVolume() {
         if (this.muted || !this.initialized) return 0;
         return this.masterVolume * this.sfxVolume;
+    }
+
+    // Get music volume
+    getMusicVolume() {
+        if (this.muted || !this.initialized) return 0;
+        return this.masterVolume * this.musicVolume;
     }
 
     // Toggle mute
@@ -262,5 +275,320 @@ class SoundManager {
 
         oscillator.start(now);
         oscillator.stop(now + duration);
+    }
+
+    /**
+     * Play saw blade hit sound - metallic grinding
+     */
+    playSawHit() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        const now = this.audioContext.currentTime;
+        const duration = 0.2;
+
+        // Use white noise for metallic grinding effect
+        const bufferSize = this.audioContext.sampleRate * duration;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        // Generate white noise
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1000; // High frequency for metallic sound
+
+        const gainNode = this.audioContext.createGain();
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        const volume = this.getVolume() * 0.3;
+        gainNode.gain.setValueAtTime(volume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+        noise.start(now);
+        noise.stop(now + duration);
+    }
+
+    /**
+     * Play lava sizzle sound - bubbling/burning effect
+     */
+    playLavaSizzle() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        const now = this.audioContext.currentTime;
+        const duration = 0.3;
+
+        // Create bubbling effect with filtered noise
+        const bufferSize = this.audioContext.sampleRate * duration;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 800; // Lower frequency for bubbling
+
+        const gainNode = this.audioContext.createGain();
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        const volume = this.getVolume() * 0.25;
+        gainNode.gain.setValueAtTime(volume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+        noise.start(now);
+        noise.stop(now + duration);
+    }
+
+    /**
+     * Play poison cloud hiss - toxic gas effect
+     */
+    playPoisonHiss() {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        const now = this.audioContext.currentTime;
+        const duration = 0.25;
+
+        // Use pink noise for softer hiss
+        const bufferSize = this.audioContext.sampleRate * duration;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        // Generate pink noise (softer than white)
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99765 * b0 + white * 0.0990460;
+            b1 = 0.96300 * b1 + white * 0.2965164;
+            b2 = 0.57000 * b2 + white * 1.0526913;
+            data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.11;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = buffer;
+
+        const gainNode = this.audioContext.createGain();
+
+        noise.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        const volume = this.getVolume() * 0.2;
+        gainNode.gain.setValueAtTime(volume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+        noise.start(now);
+        noise.stop(now + duration);
+    }
+
+    // === AMBIENT SOUNDS ===
+
+    /**
+     * Start or update ambient hazard sound based on proximity
+     * @param {string} hazardId - Unique identifier for the hazard
+     * @param {string} hazardType - Type of hazard ('saw', 'lava', 'poison')
+     * @param {number} proximity - Distance factor (0.0 = far, 1.0 = very close)
+     */
+    updateAmbientHazard(hazardId, hazardType, proximity) {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        // If proximity is too low, stop the sound
+        if (proximity < 0.01) {
+            this.stopAmbientHazard(hazardId);
+            return;
+        }
+
+        // Check if this hazard already has an ambient sound
+        if (!this.ambientSounds.has(hazardId)) {
+            // Create new ambient sound
+            this.startAmbientHazard(hazardId, hazardType);
+        }
+
+        // Update volume based on proximity
+        const ambient = this.ambientSounds.get(hazardId);
+        if (ambient && ambient.gainNode) {
+            const targetVolume = proximity * this.getVolume() * 0.15; // Quiet ambient
+            ambient.gainNode.gain.linearRampToValueAtTime(
+                targetVolume,
+                this.audioContext.currentTime + 0.1
+            );
+        }
+    }
+
+    /**
+     * Start ambient sound for a hazard
+     */
+    startAmbientHazard(hazardId, hazardType) {
+        this.ensureContext();
+        if (!this.audioContext) return;
+
+        let oscillator, gainNode;
+
+        switch (hazardType) {
+            case 'saw':
+                // Grinding/whirring sound
+                oscillator = this.audioContext.createOscillator();
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.value = 120 + Math.random() * 40;
+                break;
+
+            case 'lava':
+                // Low bubbling rumble
+                oscillator = this.audioContext.createOscillator();
+                oscillator.type = 'triangle';
+                oscillator.frequency.value = 60 + Math.random() * 20;
+                break;
+
+            case 'poison':
+                // High pitched hiss
+                oscillator = this.audioContext.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 400 + Math.random() * 200;
+                break;
+
+            default:
+                return;
+        }
+
+        gainNode = this.audioContext.createGain();
+        gainNode.gain.value = 0; // Start silent
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.start();
+
+        this.ambientSounds.set(hazardId, {
+            oscillator,
+            gainNode,
+            type: hazardType
+        });
+    }
+
+    /**
+     * Stop ambient sound for a hazard
+     */
+    stopAmbientHazard(hazardId) {
+        if (!this.ambientSounds.has(hazardId)) return;
+
+        const ambient = this.ambientSounds.get(hazardId);
+
+        // Fade out before stopping
+        if (ambient.gainNode && this.audioContext) {
+            ambient.gainNode.gain.linearRampToValueAtTime(
+                0.01,
+                this.audioContext.currentTime + 0.2
+            );
+
+            setTimeout(() => {
+                if (ambient.oscillator) {
+                    ambient.oscillator.stop();
+                }
+                this.ambientSounds.delete(hazardId);
+            }, 200);
+        }
+    }
+
+    /**
+     * Stop all ambient sounds
+     */
+    stopAllAmbient() {
+        for (let [hazardId] of this.ambientSounds) {
+            this.stopAmbientHazard(hazardId);
+        }
+    }
+
+    // === BACKGROUND MUSIC ===
+
+    /**
+     * Start background music - simple looping melody
+     */
+    startBackgroundMusic() {
+        this.ensureContext();
+        if (!this.audioContext || this.musicPlaying) return;
+
+        this.musicPlaying = true;
+        this.playMusicLoop();
+    }
+
+    /**
+     * Stop background music
+     */
+    stopBackgroundMusic() {
+        this.musicPlaying = false;
+        // Music will naturally stop after current loop
+    }
+
+    /**
+     * Play a looping melody for background music
+     */
+    playMusicLoop() {
+        if (!this.musicPlaying || !this.audioContext) return;
+
+        const now = this.audioContext.currentTime;
+
+        // Simple melody - ambient platformer tune
+        // C major scale melody: C - E - G - A - G - F - E - D
+        const melody = [
+            { freq: 261.63, duration: 0.4 }, // C4
+            { freq: 329.63, duration: 0.4 }, // E4
+            { freq: 392.00, duration: 0.4 }, // G4
+            { freq: 440.00, duration: 0.6 }, // A4 (longer)
+            { freq: 392.00, duration: 0.4 }, // G4
+            { freq: 349.23, duration: 0.4 }, // F4
+            { freq: 329.63, duration: 0.4 }, // E4
+            { freq: 293.66, duration: 0.6 }, // D4 (longer)
+        ];
+
+        let startTime = now;
+
+        melody.forEach((note) => {
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = note.freq;
+
+            // Soft envelope
+            const volume = this.getMusicVolume() * 0.12; // Very quiet
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(volume * 0.7, startTime + note.duration - 0.05);
+            gainNode.gain.linearRampToValueAtTime(0.01, startTime + note.duration);
+
+            oscillator.start(startTime);
+            oscillator.stop(startTime + note.duration);
+
+            startTime += note.duration;
+        });
+
+        // Calculate total melody duration and schedule next loop
+        const totalDuration = melody.reduce((sum, note) => sum + note.duration, 0);
+
+        if (this.musicPlaying) {
+            setTimeout(() => this.playMusicLoop(), totalDuration * 1000);
+        }
     }
 }

@@ -241,7 +241,9 @@ class HealthConsumable extends Consumable {
             duration: 0,
             effectType: 'instant',
             onPickup: (player, consumable, game) => {
-                player.lives = Math.min(player.lives + 1, player.maxLives);
+                // Increase both current lives and max lives (no cap!)
+                player.lives++;
+                player.maxLives = Math.max(player.maxLives, player.lives);
             }
         });
     }
