@@ -58,4 +58,64 @@ See `VERSION_PROTOCOL.md` for complete guidelines.
 - Do NOT trigger redeployments manually
 - Just push to GitHub and let the automation work
 
+## 🔄 CRITICAL: Concurrent Session Management
+**Multiple Claude Code sessions may be running simultaneously. Follow these rules to prevent conflicts:**
+
+1. **ALWAYS check git status FIRST** before making ANY changes
+   - Run `git status` to see what files have been modified by other sessions
+   - Run `git log -1` to see the latest commit and version number
+   - If files are modified or version is newer than expected, STOP and inform the user
+
+2. **ALWAYS pull latest changes BEFORE making edits**
+   - Run `git pull` before starting any work
+   - Read files fresh after pulling to ensure you have latest content
+   - Never assume file contents are current from previous reads
+
+3. **COORDINATE version numbers**
+   - Check current version in game.js BEFORE suggesting next version
+   - If another session incremented version, use the NEXT available version
+   - Never reuse or overwrite a version number that's already committed
+
+4. **AVOID simultaneous file edits**
+   - If git status shows uncommitted changes to files you need to edit, WARN the user
+   - Ask user which session should handle the changes
+   - Consider using different files or coordinating with user about which session does what
+
+5. **READ files immediately before editing**
+   - Always Read tool right before Edit tool to get latest content
+   - File may have been modified by other session between your last read and now
+   - If Edit tool fails due to file modification, inform user about conflict
+
+6. **Commit frequently to reduce conflict window**
+   - Smaller, focused commits reduce chance of conflicts
+   - Push immediately after committing
+   - This makes your changes visible to other sessions faster
+
+7. **If conflicts occur:**
+   - STOP immediately and inform the user
+   - Show what files are in conflict
+   - Let user decide how to resolve (merge, discard, coordinate sessions)
+   - NEVER force-push or resolve conflicts automatically
+
+**Example workflow:**
+```bash
+# 1. Check status first
+git status
+git log -1
+
+# 2. Pull latest
+git pull
+
+# 3. Read file fresh
+Read game.js
+
+# 4. Make your changes
+Edit game.js
+
+# 5. Commit and push quickly
+git add .
+git commit -m "..."
+git push
+```
+
       IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
