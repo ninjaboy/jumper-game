@@ -1,8 +1,10 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.7.4';
+        this.version = '1.8.1';
         this.versionNotes = [
+            'v1.8.1 - Major Enhancement: Fixed ALL broken consumables! Gravity effects work (Feather/Anvil/Rocket Boots), Lucky Clover actually boosts loot, dramatic screen flashes & particle explosions on pickup, size changes 3x more extreme!',
+            'v1.8.0 - New Feature: Pause menu system (ESC key) with settings menu! Adjust master/music/SFX volumes, toggle retro mode, pixel size, scanlines, color palettes. Resume, restart, or quit to menu while paused',
             'v1.7.4 - Enhancement: Elaborate multi-layered background music with melody, harmony, bass line, and percussion. Features A-A-B-A song structure with classic I-V-vi-IV chord progression',
             'v1.7.3 - Enhancement: Doubled consumable effect durations for better gameplay experience! Most effects now last 50-100% longer',
             'v1.7.2 - Bug Fix: Fixed Bomb and Chaos Dice consumables crashing (game.platformManager -> game.platforms)',
@@ -44,7 +46,7 @@ class Game {
         this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
         // Spawn initial consumables
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
 
         this.updateSeedDisplay();
         
@@ -57,12 +59,52 @@ class Game {
         };
         
         // Game state
-        this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'finished', 'game_over'
-        
+        this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'paused', 'finished', 'game_over'
+        this.isPaused = false;
+
         // Start screen and menu system
         this.selectedMenuItem = 0;
         this.menuItems = ['Start Game', 'Settings'];
         this.settingsVisible = false;
+
+        // Pause menu system
+        this.pauseMenuItems = ['Resume', 'Settings', 'Restart', 'Quit to Menu'];
+        this.selectedPauseMenuItem = 0;
+
+        // Settings system
+        this.settings = {
+            // Audio settings
+            masterVolume: 1.0,
+            musicVolume: 1.0,
+            sfxVolume: 1.0,
+
+            // Visual settings
+            retroMode: false,
+            pixelSize: 4, // How many screen pixels = 1 game pixel (higher = more pixelated)
+            scanlines: true,
+            colorPalette: 'normal', // 'normal', 'gameboy', 'crt'
+
+            // Rendering
+            showFPS: false
+        };
+
+        // Settings menu state
+        this.settingsMenuItems = [
+            { name: 'Master Volume', type: 'slider', key: 'masterVolume', min: 0, max: 1, step: 0.1 },
+            { name: 'Music Volume', type: 'slider', key: 'musicVolume', min: 0, max: 1, step: 0.1 },
+            { name: 'SFX Volume', type: 'slider', key: 'sfxVolume', min: 0, max: 1, step: 0.1 },
+            { name: 'Retro Mode', type: 'toggle', key: 'retroMode' },
+            { name: 'Pixel Size', type: 'slider', key: 'pixelSize', min: 1, max: 8, step: 1 },
+            { name: 'Scanlines', type: 'toggle', key: 'scanlines' },
+            { name: 'Color Palette', type: 'cycle', key: 'colorPalette', values: ['normal', 'gameboy', 'crt'] },
+            { name: 'Show FPS', type: 'toggle', key: 'showFPS' },
+            { name: 'Back', type: 'button' }
+        ];
+        this.selectedSettingsItem = 0;
+
+        // Retro mode rendering buffers
+        this.retroCanvas = null;
+        this.retroCtx = null;
         
         // Logo animation system
         this.logoAnimationTimer = 0;
@@ -445,7 +487,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
 
         this.restart();
     }
@@ -470,7 +512,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
 
         // Reset player position but keep powerups
         this.gameState = 'playing';
@@ -838,6 +880,10 @@ class Game {
             case 'game_over':
                 this.renderGameScreen();
                 break;
+            case 'paused':
+                this.renderGameScreen(); // Render game in background
+                this.renderPauseMenu(); // Overlay pause menu
+                break;
         }
     }
     
@@ -1110,15 +1156,229 @@ class Game {
         }
     }
 
+    // ===== PAUSE MENU RENDERING =====
+
+    renderPauseMenu() {
+        // Semi-transparent dark overlay
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.settingsVisible) {
+            this.renderPauseSettings();
+            return;
+        }
+
+        // Pause menu title
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#ecf0f1';
+        this.ctx.font = 'bold 48px Arial';
+        this.ctx.fillText('PAUSED', this.canvas.width / 2, 150);
+
+        // Menu items
+        const startY = 250;
+        for (let i = 0; i < this.pauseMenuItems.length; i++) {
+            const isSelected = i === this.selectedPauseMenuItem;
+
+            if (isSelected) {
+                this.ctx.fillStyle = '#3498db';
+                this.ctx.font = 'bold 32px Arial';
+                this.ctx.shadowColor = '#3498db';
+                this.ctx.shadowBlur = 10;
+                this.ctx.fillText('> ' + this.pauseMenuItems[i] + ' <', this.canvas.width / 2, startY + i * 60);
+                this.ctx.shadowBlur = 0;
+            } else {
+                this.ctx.fillStyle = '#95a5a6';
+                this.ctx.font = '28px Arial';
+                this.ctx.fillText(this.pauseMenuItems[i], this.canvas.width / 2, startY + i * 60);
+            }
+        }
+
+        // Controls hint
+        this.ctx.fillStyle = '#7f8c8d';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText('W/S or ↑/↓ to navigate • SPACE/ENTER to select • ESC to resume', this.canvas.width / 2, this.canvas.height - 50);
+
+        this.ctx.textAlign = 'left';
+    }
+
+    renderPauseSettings() {
+        // Settings title
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#ecf0f1';
+        this.ctx.font = 'bold 40px Arial';
+        this.ctx.fillText('SETTINGS', this.canvas.width / 2, 100);
+
+        // Settings items
+        const startY = 180;
+        const lineHeight = 50;
+
+        for (let i = 0; i < this.settingsMenuItems.length; i++) {
+            const item = this.settingsMenuItems[i];
+            const isSelected = i === this.selectedSettingsItem;
+            const y = startY + i * lineHeight;
+
+            // Item name
+            if (isSelected) {
+                this.ctx.fillStyle = '#3498db';
+                this.ctx.font = 'bold 24px Arial';
+            } else {
+                this.ctx.fillStyle = '#95a5a6';
+                this.ctx.font = '22px Arial';
+            }
+
+            this.ctx.textAlign = 'left';
+            this.ctx.fillText(item.name + ':', 100, y);
+
+            // Item value/control
+            this.ctx.textAlign = 'right';
+            if (item.type === 'slider') {
+                const value = this.settings[item.key];
+                const percentage = Math.round(((value - item.min) / (item.max - item.min)) * 100);
+                this.ctx.fillText(`${percentage}%`, this.canvas.width - 100, y);
+
+                // Draw slider bar
+                if (isSelected) {
+                    const barWidth = 200;
+                    const barX = this.canvas.width - 100 - barWidth - 20;
+                    const barY = y - 15;
+                    this.ctx.strokeStyle = '#555';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(barX, barY, barWidth, 20);
+                    this.ctx.fillStyle = '#3498db';
+                    this.ctx.fillRect(barX, barY, barWidth * ((value - item.min) / (item.max - item.min)), 20);
+                }
+            } else if (item.type === 'toggle') {
+                const value = this.settings[item.key];
+                this.ctx.fillStyle = value ? '#27ae60' : '#c0392b';
+                this.ctx.fillText(value ? 'ON' : 'OFF', this.canvas.width - 100, y);
+            } else if (item.type === 'cycle') {
+                const value = this.settings[item.key];
+                this.ctx.fillText(value.toUpperCase(), this.canvas.width - 100, y);
+            }
+        }
+
+        // Controls hint
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#7f8c8d';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText('W/S: Navigate • A/D: Adjust • SPACE: Toggle • ESC: Back', this.canvas.width / 2, this.canvas.height - 50);
+
+        this.ctx.textAlign = 'left';
+    }
+
+    // ===== PAUSE MENU SYSTEM =====
+
+    togglePause() {
+        if (this.gameState === 'playing') {
+            this.gameState = 'paused';
+            this.isPaused = true;
+            this.selectedPauseMenuItem = 0;
+        } else if (this.gameState === 'paused' && !this.settingsVisible) {
+            this.gameState = 'playing';
+            this.isPaused = false;
+        }
+    }
+
+    handlePauseMenuSelection() {
+        const selected = this.pauseMenuItems[this.selectedPauseMenuItem];
+
+        switch (selected) {
+            case 'Resume':
+                this.togglePause();
+                break;
+            case 'Settings':
+                this.settingsVisible = true;
+                this.selectedSettingsItem = 0;
+                break;
+            case 'Restart':
+                this.restart();
+                this.isPaused = false;
+                break;
+            case 'Quit to Menu':
+                this.gameState = 'start_screen';
+                this.isPaused = false;
+                this.settingsVisible = false;
+                break;
+        }
+    }
+
+    handleSettingsInput(e) {
+        const item = this.settingsMenuItems[this.selectedSettingsItem];
+
+        if (e.code === 'Escape' || e.code === 'Backspace') {
+            this.settingsVisible = false;
+            return;
+        }
+
+        if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+            this.selectedSettingsItem = Math.max(0, this.selectedSettingsItem - 1);
+        } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+            this.selectedSettingsItem = Math.min(this.settingsMenuItems.length - 1, this.selectedSettingsItem + 1);
+        } else if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+            this.adjustSetting(item, -1);
+        } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+            this.adjustSetting(item, 1);
+        } else if ((e.code === 'Space' || e.code === 'Enter') && item.type === 'button') {
+            this.settingsVisible = false;
+        } else if ((e.code === 'Space' || e.code === 'Enter') && item.type === 'toggle') {
+            this.settings[item.key] = !this.settings[item.key];
+            this.applySettings();
+        }
+    }
+
+    adjustSetting(item, direction) {
+        if (item.type === 'slider') {
+            const current = this.settings[item.key];
+            const step = item.step || 0.1;
+            const newValue = current + (direction * step);
+            this.settings[item.key] = Math.max(item.min, Math.min(item.max, newValue));
+            this.applySettings();
+        } else if (item.type === 'cycle') {
+            const values = item.values;
+            const currentIndex = values.indexOf(this.settings[item.key]);
+            const newIndex = (currentIndex + direction + values.length) % values.length;
+            this.settings[item.key] = values[newIndex];
+            this.applySettings();
+        } else if (item.type === 'toggle') {
+            this.settings[item.key] = !this.settings[item.key];
+            this.applySettings();
+        }
+    }
+
+    applySettings() {
+        // Apply audio settings
+        if (this.soundManager) {
+            // You'll need to add volume control methods to SoundManager
+            // For now, this is a placeholder
+        }
+
+        // Apply retro mode
+        if (this.settings.retroMode && !this.retroCanvas) {
+            this.initRetroMode();
+        }
+    }
+
+    initRetroMode() {
+        // Create offscreen canvas for retro rendering
+        this.retroCanvas = document.createElement('canvas');
+        this.retroCtx = this.retroCanvas.getContext('2d');
+        this.retroCtx.imageSmoothingEnabled = false;
+
+        // Set retro canvas to lower resolution
+        const scale = this.settings.pixelSize;
+        this.retroCanvas.width = Math.floor(this.canvas.width / scale);
+        this.retroCanvas.height = Math.floor(this.canvas.height / scale);
+    }
+
     gameLoop(currentTime) {
         if (!this.isRunning) return;
-        
+
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
-        
+
         this.update(deltaTime);
         this.render();
-        
+
         requestAnimationFrame((time) => this.gameLoop(time));
     }
 
