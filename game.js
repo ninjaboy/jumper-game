@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.6.1';
+        this.version = '1.7.0';
         this.versionNotes = [
+            'v1.7.0 - Major Update: 20+ new consumables with roguelike rarity system! Gravity/physics modifiers, size changes, level manipulation, cursed items. Stacking duration logic, 1 rare max per level',
             'v1.6.1 - Enhancement: Randomized platform placement with wider vertical range (100-480), smaller platforms (60-100) to reduce overlap, more chaotic and engaging level generation',
             'v1.6.0 - Major Update: Multi-floor level design with 4 distinct floors, evenly spaced platforms creating multiple vertical paths, improved camera for vertical gameplay',
             'v1.5.1 - Enhancement: Audio controls - M to toggle mute, B to toggle background music, ambient sound cleanup fixes',
