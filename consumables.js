@@ -568,7 +568,7 @@ class BombConsumable extends Consumable {
             onPickup: (player, consumable, game) => {
                 // Destroy hazards within 300px radius
                 const blastRadius = 300;
-                const platforms = game.platformManager;
+                const platforms = game.platforms;
 
                 platforms.sawBlades = platforms.sawBlades.filter(saw => {
                     const dist = Math.hypot(saw.x - player.x, saw.y - player.y);
@@ -654,7 +654,7 @@ class ChaosDiceConsumable extends Consumable {
             onPickup: (player, consumable, game) => {
                 // Randomize platforms within 400px radius
                 const chaosRadius = 400;
-                const platforms = game.platformManager;
+                const platforms = game.platforms;
 
                 platforms.platforms.forEach(platform => {
                     const dist = Math.hypot(platform.x - player.x, platform.y - player.y);
