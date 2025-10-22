@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.7.2';
+        this.version = '1.7.3';
         this.versionNotes = [
+            'v1.7.3 - Enhancement: Elaborate multi-layered background music with melody, harmony, bass line, and percussion. Features A-A-B-A song structure with classic I-V-vi-IV chord progression',
             'v1.7.2 - Bug Fix: Fixed Bomb and Chaos Dice consumables crashing (game.platformManager -> game.platforms)',
             'v1.7.1 - Enhancement: All consumable mechanics now fully functional! Shield blocks hazards, ghost phases through, magnet attracts items, sticky gloves grip ice, spring shoes bounce, freeze/slow hazards, dash (Shift), wings glide, drunk wobbles, reversed controls',
             'v1.7.0 - Major Update: 20+ new consumables with roguelike rarity system! Gravity/physics modifiers, size changes, level manipulation, cursed items. Stacking duration logic, 1 rare max per level',

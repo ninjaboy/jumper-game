@@ -212,7 +212,7 @@ class SpeedBoostConsumable extends Consumable {
             color: '#FF6347',
             glowColor: '#FF4500',
             icon: '⚡',
-            duration: 600, // 10 seconds at 60fps
+            duration: 1200, // 20 seconds at 60fps
             effectType: 'active',
             rarity: 'common',
             onPickup: (player, consumable, game) => {
@@ -269,7 +269,7 @@ class FeatherConsumable extends Consumable {
             color: '#E6E6FA',
             glowColor: '#DDA0DD',
             icon: '🪶',
-            duration: 480, // 8 seconds
+            duration: 900, // 15 seconds
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
@@ -299,7 +299,7 @@ class AnvilCurseConsumable extends Consumable {
             color: '#696969',
             glowColor: '#2F4F4F',
             icon: '⚓',
-            duration: 360, // 6 seconds
+            duration: 720, // 12 seconds
             effectType: 'active',
             rarity: 'cursed',
             onPickup: (player, consumable, game) => {
@@ -329,7 +329,7 @@ class RocketBootsConsumable extends Consumable {
             color: '#FF8C00',
             glowColor: '#FF4500',
             icon: '🚀',
-            duration: 480, // 8 seconds
+            duration: 900, // 15 seconds
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
@@ -359,7 +359,7 @@ class SpringShoesConsumable extends Consumable {
             color: '#32CD32',
             glowColor: '#00FF00',
             icon: '👟',
-            duration: 480, // 8 seconds
+            duration: 900, // 15 seconds
             effectType: 'active',
             rarity: 'common',
             onPickup: (player, consumable, game) => {
@@ -387,7 +387,7 @@ class GiantMushroomConsumable extends Consumable {
             color: '#FF0000',
             glowColor: '#FF6347',
             icon: '🍄',
-            duration: 900, // 15 seconds
+            duration: 1800, // 30 seconds
             effectType: 'active',
             rarity: 'rare',
             onPickup: (player, consumable, game) => {
@@ -424,7 +424,7 @@ class ShrinkPotionConsumable extends Consumable {
             color: '#9370DB',
             glowColor: '#8A2BE2',
             icon: '🧪',
-            duration: 900, // 15 seconds
+            duration: 1800, // 30 seconds
             effectType: 'active',
             rarity: 'rare',
             onPickup: (player, consumable, game) => {
@@ -486,7 +486,7 @@ class GhostPotionConsumable extends Consumable {
             color: '#F0F8FF',
             glowColor: '#B0C4DE',
             icon: '👻',
-            duration: 300, // 5 seconds
+            duration: 600, // 10 seconds
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
@@ -510,7 +510,7 @@ class MagnetRingConsumable extends Consumable {
             color: '#C0C0C0',
             glowColor: '#A9A9A9',
             icon: '🧲',
-            duration: 600, // 10 seconds
+            duration: 1200, // 20 seconds
             effectType: 'active',
             rarity: 'common',
             onPickup: (player, consumable, game) => {
@@ -534,7 +534,7 @@ class StickyGlovesConsumable extends Consumable {
             color: '#FFD700',
             glowColor: '#FFA500',
             icon: '🧤',
-            duration: 480, // 8 seconds
+            duration: 900, // 15 seconds
             effectType: 'active',
             rarity: 'common',
             onPickup: (player, consumable, game) => {
@@ -600,7 +600,7 @@ class IceSpellConsumable extends Consumable {
             color: '#00FFFF',
             glowColor: '#87CEEB',
             icon: '❄️',
-            duration: 480, // 8 seconds
+            duration: 900, // 15 seconds
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
@@ -624,7 +624,7 @@ class TimeSlowConsumable extends Consumable {
             color: '#DAA520',
             glowColor: '#FFD700',
             icon: '⏳',
-            duration: 600, // 10 seconds
+            duration: 1200, // 20 seconds
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
@@ -683,7 +683,7 @@ class ReverseControlsConsumable extends Consumable {
             color: '#8B008B',
             glowColor: '#9400D3',
             icon: '🔄',
-            duration: 360, // 6 seconds
+            duration: 480, // 8 seconds
             effectType: 'active',
             rarity: 'cursed',
             onPickup: (player, consumable, game) => {
@@ -707,7 +707,7 @@ class DrunkPotionConsumable extends Consumable {
             color: '#CD853F',
             glowColor: '#D2691E',
             icon: '🍺',
-            duration: 480, // 8 seconds
+            duration: 720, // 12 seconds
             effectType: 'active',
             rarity: 'cursed',
             onPickup: (player, consumable, game) => {
@@ -732,7 +732,7 @@ class LuckyCloverConsumable extends Consumable {
             color: '#00FF00',
             glowColor: '#32CD32',
             icon: '🍀',
-            duration: 900, // 15 seconds
+            duration: 1800, // 30 seconds
             effectType: 'active',
             rarity: 'common',
             onPickup: (player, consumable, game) => {
@@ -781,7 +781,7 @@ class WingsConsumable extends Consumable {
             color: '#FFE4B5',
             glowColor: '#FFD700',
             icon: '🪽',
-            duration: 480, // 8 seconds
+            duration: 900, // 15 seconds
             effectType: 'active',
             rarity: 'rare',
             onPickup: (player, consumable, game) => {
@@ -805,7 +805,7 @@ class CoffeeConsumable extends Consumable {
             color: '#6F4E37',
             glowColor: '#8B4513',
             icon: '☕',
-            duration: 300, // 5 seconds
+            duration: 600, // 10 seconds
             effectType: 'active',
             rarity: 'common',
             onPickup: (player, consumable, game) => {
