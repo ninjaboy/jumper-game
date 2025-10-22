@@ -273,16 +273,14 @@ class FeatherConsumable extends Consumable {
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
-                if (!player.originalGravity) {
-                    player.originalGravity = player.gravity;
+                if (player.originalGravity === null) {
+                    player.originalGravity = game.physics.gravity;
                 }
-                player.gravity = player.originalGravity * 0.6;
+                player.gravity = player.originalGravity * 0.5;
             },
             onExpire: (player, consumable, game) => {
-                if (player.originalGravity) {
-                    player.gravity = player.originalGravity;
-                    player.originalGravity = null;
-                }
+                player.gravity = null; // Revert to physics default
+                player.originalGravity = null;
             }
         });
     }
@@ -303,16 +301,14 @@ class AnvilCurseConsumable extends Consumable {
             effectType: 'active',
             rarity: 'cursed',
             onPickup: (player, consumable, game) => {
-                if (!player.originalGravity) {
-                    player.originalGravity = player.gravity;
+                if (player.originalGravity === null) {
+                    player.originalGravity = game.physics.gravity;
                 }
-                player.gravity = player.originalGravity * 1.5;
+                player.gravity = player.originalGravity * 2.0;
             },
             onExpire: (player, consumable, game) => {
-                if (player.originalGravity) {
-                    player.gravity = player.originalGravity;
-                    player.originalGravity = null;
-                }
+                player.gravity = null; // Revert to physics default
+                player.originalGravity = null;
             }
         });
     }
@@ -333,16 +329,14 @@ class RocketBootsConsumable extends Consumable {
             effectType: 'active',
             rarity: 'uncommon',
             onPickup: (player, consumable, game) => {
-                if (!player.originalJumpPower) {
+                if (player.originalJumpPower === null) {
                     player.originalJumpPower = player.jumpPower;
                 }
-                player.jumpPower = player.originalJumpPower * 1.5;
+                player.jumpPower = player.originalJumpPower * 1.8;
             },
             onExpire: (player, consumable, game) => {
-                if (player.originalJumpPower) {
-                    player.jumpPower = player.originalJumpPower;
-                    player.originalJumpPower = null;
-                }
+                player.jumpPower = player.originalJumpPower;
+                player.originalJumpPower = null;
             }
         });
     }
@@ -381,7 +375,7 @@ class GiantMushroomConsumable extends Consumable {
         super({
             id: 'giant_mushroom',
             name: 'Giant Mushroom',
-            description: 'Grow to 2x size!',
+            description: 'Grow to 3x size!',
             x: x,
             y: y,
             color: '#FF0000',
@@ -397,8 +391,8 @@ class GiantMushroomConsumable extends Consumable {
                         height: player.height
                     };
                 }
-                player.width = player.originalSize.width * 2;
-                player.height = player.originalSize.height * 2;
+                player.width = player.originalSize.width * 3;
+                player.height = player.originalSize.height * 3;
                 player.consumableEffects.giant = true;
             },
             onExpire: (player, consumable, game) => {
@@ -418,7 +412,7 @@ class ShrinkPotionConsumable extends Consumable {
         super({
             id: 'shrink_potion',
             name: 'Shrinking Potion',
-            description: 'Shrink to half size!',
+            description: 'Shrink to 1/3 size!',
             x: x,
             y: y,
             color: '#9370DB',
@@ -434,8 +428,8 @@ class ShrinkPotionConsumable extends Consumable {
                         height: player.height
                     };
                 }
-                player.width = player.originalSize.width * 0.5;
-                player.height = player.originalSize.height * 0.5;
+                player.width = player.originalSize.width * 0.33;
+                player.height = player.originalSize.height * 0.33;
                 player.consumableEffects.tiny = true;
             },
             onExpire: (player, consumable, game) => {
@@ -833,6 +827,8 @@ class ConsumableManager {
         this.activeEffects = [];
         this.pickupNotifications = [];
         this.soundManager = soundManager;
+        this.screenFlash = null; // { color, alpha, duration }
+        this.pickupParticles = []; // Enhanced pickup particles
     }
 
     // Spawn a consumable
@@ -843,7 +839,7 @@ class ConsumableManager {
     }
 
     // Spawn random consumables in level with rarity system
-    spawnRandomConsumables(levelWidth, rng) {
+    spawnRandomConsumables(levelWidth, rng, player = null) {
         // Define consumable pools by rarity
         const rarityPools = {
             rare: [
@@ -880,13 +876,16 @@ class ConsumableManager {
             ]
         };
 
+        // Lucky Clover effect - better loot!
+        const luckBoost = (player && player.consumableEffects && player.consumableEffects.luckBoost) || 1.0;
+
         // Spawn 12-18 total consumables (up from 5-10)
         const totalCount = rng.randomInt(12, 18);
 
-        // Rarity limits per level
-        const rareLimit = 1; // Max 1 rare per level
-        const uncommonLimit = 4; // Max 4 uncommon per level
-        const cursedChance = 0.15; // 15% chance for a cursed item
+        // Rarity limits per level (boosted by luck)
+        const rareLimit = Math.min(3, Math.floor(1 * luckBoost)); // Max 1-3 rare
+        const uncommonLimit = Math.min(8, Math.floor(4 * luckBoost)); // Max 4-8 uncommon
+        const cursedChance = 0.15 / luckBoost; // Luck reduces cursed items!
 
         let rareCount = 0;
         let uncommonCount = 0;
@@ -895,20 +894,22 @@ class ConsumableManager {
             const x = rng.randomInt(300, levelWidth - 300);
             const y = rng.randomInt(100, 480);
 
-            // Determine rarity based on roll and limits
+            // Determine rarity based on roll and limits (luck boosts better items)
             let ConsumableClass;
             const roll = rng.random();
+            const rareChance = 0.05 * luckBoost; // Luck increases rare chance!
+            const uncommonChance = 0.25 * luckBoost; // Luck increases uncommon chance!
 
-            if (roll < 0.05 && rareCount < rareLimit) {
-                // 5% chance for rare (if not at limit)
+            if (roll < rareChance && rareCount < rareLimit) {
+                // 5-10% chance for rare (boosted by luck)
                 ConsumableClass = rng.choice(rarityPools.rare);
                 rareCount++;
-            } else if (roll < 0.25 && uncommonCount < uncommonLimit) {
-                // 20% chance for uncommon (if not at limit)
+            } else if (roll < uncommonChance && uncommonCount < uncommonLimit) {
+                // 20-40% chance for uncommon (boosted by luck)
                 ConsumableClass = rng.choice(rarityPools.uncommon);
                 uncommonCount++;
-            } else if (roll < 0.25 + cursedChance) {
-                // 15% chance for cursed
+            } else if (roll < uncommonChance + cursedChance) {
+                // 15-7.5% chance for cursed (reduced by luck)
                 ConsumableClass = rng.choice(rarityPools.cursed);
             } else {
                 // Rest are common
@@ -949,6 +950,12 @@ class ConsumableManager {
                 if (this.soundManager) {
                     this.soundManager.playCollect();
                 }
+
+                // Create screen flash effect based on rarity
+                this.createScreenFlash(consumable);
+
+                // Create enhanced pickup particles
+                this.createPickupParticles(consumable, player);
 
                 // Add to active effects if it has a duration
                 if (consumable.duration > 0) {
@@ -999,6 +1006,25 @@ class ConsumableManager {
             notification.scale = Math.min(1, notification.life / 10);
             return notification.life > 0;
         });
+
+        // Update screen flash
+        if (this.screenFlash) {
+            this.screenFlash.duration--;
+            this.screenFlash.alpha *= 0.92; // Fade out
+            if (this.screenFlash.duration <= 0 || this.screenFlash.alpha < 0.01) {
+                this.screenFlash = null;
+            }
+        }
+
+        // Update pickup particles
+        this.pickupParticles = this.pickupParticles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.3; // Gravity
+            p.vx *= 0.98; // Drag
+            p.life--;
+            return p.life > 0;
+        });
     }
 
     createPickupNotification(pickupInfo, player) {
@@ -1013,6 +1039,43 @@ class ConsumableManager {
         });
     }
 
+    createScreenFlash(consumable) {
+        // Different flash colors based on rarity
+        const flashColors = {
+            rare: '#9370DB',
+            uncommon: '#4169E1',
+            common: '#FFD700',
+            cursed: '#8B0000'
+        };
+
+        this.screenFlash = {
+            color: flashColors[consumable.rarity] || consumable.glowColor,
+            alpha: 0.3,
+            duration: 15 // frames
+        };
+    }
+
+    createPickupParticles(consumable, player) {
+        // Create explosive particles on pickup
+        const particleCount = consumable.rarity === 'rare' ? 30 : consumable.rarity === 'uncommon' ? 20 : 15;
+
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+            const speed = Math.random() * 6 + 4;
+
+            this.pickupParticles.push({
+                x: consumable.x + consumable.width / 2,
+                y: consumable.y + consumable.height / 2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2,
+                life: 40 + Math.random() * 20,
+                maxLife: 40 + Math.random() * 20,
+                color: consumable.glowColor,
+                size: Math.random() * 6 + 3
+            });
+        }
+    }
+
     render(ctx, camera) {
         // Render consumables (with camera translation)
         ctx.save();
@@ -1021,6 +1084,18 @@ class ConsumableManager {
         for (let consumable of this.consumables) {
             consumable.render(ctx);
         }
+
+        // Render pickup particles (with camera translation)
+        for (let p of this.pickupParticles) {
+            const alpha = p.life / p.maxLife;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
 
         ctx.restore();
 
@@ -1052,7 +1127,20 @@ class ConsumableManager {
         ctx.globalAlpha = 1;
     }
 
+    renderScreenFlash(ctx, canvas) {
+        // Render screen flash effect (fullscreen)
+        if (this.screenFlash) {
+            ctx.fillStyle = this.screenFlash.color;
+            ctx.globalAlpha = this.screenFlash.alpha;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+        }
+    }
+
     renderUI(ctx, canvas, player) {
+        // Render screen flash first (fullscreen effect)
+        this.renderScreenFlash(ctx, canvas);
+
         // Display active effects in UI
         const hasActiveEffects = this.activeEffects.length > 0;
         const hasJumpUpgrade = player && player.maxJumps > 1;
@@ -1108,5 +1196,7 @@ class ConsumableManager {
         this.consumables = [];
         this.activeEffects = [];
         this.pickupNotifications = [];
+        this.screenFlash = null;
+        this.pickupParticles = [];
     }
 }

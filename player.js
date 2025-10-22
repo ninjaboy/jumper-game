@@ -13,7 +13,10 @@ class Player {
         // Configurable properties
         this.moveSpeed = 5;
         this.jumpPower = 15;
+        this.gravity = null; // Will use physics.gravity if null
         this.originalMoveSpeed = null; // For temporary speed boosts
+        this.originalJumpPower = null; // For temporary jump boosts
+        this.originalGravity = null; // For temporary gravity changes
 
         // Jump mechanics
         this.jumpMode = 'mario';

@@ -14,9 +14,12 @@ class Physics {
     }
 
     applyGravity(entity) {
+        // Use entity's gravity if it has one, otherwise use physics gravity
+        const gravity = entity.gravity !== null && entity.gravity !== undefined ? entity.gravity : this.gravity;
+
         // Only apply gravity if not on ground or if moving upward
         if (entity.y + entity.height < this.groundLevel || entity.velocityY < 0) {
-            entity.velocityY += this.gravity;
+            entity.velocityY += gravity;
             entity.onGround = false;
         } else {
             // Only snap to ground if moving downward
