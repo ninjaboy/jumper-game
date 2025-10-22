@@ -426,11 +426,17 @@ class SoundManager {
         // Update volume based on proximity
         const ambient = this.ambientSounds.get(hazardId);
         if (ambient && ambient.gainNode) {
-            const targetVolume = proximity * this.getVolume() * 0.15; // Quiet ambient
-            ambient.gainNode.gain.linearRampToValueAtTime(
-                targetVolume,
-                this.audioContext.currentTime + 0.1
-            );
+            try {
+                const targetVolume = proximity * this.getVolume() * 0.15; // Quiet ambient
+                ambient.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+                ambient.gainNode.gain.linearRampToValueAtTime(
+                    targetVolume,
+                    this.audioContext.currentTime + 0.1
+                );
+            } catch (e) {
+                // Gain node might be disconnected, remove from map
+                this.ambientSounds.delete(hazardId);
+            }
         }
     }
 
@@ -492,19 +498,38 @@ class SoundManager {
 
         const ambient = this.ambientSounds.get(hazardId);
 
+        // Immediately remove from map to prevent re-entry
+        this.ambientSounds.delete(hazardId);
+
         // Fade out before stopping
         if (ambient.gainNode && this.audioContext) {
-            ambient.gainNode.gain.linearRampToValueAtTime(
-                0.01,
-                this.audioContext.currentTime + 0.2
-            );
+            try {
+                ambient.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+                ambient.gainNode.gain.linearRampToValueAtTime(
+                    0.01,
+                    this.audioContext.currentTime + 0.2
+                );
+            } catch (e) {
+                // Gain node might be disconnected, just continue
+            }
 
             setTimeout(() => {
                 if (ambient.oscillator) {
-                    ambient.oscillator.stop();
+                    try {
+                        ambient.oscillator.stop();
+                        ambient.oscillator.disconnect();
+                    } catch (e) {
+                        // Oscillator might already be stopped
+                    }
                 }
-                this.ambientSounds.delete(hazardId);
-            }, 200);
+                if (ambient.gainNode) {
+                    try {
+                        ambient.gainNode.disconnect();
+                    } catch (e) {
+                        // Already disconnected
+                    }
+                }
+            }, 250);
         }
     }
 

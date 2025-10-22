@@ -403,6 +403,11 @@ class Game {
     }
 
     generateNewLevel(seed = null) {
+        // Stop all ambient sounds before generating new level
+        if (this.soundManager) {
+            this.soundManager.stopAllAmbient();
+        }
+
         this.currentLevel = 1;
         this.currentBias = this.getRandomBias();
         this.platforms = new PlatformManager(seed, this.currentBias, this.currentLevel, this.soundManager);
@@ -416,6 +421,11 @@ class Game {
     }
 
     nextLevel() {
+        // Stop all ambient sounds before going to next level
+        if (this.soundManager) {
+            this.soundManager.stopAllAmbient();
+        }
+
         // Save player's current powerups
         const savedMaxJumps = this.player.maxJumps;
         const savedMoveSpeed = this.player.moveSpeed;
