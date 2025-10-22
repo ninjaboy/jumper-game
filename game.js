@@ -972,6 +972,8 @@ class Game {
         // Draw lives (support unlimited with multiple rows)
         this.ctx.fillText('Lives:', 10, 95);
         const heartsPerRow = 10; // Max hearts per row
+        const heartsRows = Math.ceil(this.player.maxLives / heartsPerRow);
+
         for (let i = 0; i < this.player.maxLives; i++) {
             const row = Math.floor(i / heartsPerRow);
             const col = i % heartsPerRow;
@@ -989,7 +991,6 @@ class Game {
         this.ctx.fillStyle = 'white';
 
         // Show progress bar (adjust position based on heart rows)
-        const heartsRows = Math.ceil(this.player.maxLives / 10);
         const progressY = 95 + heartsRows * 18 + 5;
 
         const progress = this.player.x / this.camera.levelWidth;
