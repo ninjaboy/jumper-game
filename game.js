@@ -1,36 +1,8 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.8.2';
-        this.versionNotes = [
-            'v1.8.2 - Enhancement: Made trap ambient sounds much more subtle (reduced volume from 15% to 4%) - less annoying!',
-            'v1.8.1 - Major Enhancement: Fixed ALL broken consumables! Gravity effects work (Feather/Anvil/Rocket Boots), Lucky Clover actually boosts loot, dramatic screen flashes & particle explosions on pickup, size changes 3x more extreme!',
-            'v1.8.0 - New Feature: Pause menu system (ESC key) with settings menu! Adjust master/music/SFX volumes, toggle retro mode, pixel size, scanlines, color palettes. Resume, restart, or quit to menu while paused',
-            'v1.7.4 - Enhancement: Elaborate multi-layered background music with melody, harmony, bass line, and percussion. Features A-A-B-A song structure with classic I-V-vi-IV chord progression',
-            'v1.7.3 - Enhancement: Doubled consumable effect durations for better gameplay experience! Most effects now last 50-100% longer',
-            'v1.7.2 - Bug Fix: Fixed Bomb and Chaos Dice consumables crashing (game.platformManager -> game.platforms)',
-            'v1.7.1 - Enhancement: All consumable mechanics now fully functional! Shield blocks hazards, ghost phases through, magnet attracts items, sticky gloves grip ice, spring shoes bounce, freeze/slow hazards, dash (Shift), wings glide, drunk wobbles, reversed controls',
-            'v1.7.0 - Major Update: 20+ new consumables with roguelike rarity system! Gravity/physics modifiers, size changes, level manipulation, cursed items. Stacking duration logic, 1 rare max per level',
-            'v1.6.1 - Enhancement: Randomized platform placement with wider vertical range (100-480), smaller platforms (60-100) to reduce overlap, more chaotic and engaging level generation',
-            'v1.6.0 - Major Update: Multi-floor level design with 4 distinct floors, evenly spaced platforms creating multiple vertical paths, improved camera for vertical gameplay',
-            'v1.5.1 - Enhancement: Audio controls - M to toggle mute, B to toggle background music, ambient sound cleanup fixes',
-            'v1.5.0 - Major Update: Ambient trap sounds with proximity detection, background music, unlimited lives, trap-specific interaction sounds',
-            'v1.4.1 - Enhancement: Complete sound system - death, collect, victory, spring bounce sounds added',
-            'v1.4.0 - New Feature: Sound system with Web Audio API - jump and landing sounds for all jump modes',
-            'v1.3.1 - Enhancement: Progressive difficulty scaling - each level gets harder, prominent level badge display in top-right corner',
-            'v1.3.0 - New Feature: Level progression system with 5 biases (Wide Gap, Hazard Heavy, Safe Zone, High Route, Tight Spaces), powerups persist between levels',
-            'v1.2.7 - Enhancement: Particles now physics-based, spray opposite to movement direction',
-            'v1.2.6 - Enhancement: Particles now red/orange with glow effects for better visibility',
-            'v1.2.5 - New Feature: Particle splash effects when jumping and landing',
-            'v1.2.4 - UI/UX: Victory screen with firework celebration effects, integrated instructions',
-            'v1.2.3 - UI/UX: Show double/triple jump status persistently in Active Effects panel',
-            'v1.2.2 - UI/UX: Version on start screen, death instructions integrated with animation',
-            'v1.2.1 - Bug Fix: Version number position corrected to top-left corner',
-            'v1.2.0 - New Feature: Start screen with animated GROUNDED logo restored + Consumables',
-            'v1.1.6 - Bug Fix: Explicitly configure Vercel for static hosting',
-            'v1.1.0 - Consumable System: Double/Triple Jump, Speed Boost, Extra Life',
-            'v1.0.0 - Base Game: Multiple jump mechanics, hazards, lives system'
-        ];
+        this.version = '1.8.3';
+        // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -65,8 +37,11 @@ class Game {
 
         // Start screen and menu system
         this.selectedMenuItem = 0;
-        this.menuItems = ['Start Game', 'Settings'];
+        this.menuItems = ['Start Game', 'Changelog', 'Settings'];
         this.settingsVisible = false;
+        this.changelogVisible = false;
+        this.changelogScroll = 0;
+        this.changelogMaxScroll = 0;
 
         // Pause menu system
         this.pauseMenuItems = ['Resume', 'Settings', 'Restart', 'Quit to Menu'];
@@ -161,6 +136,19 @@ class Game {
 
             // Handle start screen navigation
             if (this.gameState === 'start_screen') {
+                // Handle changelog viewing
+                if (this.changelogVisible) {
+                    if (e.code === 'KeyB' || e.code === 'Escape' || e.code === 'Backspace') {
+                        this.changelogVisible = false;
+                    } else if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+                        this.changelogScroll = Math.max(0, this.changelogScroll - 1);
+                    } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+                        this.changelogScroll = Math.min(this.changelogMaxScroll, this.changelogScroll + 1);
+                    }
+                    return;
+                }
+
+                // Handle menu navigation
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') {
                     this.selectedMenuItem = Math.max(0, this.selectedMenuItem - 1);
                 } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
@@ -328,7 +316,14 @@ class Game {
             case 0: // Start Game
                 this.startGame();
                 break;
-            case 1: // Settings
+            case 1: // Changelog
+                this.changelogVisible = true;
+                this.changelogScroll = 0;
+                // Calculate max scroll based on changelog length
+                const lines = CHANGELOG.split('\n').length;
+                this.changelogMaxScroll = Math.max(0, lines - 25); // Show ~25 lines at a time
+                break;
+            case 2: // Settings
                 this.gameState = 'settings';
                 break;
         }
@@ -949,8 +944,104 @@ class Game {
         this.ctx.fillText(`v${this.version}`, this.canvas.width/2, this.canvas.height - 20);
 
         this.ctx.textAlign = 'left';
+
+        // Render changelog if visible (overlays everything)
+        if (this.changelogVisible) {
+            this.renderChangelog();
+        }
     }
-    
+
+    renderChangelog() {
+        // Dark semi-transparent overlay
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Changelog window background
+        const margin = 40;
+        const windowX = margin;
+        const windowY = margin;
+        const windowWidth = this.canvas.width - margin * 2;
+        const windowHeight = this.canvas.height - margin * 2;
+
+        // Window background with border
+        this.ctx.fillStyle = '#1a1a1a';
+        this.ctx.fillRect(windowX, windowY, windowWidth, windowHeight);
+        this.ctx.strokeStyle = '#3498db';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(windowX, windowY, windowWidth, windowHeight);
+
+        // Header
+        this.ctx.fillStyle = '#3498db';
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('CHANGELOG', this.canvas.width / 2, windowY + 35);
+
+        // Render changelog content
+        const changelogLines = CHANGELOG.split('\n');
+        const lineHeight = 18;
+        const startY = windowY + 60;
+        const maxLines = Math.floor((windowHeight - 100) / lineHeight);
+
+        this.ctx.textAlign = 'left';
+        this.ctx.font = '12px monospace';
+
+        for (let i = 0; i < maxLines; i++) {
+            const lineIndex = this.changelogScroll + i;
+            if (lineIndex >= changelogLines.length) break;
+
+            const line = changelogLines[lineIndex];
+            const yPos = startY + i * lineHeight;
+
+            // Color code different line types
+            if (line.startsWith('v')) {
+                // Version headers
+                this.ctx.fillStyle = '#3498db';
+                this.ctx.font = 'bold 13px monospace';
+            } else if (line.includes('═') || line.includes('─')) {
+                // Separators
+                this.ctx.fillStyle = '#7f8c8d';
+                this.ctx.font = '12px monospace';
+            } else if (line.startsWith('•') || line.startsWith('  -')) {
+                // Bullet points
+                this.ctx.fillStyle = '#bdc3c7';
+                this.ctx.font = '12px monospace';
+            } else if (line.match(/^[A-Z ]+:/)) {
+                // Section headers (CRITICAL FIXES:, etc.)
+                this.ctx.fillStyle = '#e74c3c';
+                this.ctx.font = 'bold 12px monospace';
+            } else {
+                // Normal text
+                this.ctx.fillStyle = '#ecf0f1';
+                this.ctx.font = '12px monospace';
+            }
+
+            this.ctx.fillText(line, windowX + 20, yPos);
+        }
+
+        // Scroll indicators
+        this.ctx.textAlign = 'center';
+        this.ctx.font = '16px Arial';
+
+        if (this.changelogScroll > 0) {
+            // Up arrow
+            this.ctx.fillStyle = '#3498db';
+            this.ctx.fillText('▲ MORE', this.canvas.width / 2, startY - 15);
+        }
+
+        if (this.changelogScroll < this.changelogMaxScroll) {
+            // Down arrow
+            this.ctx.fillStyle = '#3498db';
+            this.ctx.fillText('▼ MORE', this.canvas.width / 2, windowY + windowHeight - 30);
+        }
+
+        // Instructions at bottom
+        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.font = '14px Arial';
+        this.ctx.fillText('↑/↓ to scroll • B to close', this.canvas.width / 2, windowY + windowHeight - 10);
+
+        this.ctx.textAlign = 'left';
+    }
+
     renderLogoParticles() {
         // Render background particle effects
         for (let particle of this.logoParticles) {
