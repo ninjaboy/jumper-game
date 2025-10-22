@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.8.1';
+        this.version = '1.8.2';
         this.versionNotes = [
+            'v1.8.2 - Enhancement: Made trap ambient sounds much more subtle (reduced volume from 15% to 4%) - less annoying!',
             'v1.8.1 - Major Enhancement: Fixed ALL broken consumables! Gravity effects work (Feather/Anvil/Rocket Boots), Lucky Clover actually boosts loot, dramatic screen flashes & particle explosions on pickup, size changes 3x more extreme!',
             'v1.8.0 - New Feature: Pause menu system (ESC key) with settings menu! Adjust master/music/SFX volumes, toggle retro mode, pixel size, scanlines, color palettes. Resume, restart, or quit to menu while paused',
             'v1.7.4 - Enhancement: Elaborate multi-layered background music with melody, harmony, bass line, and percussion. Features A-A-B-A song structure with classic I-V-vi-IV chord progression',

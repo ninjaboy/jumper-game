@@ -429,11 +429,11 @@ class SoundManager {
             this.startAmbientHazard(hazardId, hazardType);
         }
 
-        // Update volume based on proximity
+        // Update volume based on proximity (much more subtle now)
         const ambient = this.ambientSounds.get(hazardId);
         if (ambient && ambient.gainNode) {
             try {
-                const targetVolume = proximity * this.getVolume() * 0.15; // Quiet ambient
+                const targetVolume = proximity * this.getVolume() * 0.04; // Much quieter (was 0.15)
                 ambient.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
                 ambient.gainNode.gain.linearRampToValueAtTime(
                     targetVolume,
