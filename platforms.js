@@ -373,110 +373,84 @@ class PlatformManager {
         // Get bias parameters
         const biasParams = this.getBiasParameters();
 
-        // Define distinct floor levels for multi-level platforming
-        const floors = [
-            groundLevel,           // Ground floor (y=520)
-            groundLevel - 150,     // Floor 2 (y=370)
-            groundLevel - 300,     // Floor 3 (y=220)
-            groundLevel - 450      // Floor 4 (y=70) - highest
-        ];
-
         // Always start with a safe platform at ground
         this.platforms.push(new Platform(0, groundLevel, 200, 80, 'normal'));
 
-        // Generate multi-floor level structure with multiple paths
-        this.generateMultiFloorLevel(levelWidth, floors, platformTypes, biasParams);
+        // Generate ground segments with some gaps
+        let currentX = 250;
+        while (currentX < levelWidth - 500) {
+            const segmentWidth = this.rng.randomInt(biasParams.platformWidth.min, biasParams.platformWidth.max);
+            const gapSize = this.rng.randomInt(biasParams.gapSize.min, biasParams.gapSize.max);
+
+            this.platforms.push(new Platform(currentX, groundLevel, segmentWidth, 80, 'normal'));
+            currentX += segmentWidth + gapSize;
+        }
+
+        // Generate random floating platforms with more vertical variety
+        this.generateRandomFloatingPlatforms(levelWidth, groundLevel, platformTypes, biasParams);
 
         // Generate hazards
         this.generateHazards(levelWidth);
         this.generateAdvancedHazards(levelWidth, biasParams);
 
-        // Set start and finish flags (finish can be on upper floor)
-        const finishFloor = floors[this.rng.randomInt(0, 2)]; // Random floor 0-2
+        // Set start and finish flags
         this.startFlag = {x: 50, y: groundLevel - 100, width: 20, height: 100};
-        this.finishFlag = {x: levelWidth - 150, y: finishFloor - 100, width: 20, height: 100};
+        this.finishFlag = {x: levelWidth - 150, y: groundLevel - 100, width: 20, height: 100};
 
-        // Add platform at finish location to ensure it's reachable
-        this.platforms.push(new Platform(levelWidth - 300, finishFloor, 300, 80, 'normal'));
+        // Final platform at the end
+        this.platforms.push(new Platform(levelWidth - 300, groundLevel, 300, 80, 'normal'));
     }
 
-    generateMultiFloorLevel(levelWidth, floors, platformTypes, biasParams) {
-        const sections = 12; // More sections for better coverage
+    generateRandomFloatingPlatforms(levelWidth, groundLevel, platformTypes, biasParams) {
+        // Divide level into sections for distribution
+        const sections = 10;
         const sectionWidth = levelWidth / sections;
 
-        for (let section = 0; section < sections; section++) {
+        for (let section = 1; section < sections - 1; section++) {
             const sectionStart = section * sectionWidth;
             const sectionEnd = (section + 1) * sectionWidth;
 
-            // Determine which floors should have platforms in this section
-            // Always have at least 2 floors active, sometimes 3 for multiple paths
-            const activeFloors = [];
+            // Generate multiple platforms per section at random heights
+            const platformCount = this.rng.randomInt(
+                biasParams.platformsPerSection.min,
+                biasParams.platformsPerSection.max + 2
+            );
 
-            if (section === 0) {
-                // Starting section - focus on lower floors
-                activeFloors.push(0, 1);
-            } else if (section === sections - 1) {
-                // Ending section - multiple options to reach finish
-                activeFloors.push(0, 1, 2);
-            } else {
-                // Middle sections - create varied paths
-                const numFloors = this.rng.randomInt(2, 3);
-                const startFloor = this.rng.randomInt(0, floors.length - numFloors);
-                for (let i = 0; i < numFloors; i++) {
-                    activeFloors.push(startFloor + i);
-                }
+            for (let i = 0; i < platformCount; i++) {
+                // Random X within section
+                const x = this.rng.randomInt(sectionStart + 30, sectionEnd - 100);
+
+                // Random Y with wider range for more vertical variety
+                // Range from 100 to 480 (allows platforms high up and mid-level)
+                const y = this.rng.randomInt(100, 480);
+
+                // Smaller platform widths to reduce overlap
+                const width = this.rng.randomInt(60, 100);
+                const height = 20;
+
+                // Weight platform types - mostly normal
+                let type = 'normal';
+                const typeRoll = this.rng.random();
+                if (typeRoll < 0.12) type = 'ice';
+                else if (typeRoll < 0.20) type = 'moving';
+                else if (typeRoll < 0.28) type = 'spring';
+
+                this.platforms.push(new Platform(x, y, width, height, type));
             }
+        }
 
-            // Generate platforms for each active floor
-            for (let floorIndex of activeFloors) {
-                const floorY = floors[floorIndex];
-                const platformCount = this.rng.randomInt(
-                    Math.max(1, biasParams.platformsPerSection.min - 1),
-                    biasParams.platformsPerSection.max
-                );
+        // Add some high platforms for advanced routes (scattered randomly)
+        const highPlatformCount = this.rng.randomInt(
+            biasParams.highPlatforms.min,
+            biasParams.highPlatforms.max
+        );
 
-                for (let i = 0; i < platformCount; i++) {
-                    const x = this.rng.randomInt(
-                        sectionStart + 20,
-                        sectionEnd - 100
-                    );
+        for (let i = 0; i < highPlatformCount; i++) {
+            const x = this.rng.randomInt(400, levelWidth - 400);
+            const y = this.rng.randomInt(50, 200); // Very high platforms
+            const width = this.rng.randomInt(70, 100);
 
-                    // Platform width varies by bias
-                    const width = this.rng.randomInt(
-                        Math.max(60, biasParams.platformWidth.min),
-                        Math.min(200, biasParams.platformWidth.max)
-                    );
-
-                    // Choose platform type with weighted distribution
-                    let type = 'normal';
-                    const typeRoll = this.rng.random();
-                    if (typeRoll < 0.1) type = 'ice';
-                    else if (typeRoll < 0.15) type = 'moving';
-                    else if (typeRoll < 0.20) type = 'spring';
-
-                    this.platforms.push(new Platform(x, floorY, width, 20, type));
-                }
-            }
-
-            // Add connecting platforms between floors for vertical movement
-            if (section > 0 && section < sections - 1) {
-                const shouldAddConnector = this.rng.random() < 0.6;
-                if (shouldAddConnector && activeFloors.length >= 2) {
-                    // Add a platform between two floors
-                    const floor1 = floors[activeFloors[0]];
-                    const floor2 = floors[activeFloors[activeFloors.length - 1]];
-                    const midY = (floor1 + floor2) / 2;
-                    const midX = sectionStart + sectionWidth / 2;
-
-                    this.platforms.push(new Platform(
-                        midX - 40,
-                        midY,
-                        80,
-                        20,
-                        'normal'
-                    ));
-                }
-            }
+            this.platforms.push(new Platform(x, y, width, 20, 'normal'));
         }
     }
 

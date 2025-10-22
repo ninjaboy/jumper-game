@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.6.0';
+        this.version = '1.6.1';
         this.versionNotes = [
+            'v1.6.1 - Enhancement: Randomized platform placement with wider vertical range (100-480), smaller platforms (60-100) to reduce overlap, more chaotic and engaging level generation',
             'v1.6.0 - Major Update: Multi-floor level design with 4 distinct floors, evenly spaced platforms creating multiple vertical paths, improved camera for vertical gameplay',
             'v1.5.1 - Enhancement: Audio controls - M to toggle mute, B to toggle background music, ambient sound cleanup fixes',
             'v1.5.0 - Major Update: Ambient trap sounds with proximity detection, background music, unlimited lives, trap-specific interaction sounds',
