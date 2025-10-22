@@ -571,27 +571,77 @@ class SoundManager {
 
     /**
      * Play a looping melody for background music
+     * Enhanced multi-layered composition with melody, harmony, and bass
      */
     playMusicLoop() {
         if (!this.musicPlaying || !this.audioContext) return;
 
         const now = this.audioContext.currentTime;
+        const beatDuration = 0.35; // Duration of one beat
 
-        // Simple melody - ambient platformer tune
-        // C major scale melody: C - E - G - A - G - F - E - D
-        const melody = [
-            { freq: 261.63, duration: 0.4 }, // C4
-            { freq: 329.63, duration: 0.4 }, // E4
-            { freq: 392.00, duration: 0.4 }, // G4
-            { freq: 440.00, duration: 0.6 }, // A4 (longer)
-            { freq: 392.00, duration: 0.4 }, // G4
-            { freq: 349.23, duration: 0.4 }, // F4
-            { freq: 329.63, duration: 0.4 }, // E4
-            { freq: 293.66, duration: 0.6 }, // D4 (longer)
+        // === CHORD PROGRESSION ===
+        // I - V - vi - IV (C - G - Am - F) - classic pop progression
+        const chordProgression = [
+            { root: 261.63, notes: [261.63, 329.63, 392.00], duration: beatDuration * 4 }, // C major (C-E-G)
+            { root: 196.00, notes: [196.00, 246.94, 293.66], duration: beatDuration * 4 }, // G major (G-B-D)
+            { root: 220.00, notes: [220.00, 261.63, 329.63], duration: beatDuration * 4 }, // A minor (A-C-E)
+            { root: 174.61, notes: [174.61, 220.00, 261.63], duration: beatDuration * 4 }, // F major (F-A-C)
         ];
 
-        let startTime = now;
+        // === MELODY ===
+        // Section A: Uplifting melodic phrase
+        const melodyA = [
+            { freq: 523.25, duration: beatDuration * 0.75 },    // C5
+            { freq: 587.33, duration: beatDuration * 0.75 },    // D5
+            { freq: 659.25, duration: beatDuration * 0.5 },     // E5
+            { freq: 523.25, duration: beatDuration * 1 },       // C5
+            { freq: 659.25, duration: beatDuration * 0.75 },    // E5
+            { freq: 783.99, duration: beatDuration * 0.75 },    // G5
+            { freq: 659.25, duration: beatDuration * 0.5 },     // E5
+            { freq: 587.33, duration: beatDuration * 2 },       // D5 (hold)
 
+            { freq: 587.33, duration: beatDuration * 0.75 },    // D5
+            { freq: 659.25, duration: beatDuration * 0.75 },    // E5
+            { freq: 587.33, duration: beatDuration * 0.5 },     // D5
+            { freq: 523.25, duration: beatDuration * 1 },       // C5
+            { freq: 440.00, duration: beatDuration * 1 },       // A4
+            { freq: 523.25, duration: beatDuration * 1 },       // C5
+            { freq: 587.33, duration: beatDuration * 1 },       // D5
+            { freq: 523.25, duration: beatDuration * 2 },       // C5 (hold)
+        ];
+
+        // Section B: Contrasting bridge phrase
+        const melodyB = [
+            { freq: 659.25, duration: beatDuration * 1 },       // E5
+            { freq: 783.99, duration: beatDuration * 1 },       // G5
+            { freq: 880.00, duration: beatDuration * 1 },       // A5
+            { freq: 783.99, duration: beatDuration * 1 },       // G5
+            { freq: 659.25, duration: beatDuration * 1 },       // E5
+            { freq: 587.33, duration: beatDuration * 1 },       // D5
+            { freq: 523.25, duration: beatDuration * 1 },       // C5
+            { freq: 587.33, duration: beatDuration * 1 },       // D5
+
+            { freq: 659.25, duration: beatDuration * 0.75 },    // E5
+            { freq: 587.33, duration: beatDuration * 0.75 },    // D5
+            { freq: 523.25, duration: beatDuration * 0.5 },     // C5
+            { freq: 440.00, duration: beatDuration * 1 },       // A4
+            { freq: 523.25, duration: beatDuration * 1.5 },     // C5
+            { freq: 587.33, duration: beatDuration * 1.5 },     // D5
+            { freq: 523.25, duration: beatDuration * 2 },       // C5 (hold)
+        ];
+
+        // Alternate between sections: A-A-B-A pattern
+        if (!this.musicSection) this.musicSection = 0;
+        const sections = ['A', 'A', 'B', 'A'];
+        const currentSection = sections[this.musicSection % sections.length];
+        const melody = currentSection === 'A' ? melodyA : melodyB;
+        this.musicSection++;
+
+        let melodyStartTime = now;
+        let harmonyStartTime = now;
+        let bassStartTime = now;
+
+        // === PLAY MELODY (Lead) ===
         melody.forEach((note) => {
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
@@ -599,23 +649,113 @@ class SoundManager {
             oscillator.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
 
-            oscillator.type = 'sine';
+            oscillator.type = 'triangle'; // Triangle for softer, warmer lead
             oscillator.frequency.value = note.freq;
 
-            // Soft envelope
-            const volume = this.getMusicVolume() * 0.12; // Very quiet
-            gainNode.gain.setValueAtTime(0, startTime);
-            gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.05);
-            gainNode.gain.linearRampToValueAtTime(volume * 0.7, startTime + note.duration - 0.05);
-            gainNode.gain.linearRampToValueAtTime(0.01, startTime + note.duration);
+            // Soft envelope for smooth melody
+            const volume = this.getMusicVolume() * 0.15;
+            gainNode.gain.setValueAtTime(0, melodyStartTime);
+            gainNode.gain.linearRampToValueAtTime(volume, melodyStartTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(volume * 0.8, melodyStartTime + note.duration - 0.05);
+            gainNode.gain.linearRampToValueAtTime(0.01, melodyStartTime + note.duration);
 
-            oscillator.start(startTime);
-            oscillator.stop(startTime + note.duration);
+            oscillator.start(melodyStartTime);
+            oscillator.stop(melodyStartTime + note.duration);
 
-            startTime += note.duration;
+            melodyStartTime += note.duration;
         });
 
-        // Calculate total melody duration and schedule next loop
+        // === PLAY HARMONY (Arpeggiated Chords) ===
+        chordProgression.forEach((chord) => {
+            // Arpeggiate each chord (play notes in sequence)
+            const arpDuration = chord.duration / (chord.notes.length * 2); // Each note gets a fraction of chord duration
+
+            for (let i = 0; i < 2; i++) { // Play arpeggio twice per chord
+                chord.notes.forEach((freq) => {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+
+                    oscillator.type = 'sine'; // Sine for clean harmony
+                    oscillator.frequency.value = freq;
+
+                    // Gentle envelope
+                    const volume = this.getMusicVolume() * 0.08; // Quieter than melody
+                    gainNode.gain.setValueAtTime(0, harmonyStartTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, harmonyStartTime + 0.02);
+                    gainNode.gain.linearRampToValueAtTime(0.01, harmonyStartTime + arpDuration);
+
+                    oscillator.start(harmonyStartTime);
+                    oscillator.stop(harmonyStartTime + arpDuration);
+
+                    harmonyStartTime += arpDuration;
+                });
+            }
+        });
+
+        // === PLAY BASS LINE ===
+        chordProgression.forEach((chord) => {
+            // Play root note as bass
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+
+            oscillator.type = 'sawtooth'; // Sawtooth for rich bass
+            oscillator.frequency.value = chord.root / 2; // Octave lower
+
+            // Bass envelope - punchy attack
+            const volume = this.getMusicVolume() * 0.12;
+            gainNode.gain.setValueAtTime(volume, bassStartTime);
+            gainNode.gain.exponentialRampToValueAtTime(volume * 0.3, bassStartTime + chord.duration * 0.9);
+            gainNode.gain.linearRampToValueAtTime(0.01, bassStartTime + chord.duration);
+
+            oscillator.start(bassStartTime);
+            oscillator.stop(bassStartTime + chord.duration);
+
+            bassStartTime += chord.duration;
+        });
+
+        // === ADD SUBTLE PERCUSSION (Hi-hat pattern) ===
+        for (let i = 0; i < 16; i++) { // 16 beats
+            const hitTime = now + (i * beatDuration);
+
+            // Create short noise burst for hi-hat
+            const bufferSize = this.audioContext.sampleRate * 0.05;
+            const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let j = 0; j < bufferSize; j++) {
+                data[j] = Math.random() * 2 - 1;
+            }
+
+            const noise = this.audioContext.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = this.audioContext.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 6000; // High frequency for hi-hat
+
+            const gainNode = this.audioContext.createGain();
+
+            noise.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+
+            // Accent on beats 1 and 3 (stronger), softer on 2 and 4
+            const isAccent = (i % 4 === 0 || i % 4 === 2);
+            const volume = this.getMusicVolume() * (isAccent ? 0.06 : 0.03);
+
+            gainNode.gain.setValueAtTime(volume, hitTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, hitTime + 0.05);
+
+            noise.start(hitTime);
+        }
+
+        // Calculate total duration and schedule next loop
         const totalDuration = melody.reduce((sum, note) => sum + note.duration, 0);
 
         if (this.musicPlaying) {
