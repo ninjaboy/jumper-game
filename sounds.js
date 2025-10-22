@@ -15,6 +15,7 @@ class SoundManager {
         this.musicPlaying = false;
         this.musicMood = 'normal'; // Current music mood based on level bias
         this.musicSection = 0; // Track which section we're on (for A-A-B-A pattern)
+        this.musicTimeout = null; // Track the timeout for scheduled music loops
 
         // Ambient sound state (for proximity-based sounds)
         this.ambientSounds = new Map(); // hazardId -> {oscillator, gainNode, currentVolume}
@@ -568,7 +569,12 @@ class SoundManager {
      */
     stopBackgroundMusic() {
         this.musicPlaying = false;
-        // Music will naturally stop after current loop
+
+        // Cancel any scheduled music loop
+        if (this.musicTimeout) {
+            clearTimeout(this.musicTimeout);
+            this.musicTimeout = null;
+        }
     }
 
     /**
@@ -895,7 +901,8 @@ class SoundManager {
         const totalDuration = melody.reduce((sum, note) => sum + note.duration, 0);
 
         if (this.musicPlaying) {
-            setTimeout(() => this.playMusicLoop(), totalDuration * 1000);
+            // Store the timeout ID so we can cancel it if needed
+            this.musicTimeout = setTimeout(() => this.playMusicLoop(), totalDuration * 1000);
         }
     }
 }
