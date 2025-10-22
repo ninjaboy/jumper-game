@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.2.7';
+        this.version = '1.3.0';
         this.versionNotes = [
+            'v1.3.0 - New Feature: Level progression system with 5 biases (Wide Gap, Hazard Heavy, Safe Zone, High Route, Tight Spaces), powerups persist between levels',
             'v1.2.7 - Enhancement: Particles now physics-based, spray opposite to movement direction',
             'v1.2.6 - Enhancement: Particles now red/orange with glow effects for better visibility',
             'v1.2.5 - New Feature: Particle splash effects when jumping and landing',
@@ -21,7 +22,9 @@ class Game {
 
         this.physics = new Physics();
         this.currentSeed = null;
-        this.platforms = new PlatformManager();
+        this.currentLevel = 1;
+        this.currentBias = 'normal';
+        this.platforms = new PlatformManager(null, this.currentBias);
         this.consumables = new ConsumableManager();
         this.player = new Player(100, this.physics.groundLevel - 40);
 
@@ -90,13 +93,21 @@ class Game {
                 return;
             }
             
-            // Handle restart and new level
+            // Handle restart and next level
             if (this.gameState === 'finished' || this.gameState === 'game_over') {
                 if (e.code === 'KeyR') {
                     this.restart();
                     return;
                 } else if (e.code === 'KeyN') {
-                    this.generateNewLevel();
+                    if (this.gameState === 'finished') {
+                        this.nextLevel();
+                    } else {
+                        this.generateNewLevel();
+                    }
+                    return;
+                } else if (e.code === 'Space' && this.gameState === 'finished') {
+                    // Allow space to advance to next level on victory
+                    this.nextLevel();
                     return;
                 }
             }
@@ -379,7 +390,9 @@ class Game {
     }
 
     generateNewLevel(seed = null) {
-        this.platforms = new PlatformManager(seed);
+        this.currentLevel = 1;
+        this.currentBias = this.getRandomBias();
+        this.platforms = new PlatformManager(seed, this.currentBias);
         this.updateSeedDisplay();
 
         // Reset and respawn consumables for new level
@@ -387,6 +400,52 @@ class Game {
         this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
 
         this.restart();
+    }
+
+    nextLevel() {
+        // Save player's current powerups
+        const savedMaxJumps = this.player.maxJumps;
+        const savedMoveSpeed = this.player.moveSpeed;
+        const savedOriginalMoveSpeed = this.player.originalMoveSpeed;
+        const savedConsumableEffects = { ...this.player.consumableEffects };
+
+        // Increment level and generate new level
+        this.currentLevel++;
+        this.currentBias = this.getRandomBias();
+        this.platforms = new PlatformManager(null, this.currentBias);
+        this.updateSeedDisplay();
+
+        // Reset and respawn consumables for new level
+        this.consumables.reset();
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng);
+
+        // Reset player position but keep powerups
+        this.gameState = 'playing';
+        this.player.x = 100;
+        this.player.y = this.physics.groundLevel - 40;
+        this.player.velocityX = 0;
+        this.player.velocityY = 0;
+        this.player.onGround = true;
+        this.player.resetLives(); // Reset lives to 3
+
+        // Restore powerups
+        this.player.maxJumps = savedMaxJumps;
+        this.player.jumpsRemaining = savedMaxJumps;
+        this.player.moveSpeed = savedMoveSpeed;
+        this.player.originalMoveSpeed = savedOriginalMoveSpeed;
+        this.player.consumableEffects = savedConsumableEffects;
+
+        // Clear victory particles
+        this.victoryParticles = [];
+        this.victoryTimer = 0;
+
+        this.camera.x = 0;
+        this.camera.y = 0;
+    }
+
+    getRandomBias() {
+        const biases = ['normal', 'wide_gap', 'hazard_heavy', 'safe_zone', 'high_route', 'tight_spaces'];
+        return biases[Math.floor(Math.random() * biases.length)];
     }
 
     regenerateCurrentLevel() {
@@ -547,7 +606,7 @@ class Game {
         this.ctx.font = 'bold 36px Arial';
         this.ctx.shadowColor = '#FFD700';
         this.ctx.shadowBlur = 20;
-        this.ctx.fillText('Press R to restart or N for new level!', this.canvas.width/2, this.canvas.height - 150);
+        this.ctx.fillText('Press SPACE or N for next level!', this.canvas.width/2, this.canvas.height - 150);
         this.ctx.shadowBlur = 0;
 
         // Mode and seed info below (smaller)
@@ -839,42 +898,47 @@ class Game {
         
         // Draw UI elements (fixed position)
         this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        this.ctx.fillRect(5, 5, 300, 120);
+        this.ctx.fillRect(5, 5, 300, 130);
         
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px Arial';
         this.ctx.fillText('WASD/Arrow Keys: Move | Space: Jump', 10, 25);
-        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()}`, 10, 45);
-        this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 65);
-        
+        this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} | Level: ${this.currentLevel}`, 10, 45);
+
+        // Show level bias
+        const biasName = this.platforms.getBiasParameters().name;
+        this.ctx.fillText(`Type: ${biasName}`, 10, 60);
+
+        this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 75);
+
         // Draw lives
-        this.ctx.fillText('Lives:', 10, 85);
+        this.ctx.fillText('Lives:', 10, 95);
         for (let i = 0; i < this.player.maxLives; i++) {
             if (i < this.player.lives) {
                 this.ctx.fillStyle = '#FF0000'; // Red heart for remaining lives
-                this.ctx.fillText('♥', 60 + i * 20, 85);
+                this.ctx.fillText('♥', 60 + i * 20, 95);
             } else {
                 this.ctx.fillStyle = '#444444'; // Dark heart for lost lives
-                this.ctx.fillText('♥', 60 + i * 20, 85);
+                this.ctx.fillText('♥', 60 + i * 20, 95);
             }
         }
         this.ctx.fillStyle = 'white';
-        
+
         // Show progress bar
         const progress = this.player.x / this.camera.levelWidth;
         this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        this.ctx.fillRect(10, 105, 200, 10);
+        this.ctx.fillRect(10, 115, 200, 10);
         this.ctx.fillStyle = '#00FF00';
-        this.ctx.fillRect(10, 105, progress * 200, 10);
+        this.ctx.fillRect(10, 115, progress * 200, 10);
         
         // Show jump mechanics info
         this.ctx.font = '12px Arial';
         if (this.player.jumpMode === 'hollow' || this.player.jumpMode === 'celeste') {
-            this.ctx.fillText(`Hold jump for variable height!`, 10, 125);
+            this.ctx.fillText(`Hold jump for variable height!`, 10, 135);
         } else if (this.player.jumpMode === 'sonic') {
-            this.ctx.fillText(`Run faster to jump higher!`, 10, 125);
+            this.ctx.fillText(`Run faster to jump higher!`, 10, 135);
         } else if (this.player.jumpMode === 'megaman') {
-            this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, 125);
+            this.ctx.fillText(`Fixed arc - plan your jumps!`, 10, 135);
         }
 
         // Render consumables UI (active effects, notifications)

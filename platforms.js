@@ -280,7 +280,7 @@ class PoisonCloud {
 }
 
 class PlatformManager {
-    constructor(seed = null) {
+    constructor(seed = null, bias = 'normal') {
         this.platforms = [];
         this.spikes = [];
         this.sawBlades = [];
@@ -288,6 +288,7 @@ class PlatformManager {
         this.poisonClouds = [];
         this.seed = seed || Math.floor(Math.random() * 1000000);
         this.rng = new SimpleRNG(this.seed);
+        this.bias = bias;
         this.generateRandomLevel();
     }
 
@@ -312,62 +313,124 @@ class PlatformManager {
         const levelWidth = 3000;
         const groundLevel = 520;
         const platformTypes = ['normal', 'ice', 'moving', 'spring'];
-        
+
+        // Get bias parameters
+        const biasParams = this.getBiasParameters();
+
         // Always start with a safe platform
         this.platforms.push(new Platform(0, groundLevel, 250, 80, 'normal'));
-        
+
         // Generate ground segments with gaps
         let currentX = 300;
         while (currentX < levelWidth - 300) {
-            const segmentWidth = this.rng.randomInt(150, 250);
-            const gapSize = this.rng.randomInt(50, 150);
-            
+            const segmentWidth = this.rng.randomInt(biasParams.platformWidth.min, biasParams.platformWidth.max);
+            const gapSize = this.rng.randomInt(biasParams.gapSize.min, biasParams.gapSize.max);
+
             this.platforms.push(new Platform(currentX, groundLevel, segmentWidth, 80, 'normal'));
             currentX += segmentWidth + gapSize;
         }
-        
+
         // Final platform at the end
         this.platforms.push(new Platform(levelWidth - 300, groundLevel, 300, 80, 'normal'));
-        
+
         // Generate floating platforms
-        this.generateFloatingPlatforms(levelWidth, groundLevel, platformTypes);
-        
+        this.generateFloatingPlatforms(levelWidth, groundLevel, platformTypes, biasParams);
+
         // Generate hazards
         this.generateHazards(levelWidth);
-        this.generateAdvancedHazards(levelWidth);
-        
+        this.generateAdvancedHazards(levelWidth, biasParams);
+
         // Generate high route platforms
-        this.generateHighRoute(levelWidth);
-        
+        this.generateHighRoute(levelWidth, biasParams);
+
         // Set start and finish flags
         this.startFlag = {x: 50, y: groundLevel - 100, width: 20, height: 100};
         this.finishFlag = {x: levelWidth - 150, y: groundLevel - 100, width: 20, height: 100};
     }
 
-    generateFloatingPlatforms(levelWidth, groundLevel, platformTypes) {
+    getBiasParameters() {
+        switch (this.bias) {
+            case 'wide_gap':
+                return {
+                    name: 'Wide Gap',
+                    gapSize: { min: 100, max: 250 },
+                    platformWidth: { min: 100, max: 200 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.7,
+                    highPlatforms: { min: 4, max: 8 }
+                };
+            case 'hazard_heavy':
+                return {
+                    name: 'Hazard Heavy',
+                    gapSize: { min: 50, max: 150 },
+                    platformWidth: { min: 150, max: 250 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.95,
+                    highPlatforms: { min: 4, max: 8 }
+                };
+            case 'safe_zone':
+                return {
+                    name: 'Safe Zone',
+                    gapSize: { min: 40, max: 120 },
+                    platformWidth: { min: 180, max: 280 },
+                    platformsPerSection: { min: 3, max: 5 },
+                    hazardChance: 0.3,
+                    highPlatforms: { min: 4, max: 8 }
+                };
+            case 'high_route':
+                return {
+                    name: 'High Route',
+                    gapSize: { min: 50, max: 150 },
+                    platformWidth: { min: 150, max: 250 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.6,
+                    highPlatforms: { min: 8, max: 14 }
+                };
+            case 'tight_spaces':
+                return {
+                    name: 'Tight Spaces',
+                    gapSize: { min: 30, max: 80 },
+                    platformWidth: { min: 120, max: 200 },
+                    platformsPerSection: { min: 3, max: 5 },
+                    hazardChance: 0.7,
+                    highPlatforms: { min: 4, max: 8 }
+                };
+            default: // normal
+                return {
+                    name: 'Normal',
+                    gapSize: { min: 50, max: 150 },
+                    platformWidth: { min: 150, max: 250 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.7,
+                    highPlatforms: { min: 4, max: 8 }
+                };
+        }
+    }
+
+    generateFloatingPlatforms(levelWidth, groundLevel, platformTypes, biasParams) {
         const sections = 8;
         const sectionWidth = levelWidth / sections;
-        
+
         for (let section = 1; section < sections - 1; section++) {
             const sectionStart = section * sectionWidth;
             const sectionEnd = (section + 1) * sectionWidth;
-            
-            // Generate 2-4 platforms per section
-            const platformCount = this.rng.randomInt(2, 4);
-            
+
+            // Generate platforms per section based on bias
+            const platformCount = this.rng.randomInt(biasParams.platformsPerSection.min, biasParams.platformsPerSection.max);
+
             for (let i = 0; i < platformCount; i++) {
                 const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 100);
                 const y = this.rng.randomInt(300, 450);
                 const width = this.rng.randomInt(60, 120);
                 const height = 20;
-                
+
                 // Weight platform types - more normal platforms
                 let type = 'normal';
                 const typeRoll = this.rng.random();
                 if (typeRoll < 0.15) type = 'ice';
                 else if (typeRoll < 0.25) type = 'moving';
                 else if (typeRoll < 0.35) type = 'spring';
-                
+
                 this.platforms.push(new Platform(x, y, width, height, type));
             }
         }
@@ -394,18 +457,18 @@ class PlatformManager {
         }
     }
 
-    generateAdvancedHazards(levelWidth) {
+    generateAdvancedHazards(levelWidth, biasParams) {
         const sections = 6;
         const sectionWidth = levelWidth / sections;
-        
+
         for (let section = 1; section < sections - 1; section++) {
             const sectionStart = section * sectionWidth;
             const sectionEnd = (section + 1) * sectionWidth;
-            
-            // Randomly choose hazard type for this section
+
+            // Randomly choose hazard type for this section based on bias
             const hazardRoll = this.rng.random();
-            
-            if (hazardRoll < 0.3) {
+
+            if (hazardRoll < 0.3 * biasParams.hazardChance) {
                 // Add saw blades
                 const sawCount = this.rng.randomInt(1, 3);
                 for (let i = 0; i < sawCount; i++) {
@@ -413,7 +476,7 @@ class PlatformManager {
                     const y = this.rng.randomInt(350, 450);
                     this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
                 }
-            } else if (hazardRoll < 0.5) {
+            } else if (hazardRoll < 0.5 * biasParams.hazardChance) {
                 // Add lava pits
                 const lavaCount = this.rng.randomInt(1, 2);
                 for (let i = 0; i < lavaCount; i++) {
@@ -421,7 +484,7 @@ class PlatformManager {
                     const width = this.rng.randomInt(60, 120);
                     this.lavaPits.push(new LavaPit(x, 490, width));
                 }
-            } else if (hazardRoll < 0.7) {
+            } else if (hazardRoll < biasParams.hazardChance) {
                 // Add poison clouds
                 const poisonCount = this.rng.randomInt(1, 2);
                 for (let i = 0; i < poisonCount; i++) {
@@ -433,15 +496,15 @@ class PlatformManager {
         }
     }
 
-    generateHighRoute(levelWidth) {
-        // Generate upper level platforms for advanced players
-        const highPlatforms = this.rng.randomInt(4, 8);
-        
+    generateHighRoute(levelWidth, biasParams) {
+        // Generate upper level platforms for advanced players based on bias
+        const highPlatforms = this.rng.randomInt(biasParams.highPlatforms.min, biasParams.highPlatforms.max);
+
         for (let i = 0; i < highPlatforms; i++) {
             const x = this.rng.randomInt(400, levelWidth - 400);
             const y = this.rng.randomInt(150, 250);
             const width = this.rng.randomInt(70, 100);
-            
+
             this.platforms.push(new Platform(x, y, width, 20, 'normal'));
         }
     }

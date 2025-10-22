@@ -326,9 +326,9 @@ class Player {
     }
 
     spawnJumpParticles() {
-        // Spawn particles when jumping - spray opposite to movement direction
-        const particleCount = 12;
-        const colors = ['#FF4444', '#FF6666', '#FF8888', '#FFAA00']; // Red and orange tones
+        // Spawn particles when jumping - spray opposite to movement direction (light/subtle)
+        const particleCount = 6; // Fewer particles for lighter effect
+        const colors = ['#FF8888', '#FFAA88', '#FFCC88', '#FFE0AA']; // Lighter orange/peach tones
 
         for (let i = 0; i < particleCount; i++) {
             // Spray downward and opposite to player's horizontal movement
@@ -336,7 +336,7 @@ class Player {
             const spread = (Math.random() - 0.5) * Math.PI * 0.8; // Wide spread
             const angle = baseAngle + spread;
 
-            const speed = Math.random() * 4 + 3;
+            const speed = Math.random() * 3 + 2; // Slower speed
             // Push particles opposite to player velocity
             const vx = Math.cos(angle) * speed - this.velocityX * 0.5;
             const vy = Math.abs(Math.sin(angle) * speed); // Always downward
@@ -346,9 +346,9 @@ class Player {
                 y: this.y + this.height,
                 vx: vx,
                 vy: vy,
-                life: 30 + Math.random() * 15,
-                maxLife: 30 + Math.random() * 15,
-                size: Math.random() * 5 + 3,
+                life: 20 + Math.random() * 10, // Shorter lifespan
+                maxLife: 20 + Math.random() * 10,
+                size: Math.random() * 3 + 2, // Smaller particles
                 color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
