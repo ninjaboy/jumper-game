@@ -13,6 +13,8 @@ class SoundManager {
         // Background music state
         this.backgroundMusic = null;
         this.musicPlaying = false;
+        this.musicMood = 'normal'; // Current music mood based on level bias
+        this.musicSection = 0; // Track which section we're on (for A-A-B-A pattern)
 
         // Ambient sound state (for proximity-based sounds)
         this.ambientSounds = new Map(); // hazardId -> {oscillator, gainNode, currentVolume}

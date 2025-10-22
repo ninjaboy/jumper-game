@@ -1,7 +1,8 @@
 // GROUNDED - Game Changelog
 // All version history and patch notes
 
-const CHANGELOG = `
+// Use var to ensure global scope in browser
+var CHANGELOG = `
 ═══════════════════════════════════════════════════════════════
                          GROUNDED
                     Version History & Changelog

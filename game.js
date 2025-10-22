@@ -317,6 +317,10 @@ class Game {
                 this.startGame();
                 break;
             case 1: // Changelog
+                if (typeof CHANGELOG === 'undefined') {
+                    console.error('CHANGELOG not loaded! Make sure changelog.js is included.');
+                    return;
+                }
                 this.changelogVisible = true;
                 this.changelogScroll = 0;
                 // Calculate max scroll based on changelog length
@@ -961,6 +965,13 @@ class Game {
     }
 
     renderChangelog() {
+        // Safety check
+        if (typeof CHANGELOG === 'undefined') {
+            this.changelogVisible = false;
+            console.error('CHANGELOG not available');
+            return;
+        }
+
         // Dark semi-transparent overlay
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
