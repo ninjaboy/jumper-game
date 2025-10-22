@@ -953,11 +953,12 @@ class Game {
         this.ctx.restore();
         
         // Draw UI elements (fixed position) - expand box for multiple heart rows
-        const heartsRows = Math.ceil(this.player.maxLives / 10);
+        const heartsPerRow = 10; // Max hearts per row
+        const heartsRows = Math.ceil(this.player.maxLives / heartsPerRow);
         const uiHeight = 115 + (heartsRows - 1) * 18; // Expand for multiple rows
         this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
         this.ctx.fillRect(5, 5, 300, uiHeight);
-        
+
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px Arial';
         this.ctx.fillText('WASD/Arrow Keys: Move | Space: Jump', 10, 25);
@@ -971,8 +972,6 @@ class Game {
 
         // Draw lives (support unlimited with multiple rows)
         this.ctx.fillText('Lives:', 10, 95);
-        const heartsPerRow = 10; // Max hearts per row
-        const heartsRows = Math.ceil(this.player.maxLives / heartsPerRow);
 
         for (let i = 0; i < this.player.maxLives; i++) {
             const row = Math.floor(i / heartsPerRow);
