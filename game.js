@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.8.4';
+        this.version = '1.8.5';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -570,8 +570,10 @@ class Game {
                 return;
             }
 
-            // Update ambient hazard sounds based on proximity
-            this.platforms.updateAmbientSounds(this.player);
+            // Update ambient hazard sounds based on proximity (but not during death animation)
+            if (!this.player.isDying) {
+                this.platforms.updateAmbientSounds(this.player);
+            }
 
             this.updateCamera();
 
