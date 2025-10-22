@@ -1,8 +1,9 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.5.1';
+        this.version = '1.6.0';
         this.versionNotes = [
+            'v1.6.0 - Major Update: Multi-floor level design with 4 distinct floors, evenly spaced platforms creating multiple vertical paths, improved camera for vertical gameplay',
             'v1.5.1 - Enhancement: Audio controls - M to toggle mute, B to toggle background music, ambient sound cleanup fixes',
             'v1.5.0 - Major Update: Ambient trap sounds with proximity detection, background music, unlimited lives, trap-specific interaction sounds',
             'v1.4.1 - Enhancement: Complete sound system - death, collect, victory, spring bounce sounds added',
@@ -737,12 +738,22 @@ class Game {
             // Center camera on player horizontally
             this.camera.x = this.player.x - this.canvas.width / 2;
 
-            // Clamp camera to level bounds
+            // Clamp camera to level bounds horizontally
             this.camera.x = Math.max(0, Math.min(this.camera.x, this.camera.levelWidth - this.canvas.width));
 
-            // Keep camera y position stable (slight following vertically)
-            const targetY = Math.max(0, this.player.y - this.canvas.height * 0.7);
-            this.camera.y += (targetY - this.camera.y) * 0.1;
+            // Improved vertical camera following for multi-floor platforming
+            // Center player in middle of screen (50%) for better vertical view
+            const targetY = this.player.y - this.canvas.height * 0.5;
+
+            // Smooth camera movement with faster response for vertical
+            this.camera.y += (targetY - this.camera.y) * 0.15;
+
+            // Clamp camera vertically to show level bounds
+            // Allow camera to go up to show high platforms
+            const minCameraY = -200; // Can see 200px above level top
+            const maxCameraY = 520 - this.canvas.height + 100; // Don't go too far down
+
+            this.camera.y = Math.max(minCameraY, Math.min(maxCameraY, this.camera.y));
         }
     }
 
