@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '1.8.5';
+        this.version = '1.9.0';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -485,6 +485,11 @@ class Game {
         this.platforms = new PlatformManager(seed, this.currentBias, this.currentLevel, this.soundManager);
         this.updateSeedDisplay();
 
+        // Update music mood to match new level bias
+        if (this.soundManager) {
+            this.soundManager.setMusicMood(this.currentBias);
+        }
+
         // Reset and respawn consumables for new level
         this.consumables.reset();
         this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
@@ -509,6 +514,11 @@ class Game {
         this.currentBias = this.getRandomBias();
         this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
         this.updateSeedDisplay();
+
+        // Update music mood to match new level bias
+        if (this.soundManager) {
+            this.soundManager.setMusicMood(this.currentBias);
+        }
 
         // Reset and respawn consumables for new level
         this.consumables.reset();

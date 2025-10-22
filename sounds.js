@@ -572,23 +572,156 @@ class SoundManager {
     }
 
     /**
+     * Set the music mood based on level bias
+     * Restarts the music with the new mood
+     */
+    setMusicMood(levelBias) {
+        this.musicMood = levelBias;
+        this.musicSection = 0; // Reset section counter
+
+        // Restart music if already playing
+        if (this.musicPlaying) {
+            this.stopBackgroundMusic();
+            // Brief delay before restarting to prevent overlap
+            setTimeout(() => {
+                if (!this.musicPlaying) { // Only restart if still stopped
+                    this.startBackgroundMusic();
+                }
+            }, 100);
+        }
+    }
+
+    /**
+     * Get music parameters based on current mood
+     */
+    getMusicParameters() {
+        const params = {
+            beatDuration: 0.35,
+            chordProgression: null,
+            melodyTranspose: 0, // Semitone shift
+            tempoMultiplier: 1.0,
+            bassVolume: 0.12,
+            melodyVolume: 0.15,
+            harmonyVolume: 0.08,
+            percussionVolume: 0.06
+        };
+
+        switch (this.musicMood) {
+            case 'normal':
+                // Default upbeat mood
+                params.chordProgression = [
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                ];
+                break;
+
+            case 'wide_gap':
+                // Dramatic, suspended feeling - slower with minor chords
+                params.beatDuration = 0.42;
+                params.tempoMultiplier = 1.2;
+                params.chordProgression = [
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                ];
+                params.melodyTranspose = -2; // Slightly lower
+                break;
+
+            case 'hazard_heavy':
+                // Intense, fast, aggressive - faster tempo with dissonant notes
+                params.beatDuration = 0.28;
+                params.tempoMultiplier = 0.8;
+                params.chordProgression = [
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 164.81, notes: [164.81, 196.00, 246.94], duration: params.beatDuration * 4 }, // E minor
+                    { root: 174.61, notes: [174.61, 207.65, 261.63], duration: params.beatDuration * 4 }, // F minor
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                ];
+                params.bassVolume = 0.18; // Heavier bass
+                params.percussionVolume = 0.10; // Louder percussion
+                break;
+
+            case 'safe_zone':
+                // Calm, peaceful - slower with major chords
+                params.beatDuration = 0.45;
+                params.tempoMultiplier = 1.3;
+                params.chordProgression = [
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                ];
+                params.melodyTranspose = 2; // Slightly higher
+                params.bassVolume = 0.08; // Gentler bass
+                params.percussionVolume = 0.03; // Softer percussion
+                break;
+
+            case 'high_route':
+                // Ascending, airy feeling - higher pitch with ascending progressions
+                params.beatDuration = 0.38;
+                params.chordProgression = [
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 293.66, notes: [293.66, 369.99, 440.00], duration: params.beatDuration * 4 }, // D major
+                    { root: 329.63, notes: [329.63, 415.30, 493.88], duration: params.beatDuration * 4 }, // E major
+                    { root: 392.00, notes: [392.00, 493.88, 587.33], duration: params.beatDuration * 4 }, // G major
+                ];
+                params.melodyTranspose = 5; // Much higher
+                params.bassVolume = 0.06; // Lighter bass
+                break;
+
+            case 'tight_spaces':
+                // Tense, claustrophobic - staccato rhythm with shorter notes
+                params.beatDuration = 0.32;
+                params.tempoMultiplier = 0.9;
+                params.chordProgression = [
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 196.00, notes: [196.00, 233.08, 293.66], duration: params.beatDuration * 4 }, // G minor
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                    { root: 164.81, notes: [164.81, 196.00, 246.94], duration: params.beatDuration * 4 }, // E minor
+                ];
+                params.melodyTranspose = -3; // Lower, darker
+                params.harmonyVolume = 0.06; // Quieter harmony
+                break;
+
+            default:
+                // Fallback to normal
+                params.chordProgression = [
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                ];
+                break;
+        }
+
+        return params;
+    }
+
+    /**
+     * Transpose a frequency by semitones
+     */
+    transposeFrequency(freq, semitones) {
+        return freq * Math.pow(2, semitones / 12);
+    }
+
+    /**
      * Play a looping melody for background music
      * Enhanced multi-layered composition with melody, harmony, and bass
+     * Adapts to current music mood
      */
     playMusicLoop() {
         if (!this.musicPlaying || !this.audioContext) return;
 
         const now = this.audioContext.currentTime;
-        const beatDuration = 0.35; // Duration of one beat
+        const params = this.getMusicParameters();
+        const beatDuration = params.beatDuration;
 
         // === CHORD PROGRESSION ===
-        // I - V - vi - IV (C - G - Am - F) - classic pop progression
-        const chordProgression = [
-            { root: 261.63, notes: [261.63, 329.63, 392.00], duration: beatDuration * 4 }, // C major (C-E-G)
-            { root: 196.00, notes: [196.00, 246.94, 293.66], duration: beatDuration * 4 }, // G major (G-B-D)
-            { root: 220.00, notes: [220.00, 261.63, 329.63], duration: beatDuration * 4 }, // A minor (A-C-E)
-            { root: 174.61, notes: [174.61, 220.00, 261.63], duration: beatDuration * 4 }, // F major (F-A-C)
-        ];
+        // Use mood-specific chord progression
+        const chordProgression = params.chordProgression;
 
         // === MELODY ===
         // Section A: Uplifting melodic phrase
@@ -652,10 +785,11 @@ class SoundManager {
             gainNode.connect(this.audioContext.destination);
 
             oscillator.type = 'triangle'; // Triangle for softer, warmer lead
-            oscillator.frequency.value = note.freq;
+            // Apply melody transposition based on mood
+            oscillator.frequency.value = this.transposeFrequency(note.freq, params.melodyTranspose);
 
-            // Soft envelope for smooth melody
-            const volume = this.getMusicVolume() * 0.15;
+            // Soft envelope for smooth melody with mood-based volume
+            const volume = this.getMusicVolume() * params.melodyVolume;
             gainNode.gain.setValueAtTime(0, melodyStartTime);
             gainNode.gain.linearRampToValueAtTime(volume, melodyStartTime + 0.05);
             gainNode.gain.linearRampToValueAtTime(volume * 0.8, melodyStartTime + note.duration - 0.05);
@@ -683,8 +817,8 @@ class SoundManager {
                     oscillator.type = 'sine'; // Sine for clean harmony
                     oscillator.frequency.value = freq;
 
-                    // Gentle envelope
-                    const volume = this.getMusicVolume() * 0.08; // Quieter than melody
+                    // Gentle envelope with mood-based volume
+                    const volume = this.getMusicVolume() * params.harmonyVolume;
                     gainNode.gain.setValueAtTime(0, harmonyStartTime);
                     gainNode.gain.linearRampToValueAtTime(volume, harmonyStartTime + 0.02);
                     gainNode.gain.linearRampToValueAtTime(0.01, harmonyStartTime + arpDuration);
@@ -709,8 +843,8 @@ class SoundManager {
             oscillator.type = 'sawtooth'; // Sawtooth for rich bass
             oscillator.frequency.value = chord.root / 2; // Octave lower
 
-            // Bass envelope - punchy attack
-            const volume = this.getMusicVolume() * 0.12;
+            // Bass envelope - punchy attack with mood-based volume
+            const volume = this.getMusicVolume() * params.bassVolume;
             gainNode.gain.setValueAtTime(volume, bassStartTime);
             gainNode.gain.exponentialRampToValueAtTime(volume * 0.3, bassStartTime + chord.duration * 0.9);
             gainNode.gain.linearRampToValueAtTime(0.01, bassStartTime + chord.duration);
@@ -747,9 +881,9 @@ class SoundManager {
             filter.connect(gainNode);
             gainNode.connect(this.audioContext.destination);
 
-            // Accent on beats 1 and 3 (stronger), softer on 2 and 4
+            // Accent on beats 1 and 3 (stronger), softer on 2 and 4 with mood-based volume
             const isAccent = (i % 4 === 0 || i % 4 === 2);
-            const volume = this.getMusicVolume() * (isAccent ? 0.06 : 0.03);
+            const volume = this.getMusicVolume() * params.percussionVolume * (isAccent ? 1.0 : 0.5);
 
             gainNode.gain.setValueAtTime(volume, hitTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, hitTime + 0.05);
