@@ -540,8 +540,8 @@ class MovingPoisonCloud {
         this.pulseTimer = 0;
         this.moveTimer = 0;
         this.pattern = pattern; // 'horizontal', 'vertical', 'circle', 'figure8'
-        this.moveSpeed = 1;
-        this.moveRange = 100;
+        this.moveSpeed = 0.5; // Slower movement (was 1)
+        this.moveRange = 200; // Longer horizontal strides (was 100)
 
         // Cloud particles (swirling inside)
         this.cloudParticles = [];
@@ -569,8 +569,8 @@ class MovingPoisonCloud {
     }
 
     update() {
-        // Update position based on movement pattern
-        this.moveTimer += 0.02;
+        // Update position based on movement pattern (slower movement)
+        this.moveTimer += 0.01; // Slower (was 0.02)
 
         switch (this.pattern) {
             case 'horizontal':
@@ -644,22 +644,34 @@ class MovingPoisonCloud {
             ctx.stroke();
         }
 
-        // Draw poison cloud (main body)
-        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
-        gradient.addColorStop(0, 'rgba(128, 0, 128, 0.8)');
-        gradient.addColorStop(0.5, 'rgba(128, 0, 128, 0.6)');
-        gradient.addColorStop(1, 'rgba(128, 0, 128, 0.2)');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        // Draw fluffy cloud shape with overlapping circles
+        const puffPositions = [
+            {x: -this.radius * 0.4, y: 0, size: this.radius * 0.7},
+            {x: this.radius * 0.4, y: 0, size: this.radius * 0.7},
+            {x: 0, y: -this.radius * 0.3, size: this.radius * 0.8},
+            {x: 0, y: this.radius * 0.2, size: this.radius * 0.6},
+            {x: -this.radius * 0.6, y: this.radius * 0.1, size: this.radius * 0.5},
+            {x: this.radius * 0.6, y: this.radius * 0.1, size: this.radius * 0.5}
+        ];
 
-        // Draw cloud particles (swirling)
+        for (let puff of puffPositions) {
+            const gradient = ctx.createRadialGradient(puff.x, puff.y, 0, puff.x, puff.y, puff.size);
+            gradient.addColorStop(0, 'rgba(128, 0, 128, 0.7)');
+            gradient.addColorStop(0.4, 'rgba(128, 0, 128, 0.5)');
+            gradient.addColorStop(0.7, 'rgba(128, 0, 128, 0.3)');
+            gradient.addColorStop(1, 'rgba(128, 0, 128, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(puff.x, puff.y, puff.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw cloud particles (swirling inside)
         for (let particle of this.cloudParticles) {
             const alpha = particle.life / 150;
-            ctx.fillStyle = `rgba(150, 0, 150, ${alpha * 0.9})`;
+            ctx.fillStyle = `rgba(150, 0, 150, ${alpha * 0.7})`;
             ctx.beginPath();
-            ctx.arc(particle.x, particle.y, 2.5, 0, Math.PI * 2);
+            ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -1405,7 +1417,7 @@ class PlatformManager {
                 const poisonCount = this.rng.randomInt(2, 3);
                 for (let i = 0; i < poisonCount; i++) {
                     const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
-                    const y = this.rng.randomInt(200, 350);
+                    const y = this.rng.randomInt(100, 250); // Higher in the sky (was 200-350)
                     const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
                     const pattern = this.rng.choice(patterns);
                     this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
@@ -1442,7 +1454,7 @@ class PlatformManager {
                     const poisonCount = this.rng.randomInt(1, 2);
                     for (let i = 0; i < poisonCount; i++) {
                         const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
-                        const y = this.rng.randomInt(200, 350);
+                        const y = this.rng.randomInt(100, 250); // Higher in the sky (was 200-350)
                         const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
                         const pattern = this.rng.choice(patterns);
                         this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
