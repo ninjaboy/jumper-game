@@ -1,0 +1,7 @@
+# Visual regression test outputs
+screenshots/latest/
+screenshots/diff/
+test-results.json
+
+# Keep baseline images
+!screenshots/baseline/

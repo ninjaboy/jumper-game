@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Visual regression test outputs
+test/screenshots/latest/
+test/screenshots/diff/
+test/screenshots/test-results.json
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

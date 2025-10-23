@@ -7,11 +7,19 @@
     "start": "node server.js",
     "dev": "node server.js",
     "build": "echo 'Static files ready for deployment'",
-    "vercel-build": "echo 'Build complete'"
+    "vercel-build": "echo 'Build complete'",
+    "test:visual": "node test/visual-test.js",
+    "test:visual:update": "node test/visual-test.js --update",
+    "test:visual:headful": "node test/visual-test.js --headful"
   },
   "dependencies": {
     "express": "^4.18.2"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "puppeteer": "^24.26.0"
+  }
 }
