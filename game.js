@@ -1035,15 +1035,21 @@ class Game {
             const isVerticalLevel = this.platforms && this.platforms.exitDoor;
 
             if (isVerticalLevel) {
-                // Vertical tower level camera (centered horizontally, follows player vertically)
-                this.camera.x = (800 - this.canvas.width) / 2; // Center on 800px wide tower
-                this.camera.x = Math.max(0, this.camera.x);
+                // Vertical tower level camera - follows player both horizontally AND vertically
+                const towerWidth = 1200; // Match the wider tower from platforms.js
 
-                // Vertical camera follows player closely
+                // Follow player horizontally (for exploring branching paths)
+                const targetX = this.player.x - this.canvas.width / 2;
+                this.camera.x += (targetX - this.camera.x) * 0.15;
+
+                // Clamp horizontally to tower bounds
+                this.camera.x = Math.max(0, Math.min(this.camera.x, towerWidth - this.canvas.width));
+
+                // Follow player vertically (climbing up)
                 const targetY = this.player.y - this.canvas.height * 0.5;
-                this.camera.y += (targetY - this.camera.y) * 0.2; // Faster response
+                this.camera.y += (targetY - this.camera.y) * 0.2;
 
-                // Clamp vertically - allow viewing entire tower (30 floors * 180px = 5400px)
+                // Clamp vertically - allow viewing entire tower
                 const minCameraY = -6000; // High enough to see top of tallest tower
                 const maxCameraY = 520 - this.canvas.height + 100;
                 this.camera.y = Math.max(minCameraY, Math.min(maxCameraY, this.camera.y));

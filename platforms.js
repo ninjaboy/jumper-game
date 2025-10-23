@@ -1776,66 +1776,79 @@ class PlatformManager {
      * Player must climb to reach the exit door at the top
      */
     generateVerticalTowerLevel() {
-        const towerWidth = 800; // Narrower than standard levels for vertical focus
+        const towerWidth = 1200; // WIDER tower for more horizontal exploration
         const groundLevel = 520;
         const platformHeight = 20;
-        const numFloors = 20; // Reduced from 30 to make levels shorter
-        const floorHeight = 100; // Reduced from 120 - easier to reach platforms
+        const numFloors = 20;
+        const floorHeight = 100;
         const centerX = towerWidth / 2;
 
         // Starting platform at bottom (larger for easier start)
         this.platforms.push(new Platform(centerX - 200, groundLevel, 400, platformHeight, 'normal'));
 
-        // Generate 20 floors going upward
+        // Generate 20 floors going upward with multiple branching paths
         for (let floor = 1; floor <= numFloors; floor++) {
             const floorY = groundLevel - (floor * floorHeight);
 
-            // Determine platform layout for this floor (alternating patterns)
+            // Determine platform layout - MORE variety with branching paths
             const layoutRoll = this.rng.random();
 
             // Randomly choose platform type for variety - mostly one-way platforms!
             const getPlatformType = () => {
                 const typeRoll = this.rng.random();
-                if (typeRoll < 0.40) return 'oneway';       // 40% one-way platforms
-                if (typeRoll < 0.48) return 'spring';       // 8% spring platforms
-                if (typeRoll < 0.56) return 'bouncy';       // 8% super bouncy platforms
-                if (typeRoll < 0.64) return 'ice';          // 8% ice platforms
-                if (typeRoll < 0.72) return 'moving';       // 8% moving platforms
-                if (typeRoll < 0.78) return 'speed';        // 6% speed boost platforms
-                if (typeRoll < 0.84) return 'conveyor';     // 6% conveyor platforms
-                if (typeRoll < 0.89) return 'crumbling';    // 5% crumbling platforms
-                if (typeRoll < 0.93) return 'disappearing'; // 4% disappearing platforms
-                return 'normal';                             // 7% normal platforms
+                if (typeRoll < 0.60) return 'oneway'; // 60% one-way platforms (jump through from below)
+                if (typeRoll < 0.70) return 'spring'; // 10% bouncy platforms
+                if (typeRoll < 0.80) return 'ice';    // 10% ice platforms
+                if (typeRoll < 0.90) return 'moving'; // 10% moving platforms
+                return 'normal';                       // 10% normal platforms
             };
 
-            if (layoutRoll < 0.35) {
-                // Single centered platform (LARGER and more common)
-                const width = this.rng.randomInt(150, 250);
-                this.platforms.push(new Platform(
-                    centerX - width/2,
-                    floorY,
-                    width,
-                    platformHeight,
-                    getPlatformType()
-                ));
-            } else if (layoutRoll < 0.65) {
-                // Two side platforms (LARGER, closer together)
-                const width = this.rng.randomInt(140, 180);
-                const type1 = getPlatformType();
-                const type2 = getPlatformType();
-                this.platforms.push(new Platform(60, floorY, width, platformHeight, type1));
-                this.platforms.push(new Platform(towerWidth - 60 - width, floorY, width, platformHeight, type2));
-            } else if (layoutRoll < 0.85) {
-                // Three platforms (LARGER)
+            // Create multiple branching paths with varied layouts
+            if (layoutRoll < 0.15) {
+                // Single centered platform (straight up route)
+                const width = this.rng.randomInt(150, 220);
+                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, getPlatformType()));
+            }
+            else if (layoutRoll < 0.30) {
+                // Two side platforms (split paths - left and right routes)
+                const width = this.rng.randomInt(120, 180);
+                this.platforms.push(new Platform(150, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(towerWidth - 150 - width, floorY, width, platformHeight, getPlatformType()));
+            }
+            else if (layoutRoll < 0.45) {
+                // Three platforms spread wide (left, center, right routes)
                 const width = this.rng.randomInt(100, 140);
-                const type1 = getPlatformType();
-                const type2 = getPlatformType();
-                const type3 = getPlatformType();
-                this.platforms.push(new Platform(70, floorY, width, platformHeight, type1));
-                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, type2));
-                this.platforms.push(new Platform(towerWidth - 70 - width, floorY, width, platformHeight, type3));
-            } else {
-                // Moving platform (LARGER and slower)
+                this.platforms.push(new Platform(120, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(towerWidth - 120 - width, floorY, width, platformHeight, getPlatformType()));
+            }
+            else if (layoutRoll < 0.60) {
+                // Four platforms (maximum branching - multiple routes)
+                const width = this.rng.randomInt(90, 120);
+                this.platforms.push(new Platform(100, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(350, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(650, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(towerWidth - 100 - width, floorY, width, platformHeight, getPlatformType()));
+            }
+            else if (layoutRoll < 0.75) {
+                // Staggered platforms (diagonal climbing)
+                const width = this.rng.randomInt(110, 150);
+                const offset = this.rng.randomInt(-50, 50);
+                this.platforms.push(new Platform(200 + offset, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(500 + offset, floorY, width, platformHeight, getPlatformType()));
+                this.platforms.push(new Platform(800 + offset, floorY, width, platformHeight, getPlatformType()));
+            }
+            else if (layoutRoll < 0.90) {
+                // Wide scattered platforms (exploration required)
+                const count = this.rng.randomInt(2, 4);
+                for (let i = 0; i < count; i++) {
+                    const width = this.rng.randomInt(100, 140);
+                    const x = this.rng.randomInt(100, towerWidth - width - 100);
+                    this.platforms.push(new Platform(x, floorY, width, platformHeight, getPlatformType()));
+                }
+            }
+            else {
+                // Moving platform crossing horizontally (dynamic route)
                 const width = this.rng.randomInt(140, 180);
                 this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'moving'));
             }
