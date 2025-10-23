@@ -47,33 +47,36 @@ color palettes. Access from start screen or pause menu (ESC).
 
 v2.0.0 - Music Fix
 ─────────────────────────────────────────────────────────────
-🎵 Music stops INSTANTLY between levels. No more ghostly notes!
+🎵 Music stops INSTANTLY between levels. Forcefully killed all
+Web Audio oscillators. No more ghostly notes bleeding through!
 
 ─────────────────────────────────────────────────────────────
 
 v1.8.3 - Changelog Viewer
 ─────────────────────────────────────────────────────────────
-📜 Scrolling changelog in-game. You're reading it now!
+📜 Scrolling changelog viewer in-game. You're reading it now!
 
 ─────────────────────────────────────────────────────────────
 
 v1.8.1 - Consumable Overhaul
 ─────────────────────────────────────────────────────────────
-✨ Fixed ALL broken items! Everything works, looks cooler, and
-feels more dramatic. Screen flashes, particles everywhere!
+✨ Fixed ALL broken consumables! Gravity physics, Lucky Clover
+rarity boosts, screen flashes color-coded by rarity, particle
+explosions, 3x size changes. Everything's functional and dramatic!
 
 ─────────────────────────────────────────────────────────────
 
 v1.8.0 - Pause Menu
 ─────────────────────────────────────────────────────────────
-🎮 Press ESC to pause. Finally, you can take a break!
+🎮 Press ESC to pause. Resume, Settings, Restart, Quit to Menu.
+Finally, you can take a break!
 
 ─────────────────────────────────────────────────────────────
 
-v1.7.4 - Better Music
+v1.7.4 - Elaborate Music
 ─────────────────────────────────────────────────────────────
-🎵 Multi-layered composition with melody, harmony, bass, and drums.
-Press B to toggle.
+🎵 Multi-layered composition: melody, harmony, bass, percussion.
+I-V-vi-IV chord progression. Seamless 5.6s loops. Press B to toggle.
 
 ─────────────────────────────────────────────────────────────
 
@@ -87,42 +90,46 @@ boosts, and cursed effects that make you regret your choices.
 
 v1.6.0 - Multi-Floor Design
 ─────────────────────────────────────────────────────────────
-🏢 Vertical platforming! 4 floors per level, smooth camera scrolling.
-Go up! Way up!
+🏢 Vertical platforming! 4 floors per level, smooth camera scrolling,
+player-centered at 50% screen height. Go up! Way up!
 
 ─────────────────────────────────────────────────────────────
 
 v1.5.0 - Ambient Sound
 ─────────────────────────────────────────────────────────────
-🎧 Hazards make noise now! Saws grind, lava bubbles, poison hisses.
-Background music loops. Press M to mute everything.
+🎧 Proximity-based hazard audio! Saws grind, lava bubbles, poison
+hisses. Background music loops. Press M to mute.
 
 ─────────────────────────────────────────────────────────────
 
-v1.4.0 - Sound Effects
+v1.4.0 - Web Audio
 ─────────────────────────────────────────────────────────────
-🎵 Jump sounds, landing thuds, all dynamically generated.
-No audio files needed!
+🎵 Dynamic sound generation with Web Audio API! Synthesized jump
+sounds (200Hz→600Hz), landing thuds (100Hz→40Hz), frequency sweeps.
+Pure oscillator magic - no audio files!
 
 ─────────────────────────────────────────────────────────────
 
 v1.3.0 - Level Progression
 ─────────────────────────────────────────────────────────────
-🗺️ Multiple levels with biases: Wide Gap, Hazard Heavy, Safe Zone,
-High Route, Tight Spaces. Press N for next level. Powerups persist!
+🗺️ Multiple levels with 5 unique generation biases: Wide Gap,
+Hazard Heavy, Safe Zone, High Route, Tight Spaces. Seed-based
+generation. Press N for next level. Powerups persist!
 
 ─────────────────────────────────────────────────────────────
 
 v1.2.5 - Particle Effects
 ─────────────────────────────────────────────────────────────
-🎆 Jump splashes, landing explosions! Particles everywhere!
+🎆 Physics-based particles! Jump splashes, landing explosions with
+velocity, gravity, drag, and glow. Particles spray opposite to
+movement direction for realistic motion!
 
 ─────────────────────────────────────────────────────────────
 
 v1.2.0 - Start Screen
 ─────────────────────────────────────────────────────────────
-🎬 Animated "GROUNDED" logo with glitch effects and particles.
-Looks professional!
+🎬 Animated "GROUNDED" logo with RGB split, glitch effects,
+multi-layer rendering, background particles. Professional intro!
 
 ─────────────────────────────────────────────────────────────
 
@@ -134,9 +141,11 @@ v1.1.0 - Consumable Foundation
 
 v1.0.0 - Base Game
 ─────────────────────────────────────────────────────────────
-🎮 Initial release! 5 jump modes (Mario, Hollow Knight, Celeste,
-Sonic, Mega Man), platforms, hazards, lives, side-scrolling camera.
-The foundation of everything you see now!
+🎮 Initial release! Rectangle physics, 5 jump modes (Mario, Hollow
+Knight, Celeste, Sonic, Mega Man), platforms, hazards (saws, lava,
+poison, black holes), lives system, side-scrolling camera.
+Built with HTML5 Canvas, custom physics engine, 60 FPS game loop,
+seed-based procedural generation. The foundation!
 
 
 ═══════════════════════════════════════════════════════════════
