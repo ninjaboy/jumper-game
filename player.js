@@ -235,7 +235,7 @@ class Player {
         // Handle ladder climbing
         if (this.onLadder) {
             // Vertical movement on ladder
-            if (this.keys.up) {
+            if (this.keys.up || this.keys.jump) {
                 this.velocityY = -this.climbSpeed;
                 this.velocityX = 0; // No horizontal movement while climbing
             } else if (this.keys.down) {
@@ -245,17 +245,10 @@ class Player {
                 this.velocityY = 0; // Stay in place on ladder
             }
 
-            // Allow dismount via left/right or jump
-            if (this.keys.left || this.keys.right || this.keys.jump) {
+            // Allow dismount via left/right
+            if (this.keys.left || this.keys.right) {
                 this.onLadder = false;
                 this.currentLadder = null;
-                // If jumping, give upward velocity
-                if (this.keys.jump) {
-                    this.velocityY = -this.jumpPower * 0.8;
-                    if (this.soundManager) {
-                        this.soundManager.playJump();
-                    }
-                }
             }
 
             return; // Don't process normal movement while on ladder

@@ -1643,7 +1643,7 @@ class PlatformManager {
         for (let ladder of this.ladders) {
             if (ladder.isPlayerOnLadder(player)) {
                 // Player is touching ladder
-                if (player.keys.up || player.keys.down) {
+                if (player.keys.up || player.keys.down || player.keys.jump) {
                     // Player wants to climb - attach to ladder
                     player.onLadder = true;
                     player.currentLadder = ladder;
