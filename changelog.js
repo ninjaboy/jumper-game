@@ -8,7 +8,20 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.3.2 - Bug Fix: Feedback Form Input (Current Version)
+v2.4.0 - Feature: Less Distracting Narrative (Current Version)
+─────────────────────────────────────────────────────────────
+📝 Made narrative messages shorter and less intrusive!
+
+IMPROVEMENTS:
+• Shortened all 85 narrative messages to 1-2 lines max
+• Reduced display duration from 10 seconds to 3 seconds
+• Messages now punchy and non-distracting during gameplay
+• Still maintains PKD & Asimov themes, just more concise
+• Better gameplay flow with less text interruption
+
+─────────────────────────────────────────────────────────────
+
+v2.3.2 - Bug Fix: Feedback Form Input
 ─────────────────────────────────────────────────────────────
 🐛 Fixed 'M' key not working in feedback form!
 
