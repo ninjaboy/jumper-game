@@ -445,6 +445,7 @@ class PlatformManager {
         this.sawBlades = [];
         this.lavaPits = [];
         this.poisonClouds = [];
+        this.blackHoles = [];
         this.seed = seed || Math.floor(Math.random() * 1000000);
         this.rng = new SimpleRNG(this.seed);
         this.bias = bias;

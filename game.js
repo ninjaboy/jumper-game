@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.2.0';
+        this.version = '2.2.1';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -932,8 +932,8 @@ class Game {
     renderStartScreen() {
         // Dark background with subtle gradient
         const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#3a1a1a'); // DEMO: Changed to reddish tint!
-        gradient.addColorStop(1, '#4c2e50'); // DEMO: Changed to purplish tint!
+        gradient.addColorStop(0, '#1a1a1a');
+        gradient.addColorStop(1, '#2c3e50');
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
