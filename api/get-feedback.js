@@ -1,7 +1,7 @@
 // Vercel Serverless Function to retrieve all feedback
 // Fetches from Vercel Blob and returns as JSON array
 
-import { list } from '@vercel/blob';
+import * as blob from '@vercel/blob';
 
 export default async function handler(req, res) {
   // Allow GET requests
@@ -12,8 +12,16 @@ export default async function handler(req, res) {
   try {
     // Use Vercel Blob for storage
     try {
+      // Verify token exists
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        throw new Error('BLOB_READ_WRITE_TOKEN not found in environment');
+      }
+
       // Get the feedback blob
-      const existingBlobs = await list({ prefix: 'feedback-data' });
+      const existingBlobs = await blob.list({
+        prefix: 'feedback-data',
+        token: process.env.BLOB_READ_WRITE_TOKEN
+      });
 
       if (existingBlobs.blobs.length === 0) {
         return res.status(200).json({

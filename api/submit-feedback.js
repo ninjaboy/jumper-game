@@ -1,7 +1,7 @@
 // Vercel Serverless Function to submit player feedback
 // Uses Vercel Blob for persistent storage
 
-import { put, list } from '@vercel/blob';
+import * as blob from '@vercel/blob';
 
 export default async function handler(req, res) {
   // Only accept POST requests
@@ -28,10 +28,18 @@ export default async function handler(req, res) {
 
     // Use Vercel Blob for storage
     try {
+      // Verify token exists
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        throw new Error('BLOB_READ_WRITE_TOKEN not found in environment');
+      }
+
       // Read existing feedback
       let allFeedback = [];
       try {
-        const existingBlobs = await list({ prefix: 'feedback-data' });
+        const existingBlobs = await blob.list({
+          prefix: 'feedback-data',
+          token: process.env.BLOB_READ_WRITE_TOKEN
+        });
         if (existingBlobs.blobs.length > 0) {
           const response = await fetch(existingBlobs.blobs[0].url);
           allFeedback = await response.json();
@@ -49,13 +57,14 @@ export default async function handler(req, res) {
       }
 
       // Write updated feedback back to blob
-      const blob = await put('feedback-data.json', JSON.stringify(allFeedback), {
+      const blobResult = await blob.put('feedback-data.json', JSON.stringify(allFeedback), {
         access: 'public',
         contentType: 'application/json',
-        addRandomSuffix: false
+        addRandomSuffix: false,
+        token: process.env.BLOB_READ_WRITE_TOKEN
       });
 
-      console.log('Blob created successfully:', blob.url);
+      console.log('Blob created successfully:', blobResult.url);
       console.log('Total feedback entries:', allFeedback.length);
 
       return res.status(200).json({
