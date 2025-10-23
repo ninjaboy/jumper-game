@@ -1763,7 +1763,9 @@ class PlatformManager {
                 // Move player with moving platforms (critical for staying on platform!)
                 if (platform.type === 'moving' && platform.deltaX) {
                     player.x += platform.deltaX;
-                    // Don't modify velocityX - just move position to stay with platform
+                    // Cancel player's horizontal momentum to stick to platform
+                    // This prevents sliding off when platform reverses direction
+                    player.velocityX = 0;
                 }
 
                 // Apply friction based on platform type
@@ -1792,8 +1794,7 @@ class PlatformManager {
                         }
                         break;
                     case 'moving':
-                        // Normal friction - player position is moved by platform directly
-                        player.velocityX *= 0.8;
+                        // Friction already applied above by setting velocityX = 0
                         break;
                     default:
                         // Normal friction for regular platforms
