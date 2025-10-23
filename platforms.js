@@ -919,8 +919,7 @@ class PlatformManager {
         // Move player with their platform BEFORE clearing reference
         if (player && player.currentPlatform && player.currentPlatform.type === 'moving' && player.currentPlatform.deltaX) {
             player.x += player.currentPlatform.deltaX;
-            // Lock player velocity to prevent sliding
-            player.velocityX = 0;
+            // Don't override velocityX - let player keep their input control
         }
 
         // Clear currentPlatform reference - will be reset in checkCollisions if still on platform
@@ -1944,8 +1943,8 @@ class PlatformManager {
                 // Apply friction and special effects based on platform type
                 switch (platform.type) {
                     case 'moving':
-                        // Platform movement handled in update() - just apply friction here
-                        player.velocityX *= 0.7; // Strong friction - player has good control
+                        // Platform movement handled in update() - apply medium friction
+                        player.velocityX *= 0.85; // Medium friction for responsive control
                         break;
                     case 'ice':
                         // Low friction on ice (unless sticky gloves active)
