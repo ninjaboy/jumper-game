@@ -463,7 +463,7 @@ class ShrinkMushroomConsumable extends Consumable {
         super({
             id: 'shrink_mushroom',
             name: 'Shrink Mushroom',
-            description: 'Get smaller! (Permanent, stacks)',
+            description: 'Get smaller, faster, jumpier! (Permanent, stacks)',
             x: x,
             y: y,
             width: 30,
@@ -478,6 +478,16 @@ class ShrinkMushroomConsumable extends Consumable {
                 // Permanent 0.67x size decrease (1/1.5, stacks multiplicatively)
                 player.applySizeMultiplier(0.67);
                 player.consumableEffects.tiny = true;
+
+                // Boost speed by 20% (becomes faster when smaller)
+                if (player.originalMoveSpeed === null) {
+                    player.originalMoveSpeed = player.moveSpeed;
+                }
+                player.moveSpeed *= 1.2;
+
+                // Boost jump power by 15% (compensates for smaller size, easier movement)
+                player.baseJumpPower *= 1.15;
+                player.jumpPower = player.baseJumpPower * Math.pow(player.sizeMultiplier, 0.5);
             }
         });
     }

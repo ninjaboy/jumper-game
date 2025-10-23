@@ -8,7 +8,31 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.7.0 - Visual Style Themes! (Current Version)
+v2.7.2 - Shrink Mushroom Buff! (Current Version)
+─────────────────────────────────────────────────────────────
+⚡ Shrink mushrooms now make you FASTER and JUMPIER!
+
+SHRINK MUSHROOM CHANGES:
+• Speed boost: +20% movement speed (stacks with each shrink)
+• Jump boost: +15% jump power (stacks with each shrink)
+• Size reduction: 0.67x (unchanged, still stacks)
+• All effects are PERMANENT and persist across levels
+
+GAMEPLAY:
+• Smaller = nimbler! Dodge hazards more easily
+• Higher jumps compensate for smaller size
+• Faster movement makes platforming smoother
+• Strategic choice: Go small for agility vs big for power
+• Multiple shrink mushrooms = super speed + super jumps!
+
+TECHNICAL:
+• baseJumpPower now persists across levels
+• Speed multiplier stacks multiplicatively
+• Jump power scales with both size AND shrink boosts
+
+─────────────────────────────────────────────────────────────
+
+v2.7.0 - Visual Style Themes!
 ─────────────────────────────────────────────────────────────
 🎨 Every level now has a unique visual style theme!
 

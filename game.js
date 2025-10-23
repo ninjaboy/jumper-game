@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.7.1';
+        this.version = '2.7.2';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -627,6 +627,7 @@ class Game {
         const savedMaxJumps = this.player.maxJumps;
         const savedMoveSpeed = this.player.moveSpeed;
         const savedOriginalMoveSpeed = this.player.originalMoveSpeed;
+        const savedBaseJumpPower = this.player.baseJumpPower;
 
         // Save size (permanent mushroom effect)
         const savedSizeMultiplier = this.player.sizeMultiplier;
@@ -697,6 +698,7 @@ class Game {
         this.player.jumpsRemaining = savedMaxJumps;
         this.player.moveSpeed = savedMoveSpeed;
         this.player.originalMoveSpeed = savedOriginalMoveSpeed;
+        this.player.baseJumpPower = savedBaseJumpPower;
 
         // Restore permanent size from mushrooms
         this.player.sizeMultiplier = savedSizeMultiplier;
