@@ -82,6 +82,7 @@ class Platform {
             case 'moving': return '#FF6B6B';
             case 'crumbling': return '#DEB887';
             case 'spring': return '#90EE90';
+            case 'oneway': return '#FFB347'; // Orange for one-way platforms
             default: return '#8B4513';
         }
     }
@@ -124,6 +125,25 @@ class Platform {
                     ctx.lineTo(this.x + this.width - 5, springY);
                 }
                 ctx.stroke();
+                break;
+            case 'oneway':
+                // Add dashed line pattern to indicate one-way nature
+                ctx.fillStyle = '#FFC870';
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+                // Draw upward arrows to show you can jump through from below
+                ctx.fillStyle = '#FF8C00';
+                const arrowCount = Math.floor(this.width / 30);
+                for (let i = 0; i < arrowCount; i++) {
+                    const arrowX = this.x + (i + 0.5) * (this.width / arrowCount);
+                    const arrowY = this.y + this.height / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(arrowX, arrowY + 3);
+                    ctx.lineTo(arrowX - 4, arrowY - 2);
+                    ctx.lineTo(arrowX, arrowY - 5);
+                    ctx.lineTo(arrowX + 4, arrowY - 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
                 break;
         }
         
@@ -1074,11 +1094,11 @@ class PlatformManager {
         const ladderHeight = groundLevel - targetHeight;
         this.ladders.push(new Ladder(ladderX, targetHeight, ladderHeight));
 
-        // Platform at top - SMALL to MEDIUM
+        // Platform at top - SMALL to MEDIUM (one-way so you can climb through)
         const topWidths = [this.metrics.PLATFORM.SMALL, this.metrics.PLATFORM.MEDIUM];
         const topWidth = topWidths[this.rng.randomInt(0, topWidths.length - 1)];
         const topX = startX + bottomWidth/2 - topWidth/2;
-        this.platforms.push(new Platform(topX, targetHeight - this.metrics.PLATFORM_HEIGHT, topWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
+        this.platforms.push(new Platform(topX, targetHeight - this.metrics.PLATFORM_HEIGHT, topWidth, this.metrics.PLATFORM_HEIGHT, 'oneway'));
 
         // Random exit gap
         const exitGaps = [this.metrics.GAP.SMALL, this.metrics.GAP.MEDIUM];
@@ -1562,13 +1582,31 @@ class PlatformManager {
 
     checkCollisions(player) {
         for (let platform of this.platforms) {
-            // Check if player is landing on top of platform
-            if (player.velocityY >= 0 && 
+            // One-way platforms: only collide from above
+            if (platform.type === 'oneway') {
+                // Only check if falling and player was above the platform
+                if (player.velocityY >= 0 &&
+                    player.x + player.width > platform.x &&
+                    player.x < platform.x + platform.width &&
+                    player.y + player.height <= platform.y + 10 &&
+                    player.y + player.height >= platform.y - 10 &&
+                    player.y < platform.y) { // Must be approaching from above
+
+                    // Land on platform
+                    player.y = platform.y - player.height;
+                    player.velocityY = 0;
+                    player.onGround = true;
+                }
+                continue; // Skip other collision checks for one-way platforms
+            }
+
+            // Normal platforms: check if player is landing on top of platform
+            if (player.velocityY >= 0 &&
                 player.x + player.width > platform.x &&
                 player.x < platform.x + platform.width &&
                 player.y + player.height <= platform.y + 10 &&
                 player.y + player.height >= platform.y - 10) {
-                
+
                 // Land on platform
                 player.y = platform.y - player.height;
                 player.velocityY = 0;
