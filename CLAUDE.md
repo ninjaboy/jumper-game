@@ -57,45 +57,49 @@ See `VERSION_PROTOCOL.md` for complete guidelines.
 - After making changes: `git add -A && git commit -m "..." && git push`
 - Push immediately after each commit
 - Keep GitHub repository up to date
-- This does NOT trigger production deployment automatically
+- This pushes to `master` branch only (development)
 
 ### Production Deployment Policy
-**NEVER deploy to production automatically:**
-- Do NOT deploy after every commit
-- Do NOT use `vercel --prod` or `vercel deploy` commands
-- Only deploy when user explicitly requests it
-- Vercel auto-deploy webhook is DISABLED by default
+**Production deploys from `prod` branch via Vercel auto-deployment:**
+- Vercel is configured to auto-deploy from the `prod` branch
+- `master` branch = development (no auto-deploy)
+- `prod` branch = production (auto-deploys to live site)
 
-### Manual Deployment (User Request Only)
-**Deploy ONLY when user explicitly asks:**
+### Pushing to Production (User Request Only)
+**When user explicitly requests production deployment:**
 ```bash
-./deploy.sh
+git push origin master:prod
 ```
 
 **What this does:**
-- Triggers Vercel deployment via deploy hook
-- Deploys latest code from GitHub master
-- Uses `.vercel-deploy-hook` file (gitignored, local only)
-- Shows deployment status and Vercel dashboard link
+- Pushes current `master` branch to remote `prod` branch
+- Triggers Vercel auto-deployment (prod branch is configured for production)
+- Deploys latest code to live site at jumper-game.vercel.app
+- Takes 30-60 seconds to build and deploy
 
-**When to suggest deployment:**
-- User says "deploy" or "push to production"
-- Major feature is complete and user wants to test live
-- Bug fix is ready and user needs it live
-- User asks to see changes on the live site
+**Check deployment status:**
+```bash
+vercel ls
+```
+
+**When to push to prod:**
+- User explicitly says "push to prod" or "deploy to production"
+- Major feature is complete and user wants it live
+- Bug fix is ready and needs to go live
+- User asks to see changes on the production site
 
 **NEVER:**
-- Deploy without explicit user request
-- Assume user wants immediate deployment
+- Push to prod without explicit user request
+- Assume user wants immediate production deployment
 - Deploy after every commit or change
-- Use `vercel --prod` commands (can hit rate limits)
-- Share or commit the `.vercel-deploy-hook` file (it's gitignored)
+- Use `vercel --prod` or `vercel deploy` commands manually
 
-**After deployment:**
-- Wait 30-60 seconds for build to complete
+**After pushing to prod:**
+- Wait 30-60 seconds for Vercel build to complete
+- Run `vercel ls` to check deployment status
+- Verify deployment shows "Ready" status
 - Check: https://vercel.com/alexeystolybkos-projects/jumper/deployments
-- Test the production URL to verify changes
-- Inform user deployment is complete
+- Inform user deployment is complete with production URL
 
 ## 🔄 CRITICAL: Concurrent Session Management
 **Multiple Claude Code sessions may be running simultaneously. Follow these rules to prevent conflicts:**
