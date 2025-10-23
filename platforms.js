@@ -1763,6 +1763,9 @@ class PlatformManager {
                 // Move player with moving platforms (critical for staying on platform!)
                 if (platform.type === 'moving' && platform.deltaX) {
                     player.x += platform.deltaX;
+                    // Inherit platform velocity to move naturally with it
+                    // This prevents friction from fighting the platform movement
+                    player.velocityX = platform.deltaX * 60; // Convert deltaX to velocity (60 fps)
                 }
 
                 // Apply friction based on platform type
@@ -1791,8 +1794,8 @@ class PlatformManager {
                         }
                         break;
                     case 'moving':
-                        // Normal friction for moving platforms
-                        player.velocityX *= 0.8;
+                        // Less friction on moving platforms so player moves with platform
+                        player.velocityX *= 0.95;
                         break;
                     default:
                         // Normal friction for regular platforms
