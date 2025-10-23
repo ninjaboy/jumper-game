@@ -41,15 +41,8 @@ class Physics {
         entity.x += entity.velocityX;
         entity.y += entity.velocityY;
 
-        // Keep player within level bounds
-        if (entity.x < 0) {
-            entity.x = 0;
-            entity.velocityX = 0;
-        }
-        if (entity.x + entity.width > 3000) {
-            entity.x = 3000 - entity.width;
-            entity.velocityX = 0;
-        }
+        // Note: Boundary checks removed to allow screen wrapping
+        // Wrapping is handled in game.js after camera update
     }
 
     checkCollisions(entity) {
