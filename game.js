@@ -1466,8 +1466,41 @@ class Game {
         }
         this.ctx.fillStyle = 'white';
 
-        // Show progress bar (adjust position based on heart rows)
-        const progressY = 95 + heartsRows * 18 + 5;
+        // Show jump counter (current/max jumps)
+        const jumpY = 95 + heartsRows * 18 + 5;
+        this.ctx.font = '14px Arial';
+
+        // Color code based on jumps remaining
+        if (this.player.jumpsRemaining === 0) {
+            this.ctx.fillStyle = '#FF4444'; // Red when no jumps
+        } else if (this.player.jumpsRemaining === this.player.maxJumps) {
+            this.ctx.fillStyle = '#00FF00'; // Green when full
+        } else {
+            this.ctx.fillStyle = '#FFAA00'; // Orange when partial
+        }
+
+        this.ctx.fillText('Jumps:', 10, jumpY);
+        this.ctx.fillText(`${this.player.jumpsRemaining}/${this.player.maxJumps}`, 70, jumpY);
+
+        // Visual jump indicators (circles)
+        for (let i = 0; i < this.player.maxJumps; i++) {
+            const jumpX = 130 + i * 15;
+            if (i < this.player.jumpsRemaining) {
+                this.ctx.fillStyle = '#00FF00'; // Available jumps
+                this.ctx.beginPath();
+                this.ctx.arc(jumpX, jumpY - 5, 5, 0, Math.PI * 2);
+                this.ctx.fill();
+            } else {
+                this.ctx.fillStyle = '#444444'; // Used jumps
+                this.ctx.beginPath();
+                this.ctx.arc(jumpX, jumpY - 5, 5, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+        this.ctx.fillStyle = 'white';
+
+        // Show progress bar (adjust position based on heart rows and jump counter)
+        const progressY = jumpY + 20;
 
         const progress = this.player.x / this.camera.levelWidth;
         this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
