@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.8';
+        this.version = '2.6.0';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -18,17 +18,17 @@ class Game {
         this.consumables = new ConsumableManager(this.soundManager);
         this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
-        // Spawn initial consumables
-        this.consumables.spawnRandomConsumables(5000, this.platforms.rng, this.player, this.platforms.platforms);
+        // Spawn initial consumables (tower width = 800)
+        this.consumables.spawnRandomConsumables(800, this.platforms.rng, this.player, this.platforms.platforms);
 
         this.updateSeedDisplay();
         
-        // Camera system for side-scrolling
+        // Camera system for vertical climbing
         this.camera = {
             x: 0,
             y: 0,
             followPlayer: true,
-            levelWidth: 5000 // Total level width (increased from 3000 for longer levels)
+            levelWidth: 800 // Tower width for vertical levels
         };
         
         // Game state
@@ -600,7 +600,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(5000, this.platforms.rng, this.player, this.platforms.platforms);
+        this.consumables.spawnRandomConsumables(800, this.platforms.rng, this.player, this.platforms.platforms);
 
         this.restart();
     }
@@ -650,7 +650,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(5000, this.platforms.rng, this.player, this.platforms.platforms);
+        this.consumables.spawnRandomConsumables(800, this.platforms.rng, this.player, this.platforms.platforms);
 
         // Reset player position but keep powerups
         this.gameState = 'playing';
@@ -712,7 +712,7 @@ class Game {
 
         this.camera.x = 0;
         this.camera.y = 0;
-        this.camera.levelWidth = 5000; // Ensure camera knows about new level width
+        this.camera.levelWidth = 800; // Ensure camera knows about new level width
     }
 
     getRandomBias() {
@@ -1008,7 +1008,7 @@ class Game {
 
         this.camera.x = 0;
         this.camera.y = 0;
-        this.camera.levelWidth = 5000; // Ensure camera knows about level width
+        this.camera.levelWidth = 800; // Ensure camera knows about level width
     }
 
     updateCamera() {

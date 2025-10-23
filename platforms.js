@@ -733,11 +733,8 @@ class PlatformManager {
         this.GOLDEN_ANGLE = 137.5; // Golden angle in degrees
 
         // Choose level generation type based on bias
-        if (this.bias === 'vertical_climb') {
-            this.generateVerticalTowerLevel();
-        } else {
-            this.generateFibonacciLevel(); // Standard horizontal level
-        }
+        // ALWAYS generate vertical tower levels (bottom to top gameplay)
+        this.generateVerticalTowerLevel();
     }
 
     update(player = null) {

@@ -990,8 +990,10 @@ class ConsumableManager {
         let uncommonCount = 0;
 
         for (let i = 0; i < totalCount; i++) {
-            const x = rng.randomInt(300, levelWidth - 300);
-            const y = rng.randomInt(100, 480);
+            // For vertical tower (800px wide), spawn across the width
+            const x = rng.randomInt(100, levelWidth - 100);
+            // For vertical levels, spawn throughout the height (going up from ground at 520)
+            const y = rng.randomInt(-5000, 480); // Negative Y = higher up
 
             // Determine rarity based on roll and limits (luck boosts better items)
             let ConsumableClass;
