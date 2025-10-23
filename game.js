@@ -124,20 +124,21 @@ class Game {
         // Keyboard input
         document.addEventListener('keydown', (e) => {
             // Don't trigger game controls if user is typing in an input field
-            // OR if user is in the feedback screen (canvas-based text input)
-            const isTyping = e.target.tagName === 'INPUT' ||
-                           e.target.tagName === 'TEXTAREA' ||
-                           e.target.isContentEditable ||
-                           this.gameState === 'feedback';
+            const isTypingInElement = e.target.tagName === 'INPUT' ||
+                                     e.target.tagName === 'TEXTAREA' ||
+                                     e.target.isContentEditable;
+
+            // Feedback screen has its own text input handling
+            const isFeedbackScreen = this.gameState === 'feedback';
 
             // Allow M and B keys without preventDefault for audio controls
             const isAudioControl = e.code === 'KeyM' || e.code === 'KeyB';
-            if (!isAudioControl && !isTyping) {
+            if (!isAudioControl && !isTypingInElement && !isFeedbackScreen) {
                 e.preventDefault();
             }
 
-            // Don't trigger audio controls if user is typing
-            if (isTyping) {
+            // Don't trigger audio controls if user is typing in HTML elements
+            if (isTypingInElement) {
                 return;
             }
 
