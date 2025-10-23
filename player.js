@@ -5,6 +5,8 @@ class Player {
         this.baseWidth = 40;
         this.baseHeight = 40;
         this.sizeMultiplier = 1.0; // Track cumulative size changes from mushrooms
+        this.targetSizeMultiplier = 1.0; // Target size for smooth transitions
+        this.sizeTransitionSpeed = 0.1; // How fast to transition (0-1, higher = faster)
         this.width = 40;
         this.height = 40;
         this.velocityX = 0;
@@ -79,19 +81,36 @@ class Player {
     }
 
     applySizeMultiplier(multiplier) {
-        // Apply the multiplier to the current size multiplier (stacking)
-        this.sizeMultiplier *= multiplier;
+        // Apply the multiplier to the target size (for smooth transition)
+        this.targetSizeMultiplier *= multiplier;
 
         // Clamp to reasonable limits (0.1x to 10x)
-        this.sizeMultiplier = Math.max(0.1, Math.min(10, this.sizeMultiplier));
+        this.targetSizeMultiplier = Math.max(0.1, Math.min(10, this.targetSizeMultiplier));
 
-        // Update actual dimensions
-        this.width = this.baseWidth * this.sizeMultiplier;
-        this.height = this.baseHeight * this.sizeMultiplier;
+        // Note: Actual size will be smoothly interpolated in updateSizeTransition()
+        // Jump power will also be updated there based on current (not target) size
+    }
 
-        // Scale jump power with size: bigger = stronger jumps
-        // Use square root scaling so it's not too extreme
-        this.jumpPower = this.baseJumpPower * Math.pow(this.sizeMultiplier, 0.5);
+    updateSizeTransition() {
+        // Smoothly interpolate current size towards target size
+        if (Math.abs(this.sizeMultiplier - this.targetSizeMultiplier) > 0.01) {
+            // Lerp towards target size
+            this.sizeMultiplier += (this.targetSizeMultiplier - this.sizeMultiplier) * this.sizeTransitionSpeed;
+
+            // Update actual dimensions based on current (transitioning) size
+            this.width = this.baseWidth * this.sizeMultiplier;
+            this.height = this.baseHeight * this.sizeMultiplier;
+
+            // Scale jump power with size: bigger = stronger jumps
+            // Use square root scaling so it's not too extreme
+            this.jumpPower = this.baseJumpPower * Math.pow(this.sizeMultiplier, 0.5);
+        } else if (this.sizeMultiplier !== this.targetSizeMultiplier) {
+            // Snap to target when very close
+            this.sizeMultiplier = this.targetSizeMultiplier;
+            this.width = this.baseWidth * this.sizeMultiplier;
+            this.height = this.baseHeight * this.sizeMultiplier;
+            this.jumpPower = this.baseJumpPower * Math.pow(this.sizeMultiplier, 0.5);
+        }
     }
 
     setJumpMode(mode) {
@@ -527,6 +546,9 @@ class Player {
     }
 
     update(physics, platforms) {
+        // Update smooth size transitions from mushrooms
+        this.updateSizeTransition();
+
         // Update timers
         if (this.isDying) {
             this.deathAnimationTimer--;
@@ -639,18 +661,36 @@ class Player {
     }
 
     renderNormal(ctx) {
+        // Add glow effect when size is transitioning
+        const isTransitioning = Math.abs(this.sizeMultiplier - this.targetSizeMultiplier) > 0.01;
+        if (isTransitioning) {
+            const isGrowing = this.targetSizeMultiplier > this.sizeMultiplier;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = isGrowing ? '#FFD700' : '#9370DB'; // Gold for growing, purple for shrinking
+        }
+
         // Normal player rendering
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        
-        // Add a simple face
+
+        // Reset shadow
+        ctx.shadowBlur = 0;
+
+        // Add a simple face (scaled to player size)
+        const eyeSize = Math.max(4, this.width * 0.15);
+        const eyeOffset = Math.max(6, this.width * 0.2);
+        const eyeY = Math.max(6, this.height * 0.2);
+
         ctx.fillStyle = 'white';
-        ctx.fillRect(this.x + 8, this.y + 8, 6, 6);  // Left eye
-        ctx.fillRect(this.x + 26, this.y + 8, 6, 6); // Right eye
-        
-        // Simple mouth
+        ctx.fillRect(this.x + eyeOffset, this.y + eyeY, eyeSize, eyeSize);  // Left eye
+        ctx.fillRect(this.x + this.width - eyeOffset - eyeSize, this.y + eyeY, eyeSize, eyeSize); // Right eye
+
+        // Simple mouth (scaled)
+        const mouthWidth = Math.max(12, this.width * 0.4);
+        const mouthHeight = Math.max(2, this.height * 0.075);
+        const mouthY = Math.max(20, this.height * 0.625);
         ctx.fillStyle = 'black';
-        ctx.fillRect(this.x + 12, this.y + 25, 16, 3);
+        ctx.fillRect(this.x + (this.width - mouthWidth) / 2, this.y + mouthY, mouthWidth, mouthHeight);
     }
 
     renderRegularDeath(ctx) {

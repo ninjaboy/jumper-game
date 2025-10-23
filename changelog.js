@@ -8,7 +8,37 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.5.1 - Bug Fix: Music Overlapping (Current Version)
+v2.5.2 - Smooth Mushroom Transitions (Current Version)
+─────────────────────────────────────────────────────────────
+✨ Mushroom size changes now animate smoothly instead of instant!
+
+SMOOTH TRANSITIONS:
+• Size changes from mushrooms now lerp smoothly over time
+• No more jarring instant size jumps
+• Transition speed: 10% per frame for natural feel
+• Jump power scales smoothly during transition
+
+VISUAL FEEDBACK:
+• Gold glow when growing (eating giant mushroom)
+• Purple glow when shrinking (eating shrink mushroom)
+• Face and features scale proportionally with size
+• Eyes and mouth stay properly positioned at any size
+
+TECHNICAL:
+• Added targetSizeMultiplier for smooth interpolation
+• updateSizeTransition() called every frame
+• Smooth lerp formula: current + (target - current) * 0.1
+• Snaps to target when within 0.01 difference
+
+IMPACT:
+• Much more polished and satisfying mushroom collection
+• Size changes feel natural and smooth
+• Visual feedback clearly shows what's happening
+• No more disorienting instant size changes
+
+─────────────────────────────────────────────────────────────
+
+v2.5.1 - Bug Fix: Music Overlapping
 ─────────────────────────────────────────────────────────────
 🐛 Fixed background music starting multiple times and overlapping!
 

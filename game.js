@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.1';
+        this.version = '2.5.2';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -895,6 +895,7 @@ class Game {
 
         // Reset size multiplier (mushrooms)
         this.player.sizeMultiplier = 1.0;
+        this.player.targetSizeMultiplier = 1.0; // Reset target for smooth transitions
         this.player.width = this.player.baseWidth;
         this.player.height = this.player.baseHeight;
         this.player.jumpPower = this.player.baseJumpPower;
