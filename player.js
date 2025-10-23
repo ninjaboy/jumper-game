@@ -388,6 +388,8 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            // Clear platform reference when jumping
+            this.currentPlatform = null;
             this.spawnJumpParticles();
 
             // Play jump sound
@@ -405,6 +407,8 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            // Clear platform reference when jumping
+            this.currentPlatform = null;
             this.spawnJumpParticles();
 
             // Play jump sound
@@ -433,6 +437,8 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            // Clear platform reference when jumping
+            this.currentPlatform = null;
             this.spawnJumpParticles();
 
             // Play jump sound
@@ -463,6 +469,8 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            // Clear platform reference when jumping
+            this.currentPlatform = null;
             this.spawnJumpParticles();
 
             // Play jump sound
@@ -479,6 +487,8 @@ class Player {
             this.onGround = false;
             this.coyoteTime = 0;
             this.jumpsRemaining--;
+            // Clear platform reference when jumping
+            this.currentPlatform = null;
             this.spawnJumpParticles();
 
             // Play jump sound

@@ -771,8 +771,16 @@ class PlatformManager {
     }
 
     update(player = null) {
+        // First, update all platform positions
         for (let platform of this.platforms) {
             platform.update();
+        }
+
+        // Then, if player is on a moving platform, move them with it BEFORE player.update()
+        if (player && player.currentPlatform && player.currentPlatform.type === 'moving' && player.currentPlatform.deltaX) {
+            player.x += player.currentPlatform.deltaX;
+            // Keep player locked to platform
+            player.velocityX = 0;
         }
 
         // Check if hazards should be frozen or slowed
@@ -1759,6 +1767,9 @@ class PlatformManager {
                 player.y = platform.y - player.height;
                 player.velocityY = 0;
                 player.onGround = true;
+
+                // Store reference to current platform for moving platform tracking
+                player.currentPlatform = platform;
 
                 // Move player with moving platforms (critical for staying on platform!)
                 if (platform.type === 'moving' && platform.deltaX) {
