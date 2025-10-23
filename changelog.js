@@ -47,44 +47,41 @@ color palettes. Access from start screen or pause menu (ESC).
 
 v2.0.0 - Music Fix
 ─────────────────────────────────────────────────────────────
-🎵 Music stops INSTANTLY between levels. No more ghostly notes
-bleeding through. Had to forcefully kill all Web Audio oscillators.
+🎵 Music stops INSTANTLY between levels. No more ghostly notes!
 
 ─────────────────────────────────────────────────────────────
 
 v1.8.3 - Changelog Viewer
 ─────────────────────────────────────────────────────────────
-📜 Scrolling changelog viewer in-game. You're reading it now!
+📜 Scrolling changelog in-game. You're reading it now!
 
 ─────────────────────────────────────────────────────────────
 
 v1.8.1 - Consumable Overhaul
 ─────────────────────────────────────────────────────────────
-✨ Fixed ALL broken consumables! Gravity items work, Lucky Clover
-actually does something, screen flashes, particle explosions,
-size changes 3x more dramatic. Everything's functional now.
+✨ Fixed ALL broken items! Everything works, looks cooler, and
+feels more dramatic. Screen flashes, particles everywhere!
 
 ─────────────────────────────────────────────────────────────
 
 v1.8.0 - Pause Menu
 ─────────────────────────────────────────────────────────────
-🎮 Press ESC to pause. Resume, Settings, Restart, or Quit.
-Finally, you can take a break!
+🎮 Press ESC to pause. Finally, you can take a break!
 
 ─────────────────────────────────────────────────────────────
 
-v1.7.4 - Elaborate Music
+v1.7.4 - Better Music
 ─────────────────────────────────────────────────────────────
-🎵 Multi-layered composition: melody, harmony, bass, percussion.
-I-V-vi-IV progression. Seamless 5.6s loops. Press B to toggle.
+🎵 Multi-layered composition with melody, harmony, bass, and drums.
+Press B to toggle.
 
 ─────────────────────────────────────────────────────────────
 
 v1.7.0 - Roguelike Consumables
 ─────────────────────────────────────────────────────────────
-🎲 20+ consumables with rarity tiers! Common, Uncommon, Rare, Cursed.
-Physics modifiers, size changes, defensive items, level manipulation,
-advanced movement, cursed effects. Stacking durations. Max 1 rare/level.
+🎲 20+ items with rarity tiers! Common, Uncommon, Rare, Cursed.
+Gravity changers, size mods, defensive gear, level chaos, movement
+boosts, and cursed effects that make you regret your choices.
 
 ─────────────────────────────────────────────────────────────
 
@@ -97,16 +94,15 @@ Go up! Way up!
 
 v1.5.0 - Ambient Sound
 ─────────────────────────────────────────────────────────────
-🎧 Proximity-based hazard sounds! Saws grind, lava bubbles, poison
-hisses. Background music loops. Sound effects for everything.
-Press M to mute.
+🎧 Hazards make noise now! Saws grind, lava bubbles, poison hisses.
+Background music loops. Press M to mute everything.
 
 ─────────────────────────────────────────────────────────────
 
-v1.4.0 - Web Audio
+v1.4.0 - Sound Effects
 ─────────────────────────────────────────────────────────────
-🎵 Dynamic sound generation with Web Audio API! Synthesized jump
-sounds, landing thuds, frequency sweeps. Pure oscillator magic.
+🎵 Jump sounds, landing thuds, all dynamically generated.
+No audio files needed!
 
 ─────────────────────────────────────────────────────────────
 
@@ -119,15 +115,14 @@ High Route, Tight Spaces. Press N for next level. Powerups persist!
 
 v1.2.5 - Particle Effects
 ─────────────────────────────────────────────────────────────
-🎆 Jump splashes, landing explosions! Physics-based particles with
-velocity, glow, and realistic motion.
+🎆 Jump splashes, landing explosions! Particles everywhere!
 
 ─────────────────────────────────────────────────────────────
 
 v1.2.0 - Start Screen
 ─────────────────────────────────────────────────────────────
-🎬 Animated "GROUNDED" logo with glitch effects, RGB split,
-background particles, menu navigation. Professional intro!
+🎬 Animated "GROUNDED" logo with glitch effects and particles.
+Looks professional!
 
 ─────────────────────────────────────────────────────────────
 
@@ -139,10 +134,9 @@ v1.1.0 - Consumable Foundation
 
 v1.0.0 - Base Game
 ─────────────────────────────────────────────────────────────
-🎮 Initial release! Rectangle physics, 5 jump modes (Mario, Hollow
-Knight, Celeste, Sonic, Mega Man), platforms, hazards, lives system,
-side-scrolling camera. Built with HTML5 Canvas, custom physics,
-60 FPS, seed-based generation.
+🎮 Initial release! 5 jump modes (Mario, Hollow Knight, Celeste,
+Sonic, Mega Man), platforms, hazards, lives, side-scrolling camera.
+The foundation of everything you see now!
 
 
 ═══════════════════════════════════════════════════════════════
