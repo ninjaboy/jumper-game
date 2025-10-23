@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.3.4';
+        this.version = '2.3.5';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -892,6 +892,15 @@ class Game {
             this.player.moveSpeed = this.player.originalMoveSpeed;
             this.player.originalMoveSpeed = null;
         }
+
+        // Reset size (giant mushroom, shrink potion, etc.)
+        if (this.player.originalSize) {
+            this.player.width = this.player.originalSize.width;
+            this.player.height = this.player.originalSize.height;
+            this.player.originalSize = null;
+        }
+        this.player.consumableEffects.giant = false;
+        this.player.consumableEffects.shrink = false;
 
         // Clear victory particles
         this.victoryParticles = [];
