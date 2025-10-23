@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.6.1';
+        this.version = '2.6.2';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -16,7 +16,8 @@ class Game {
         this.currentBias = 'normal';
         this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
         this.consumables = new ConsumableManager(this.soundManager);
-        this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
+        // Center player on tower (centerX = 400, player width ~30)
+        this.player = new Player(385, this.physics.groundLevel - 40, this.soundManager);
 
         // Spawn initial consumables (tower width = 800)
         this.consumables.spawnRandomConsumables(800, this.platforms.rng, this.player, this.platforms.platforms);
@@ -654,7 +655,8 @@ class Game {
 
         // Reset player position but keep powerups
         this.gameState = 'playing';
-        this.player.x = 100;
+        // Center player on tower starting platform (tower centerX = 400)
+        this.player.x = 400 - this.player.width / 2;
         this.player.y = this.physics.groundLevel - 40;
         this.player.velocityX = 0;
         this.player.velocityY = 0;
@@ -958,7 +960,8 @@ class Game {
         }
 
         this.gameState = 'playing';
-        this.player.x = 100;
+        // Center player on tower starting platform (tower centerX = 400)
+        this.player.x = 400 - this.player.width / 2;
         this.player.y = this.physics.groundLevel - 40;
         this.player.velocityX = 0;
         this.player.velocityY = 0;

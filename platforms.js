@@ -98,10 +98,14 @@ class Platform {
         }
     }
 
-    render(ctx) {
-        ctx.fillStyle = this.color;
+    render(ctx, style = null) {
+        // Use style colors if provided, otherwise fall back to defaults
+        const platformColor = style ? style.platforms : this.color;
+        const highlightColor = style ? style.platformHighlight : '#A0522D';
+
+        ctx.fillStyle = platformColor;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        
+
         // Add visual details based on type
         switch (this.type) {
             case 'ice':
@@ -145,10 +149,15 @@ class Platform {
                     ctx.fill();
                 }
                 break;
+            case 'normal':
+                // Add highlight for normal platforms using style color
+                ctx.fillStyle = highlightColor;
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, 4);
+                break;
         }
-        
+
         // Platform border
-        ctx.strokeStyle = '#654321';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
     }
@@ -164,14 +173,17 @@ class Ladder {
         this.rungSpacing = 25; // Space between rungs
     }
 
-    render(ctx) {
+    render(ctx, style = null) {
+        const railColor = style ? style.platforms : '#8B4513';
+        const rungColor = style ? style.platformHighlight : '#A0522D';
+
         // Draw vertical rails
-        ctx.fillStyle = '#8B4513';
+        ctx.fillStyle = railColor;
         ctx.fillRect(this.x, this.y, 8, this.height); // Left rail
         ctx.fillRect(this.x + this.width - 8, this.y, 8, this.height); // Right rail
 
         // Draw horizontal rungs
-        ctx.fillStyle = '#A0522D';
+        ctx.fillStyle = rungColor;
         const rungCount = Math.floor(this.height / this.rungSpacing);
         for (let i = 0; i <= rungCount; i++) {
             const rungY = this.y + (i * this.rungSpacing);
@@ -179,10 +191,10 @@ class Ladder {
                 ctx.fillRect(this.x, rungY, this.width, 6);
 
                 // Add wood grain effect
-                ctx.fillStyle = '#8B4513';
+                ctx.fillStyle = railColor;
                 ctx.fillRect(this.x + 5, rungY + 1, 2, 4);
                 ctx.fillRect(this.x + this.width - 7, rungY + 1, 2, 4);
-                ctx.fillStyle = '#A0522D';
+                ctx.fillStyle = rungColor;
             }
         }
 
@@ -732,6 +744,9 @@ class PlatformManager {
         this.PHI = 1.618033988749895; // Golden ratio
         this.GOLDEN_ANGLE = 137.5; // Golden angle in degrees
 
+        // Level visual style system - changes every level!
+        this.style = this.getLevelStyle(level);
+
         // Choose level generation type based on bias
         // ALWAYS generate vertical tower levels (bottom to top gameplay)
         this.generateVerticalTowerLevel();
@@ -868,6 +883,119 @@ class PlatformManager {
             major: value / this.PHI, // ~0.618 of value
             minor: value - (value / this.PHI) // ~0.382 of value
         };
+    }
+
+    /**
+     * Get visual style for the current level
+     * Cycles through different themes to keep game visually fresh
+     */
+    getLevelStyle(level) {
+        const styles = [
+            {
+                name: 'Classic',
+                sky: '#87CEEB',
+                platforms: '#8B4513',
+                platformHighlight: '#A0522D',
+                spikes: '#FF4444',
+                poison: '#9370DB',
+                lava: '#FF4500',
+                saws: '#888888'
+            },
+            {
+                name: 'Sunset',
+                sky: '#FF6B35',
+                platforms: '#4A4A4A',
+                platformHighlight: '#5C5C5C',
+                spikes: '#FF1744',
+                poison: '#8E24AA',
+                lava: '#FF6F00',
+                saws: '#616161'
+            },
+            {
+                name: 'Night',
+                sky: '#1A1A2E',
+                platforms: '#16213E',
+                platformHighlight: '#0F3460',
+                spikes: '#E94560',
+                poison: '#533483',
+                lava: '#F97B0C',
+                saws: '#4A5568'
+            },
+            {
+                name: 'Forest',
+                sky: '#A8E6CF',
+                platforms: '#2D5016',
+                platformHighlight: '#3A6B1F',
+                spikes: '#C23B22',
+                poison: '#6B8E23',
+                lava: '#D84315',
+                saws: '#4E4E4E'
+            },
+            {
+                name: 'Desert',
+                sky: '#FFE5B4',
+                platforms: '#D2691E',
+                platformHighlight: '#E07A3D',
+                spikes: '#8B0000',
+                poison: '#CD853F',
+                lava: '#FF8C00',
+                saws: '#8B7355'
+            },
+            {
+                name: 'Ice',
+                sky: '#B0E0E6',
+                platforms: '#4682B4',
+                platformHighlight: '#5F9EA0',
+                spikes: '#00CED1',
+                poison: '#4169E1',
+                lava: '#1E90FF',
+                saws: '#708090'
+            },
+            {
+                name: 'Volcano',
+                sky: '#2B2B2B',
+                platforms: '#3E2723',
+                platformHighlight: '#4E342E',
+                spikes: '#FF3D00',
+                poison: '#BF360C',
+                lava: '#DD2C00',
+                saws: '#424242'
+            },
+            {
+                name: 'Candy',
+                sky: '#FFB3E6',
+                platforms: '#FF69B4',
+                platformHighlight: '#FF85C1',
+                spikes: '#FF1493',
+                poison: '#DA70D6',
+                lava: '#FF6EC7',
+                saws: '#FF91C8'
+            },
+            {
+                name: 'Matrix',
+                sky: '#001100',
+                platforms: '#003300',
+                platformHighlight: '#004400',
+                spikes: '#00FF00',
+                poison: '#00AA00',
+                lava: '#00FF41',
+                saws: '#00DD00'
+            },
+            {
+                name: 'Space',
+                sky: '#0B0B1E',
+                platforms: '#2C2C54',
+                platformHighlight: '#474787',
+                spikes: '#00D9FF',
+                poison: '#8E44AD',
+                lava: '#E056FD',
+                saws: '#706FD3'
+            }
+        ];
+
+        // Cycle through styles based on level
+        const styleIndex = (level - 1) % styles.length;
+        return styles[styleIndex];
     }
 
     /**
@@ -1481,7 +1609,7 @@ class PlatformManager {
         const groundLevel = 520;
         const platformHeight = 20;
         const numFloors = 30; // Number of vertical platforms/floors
-        const floorHeight = 180; // Vertical distance between floors
+        const floorHeight = 120; // Vertical distance between floors (reduced to be jumpable)
         const centerX = towerWidth / 2;
 
         // Starting platform at bottom
@@ -1828,25 +1956,25 @@ class PlatformManager {
         return result; // 'respawn' or 'game_over'
     }
 
-    renderHazards(ctx) {
+    renderHazards(ctx, style = null) {
         // Render spikes (using animated spike rendering)
         for (let spike of this.spikes) {
-            spike.render(ctx);
+            spike.render(ctx, style);
         }
 
         // Render saw blades
         for (let sawBlade of this.sawBlades) {
-            sawBlade.render(ctx);
+            sawBlade.render(ctx, style);
         }
 
         // Render lava pits
         for (let lavaPit of this.lavaPits) {
-            lavaPit.render(ctx);
+            lavaPit.render(ctx, style);
         }
 
         // Render poison clouds
         for (let poisonCloud of this.poisonClouds) {
-            poisonCloud.render(ctx);
+            poisonCloud.render(ctx, style);
         }
     }
 
@@ -1861,16 +1989,16 @@ class PlatformManager {
 
         // Render platforms
         for (let platform of this.platforms) {
-            platform.render(ctx);
+            platform.render(ctx, this.style);
         }
 
         // Render ladders (over platforms, behind player)
         for (let ladder of this.ladders) {
-            ladder.render(ctx);
+            ladder.render(ctx, this.style);
         }
 
         // Render all hazards
-        this.renderHazards(ctx);
+        this.renderHazards(ctx, this.style);
         
         // Render start flag
         ctx.fillStyle = '#00FF00';
