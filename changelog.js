@@ -8,7 +8,40 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.7.3 - Made Levels Much Easier! (Current Version)
+v2.7.4 - More Platform Variety! (Current Version)
+─────────────────────────────────────────────────────────────
+🎪 Added lots more bouncy and ice platforms for variety!
+
+PLATFORM TYPE DISTRIBUTION:
+• Spring platforms: 15% (bouncy! launch higher)
+• Ice platforms: 15% (slippery sliding)
+• Moving platforms: 10% (horizontal motion)
+• Normal platforms: 60% (standard grip)
+
+WHAT THIS MEANS:
+• ~3 bouncy platforms per level (was 0!)
+• ~3 ice platforms per level (was 0!)
+• More dynamic and varied gameplay
+• Spring platforms help you reach higher floors faster
+• Ice platforms add skill-based challenges
+• Each level feels different with random platform types
+
+TECHNICAL:
+• Platform types randomly assigned to each platform
+• Each platform independently rolls for its type
+• 30% chance of special platform types
+• Works with all layout patterns (single, double, triple platforms)
+
+GAMEPLAY IMPACT:
+• More fun and unpredictable levels!
+• Spring platforms provide shortcuts upward
+• Ice platforms test your control skills
+• Better variety keeps gameplay fresh
+• Strategic choices: use springs to skip floors or take normal route
+
+─────────────────────────────────────────────────────────────
+
+v2.7.3 - Made Levels Much Easier!
 ─────────────────────────────────────────────────────────────
 ✅ Major difficulty reduction - levels are now completable!
 

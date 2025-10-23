@@ -1640,6 +1640,15 @@ class PlatformManager {
             // Determine platform layout for this floor (alternating patterns)
             const layoutRoll = this.rng.random();
 
+            // Randomly choose platform type for variety (30% special platforms)
+            const getPlatformType = () => {
+                const typeRoll = this.rng.random();
+                if (typeRoll < 0.15) return 'spring'; // 15% bouncy platforms
+                if (typeRoll < 0.30) return 'ice';    // 15% ice platforms
+                if (typeRoll < 0.40) return 'moving'; // 10% moving platforms
+                return 'normal';                       // 60% normal platforms
+            };
+
             if (layoutRoll < 0.35) {
                 // Single centered platform (LARGER and more common)
                 const width = this.rng.randomInt(150, 250);
@@ -1648,19 +1657,24 @@ class PlatformManager {
                     floorY,
                     width,
                     platformHeight,
-                    'normal'
+                    getPlatformType()
                 ));
             } else if (layoutRoll < 0.65) {
                 // Two side platforms (LARGER, closer together)
                 const width = this.rng.randomInt(140, 180);
-                this.platforms.push(new Platform(60, floorY, width, platformHeight, 'normal'));
-                this.platforms.push(new Platform(towerWidth - 60 - width, floorY, width, platformHeight, 'normal'));
+                const type1 = getPlatformType();
+                const type2 = getPlatformType();
+                this.platforms.push(new Platform(60, floorY, width, platformHeight, type1));
+                this.platforms.push(new Platform(towerWidth - 60 - width, floorY, width, platformHeight, type2));
             } else if (layoutRoll < 0.85) {
                 // Three platforms (LARGER)
                 const width = this.rng.randomInt(100, 140);
-                this.platforms.push(new Platform(70, floorY, width, platformHeight, 'normal'));
-                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'normal'));
-                this.platforms.push(new Platform(towerWidth - 70 - width, floorY, width, platformHeight, 'normal'));
+                const type1 = getPlatformType();
+                const type2 = getPlatformType();
+                const type3 = getPlatformType();
+                this.platforms.push(new Platform(70, floorY, width, platformHeight, type1));
+                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, type2));
+                this.platforms.push(new Platform(towerWidth - 70 - width, floorY, width, platformHeight, type3));
             } else {
                 // Moving platform (LARGER and slower)
                 const width = this.rng.randomInt(140, 180);
