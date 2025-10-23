@@ -22,6 +22,44 @@ class SimpleRNG {
     }
 }
 
+// Physics-based platform metrics
+// All measurements derive from player jump capabilities
+class PlatformMetrics {
+    constructor() {
+        // Player physics constants (from player.js and physics.js)
+        this.PLAYER_SIZE = 40;      // Player width/height
+        this.MOVE_SPEED = 5;        // px per frame
+        this.JUMP_POWER = 15;       // Initial upward velocity
+        this.GRAVITY = 0.8;         // Downward acceleration
+
+        // Calculated maximum jump distance
+        // Air time = 2 * (jumpPower / gravity) = 2 * (15 / 0.8) = 37.5 frames
+        // Max distance = moveSpeed * airTime = 5 * 37.5 = 187.5px
+        this.MAX_JUMP_DISTANCE = 190; // With safety margin
+
+        // Platform widths (multiples of player size - must be landable)
+        this.PLATFORM = {
+            TINY: this.PLAYER_SIZE * 1.5,   // 60px - minimum safe landing
+            SMALL: this.PLAYER_SIZE * 2.5,  // 100px
+            MEDIUM: this.PLAYER_SIZE * 4,   // 160px
+            LARGE: this.PLAYER_SIZE * 6     // 240px
+        };
+
+        // Gap widths (fractions of max jump - must be jumpable)
+        this.GAP = {
+            MIN: this.PLAYER_SIZE,                    // 40px - minimum (player width)
+            SMALL: this.MAX_JUMP_DISTANCE * 0.3,      // 57px - easy
+            MEDIUM: this.MAX_JUMP_DISTANCE * 0.5,     // 95px - moderate
+            LARGE: this.MAX_JUMP_DISTANCE * 0.7,      // 133px - challenging
+            MAX: this.MAX_JUMP_DISTANCE * 0.85        // 161px - very challenging
+        };
+
+        // Vertical measurements
+        this.PLATFORM_HEIGHT = 20; // Standard platform thickness
+        this.LADDER_WIDTH = 40;    // Same as player width
+    }
+}
+
 class Platform {
     constructor(x, y, width, height, type = 'normal') {
         this.x = x;
@@ -413,6 +451,9 @@ class PlatformManager {
         this.level = level;
         this.soundManager = soundManager;
 
+        // Physics-based platform sizing system
+        this.metrics = new PlatformMetrics();
+
         // Mathematical constants for beautiful design
         this.PHI = 1.618033988749895; // Golden ratio
         this.GOLDEN_ANGLE = 137.5; // Golden angle in degrees
@@ -637,11 +678,13 @@ class PlatformManager {
      * GROUND CHUNK: Simple horizontal ground platform
      */
     generateGroundChunk(startX, startHeight, fib, groundLevel) {
-        const width = fib[this.rng.randomInt(4, 6)] * 18; // 90-180px (balanced)
-        this.platforms.push(new Platform(startX, groundLevel, width, 80, 'normal'));
+        // Platform width: SMALL to MEDIUM (100-160px)
+        const widths = [this.metrics.PLATFORM.SMALL, this.metrics.PLATFORM.MEDIUM];
+        const width = widths[this.rng.randomInt(0, widths.length - 1)];
+        this.platforms.push(new Platform(startX, groundLevel, width, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
         return {
-            exitX: startX + width + 25, // Medium gap
+            exitX: startX + width + this.metrics.GAP.SMALL, // Easy gap (57px)
             exitHeight: groundLevel
         };
     }
@@ -650,23 +693,24 @@ class PlatformManager {
      * PIT CHUNK: Ground platform, pit, ground platform
      */
     generatePitChunk(startX, startHeight, fib, groundLevel) {
-        // Left platform
-        const leftWidth = fib[4] * 12; // 60px (comfortable)
-        this.platforms.push(new Platform(startX, groundLevel, leftWidth, 80, 'normal'));
+        // Left platform - TINY size (60px) for tight landing
+        const leftWidth = this.metrics.PLATFORM.TINY;
+        this.platforms.push(new Platform(startX, groundLevel, leftWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
-        // Pit in middle
-        const pitWidth = fib[this.rng.randomInt(5, 7)] * 12; // 96-168px (medium)
-        const pitDepth = fib[this.rng.randomInt(5, 7)] * 10; // 80-168px (visible)
+        // Pit in middle - MEDIUM to LARGE gap (95-133px)
+        const pitWidths = [this.metrics.GAP.MEDIUM, this.metrics.GAP.LARGE];
+        const pitWidth = pitWidths[this.rng.randomInt(0, pitWidths.length - 1)];
+        const pitDepth = this.rng.randomInt(80, 150); // Visual depth
         const pitX = startX + leftWidth;
         this.pits.push(new Pit(pitX, pitWidth, pitDepth));
 
-        // Right platform
+        // Right platform - TINY size (60px)
         const rightX = pitX + pitWidth;
-        const rightWidth = fib[4] * 12; // 60px
-        this.platforms.push(new Platform(rightX, groundLevel, rightWidth, 80, 'normal'));
+        const rightWidth = this.metrics.PLATFORM.TINY;
+        this.platforms.push(new Platform(rightX, groundLevel, rightWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
         return {
-            exitX: rightX + rightWidth + 18, // Medium gap
+            exitX: rightX + rightWidth + this.metrics.GAP.MIN, // Minimum gap (40px)
             exitHeight: groundLevel
         };
     }
@@ -675,18 +719,17 @@ class PlatformManager {
      * CLIMB CHUNK: Ascending staircase of platforms
      */
     generateClimbChunk(startX, startHeight, fib, heights, groundLevel) {
-        const steps = fib[this.rng.randomInt(2, 4)]; // 2, 3, or 5 steps
+        const steps = this.rng.randomInt(3, 5); // 3-5 steps
         let currentX = startX;
         let currentY = groundLevel;
 
         for (let i = 0; i < steps; i++) {
-            const stepWidth = fib[4] * 8; // 40px (comfortable)
-            const stepHeight = 20;
-            const stepUp = fib[4] * 12; // 60px up (noticeable climb)
+            const stepWidth = this.metrics.PLATFORM.TINY; // 60px - safe landing
+            const stepUp = this.metrics.PLATFORM.TINY; // 60px up - climbable
 
             currentY -= stepUp;
-            this.platforms.push(new Platform(currentX, currentY, stepWidth, stepHeight, 'normal'));
-            currentX += stepWidth + fib[3] * 12; // 36px spacing
+            this.platforms.push(new Platform(currentX, currentY, stepWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
+            currentX += stepWidth + this.metrics.GAP.MIN; // MIN gap (40px) between steps
         }
 
         return {
@@ -699,20 +742,21 @@ class PlatformManager {
      * GAP CHUNK: Wide horizontal gap requiring jump
      */
     generateGapChunk(startX, startHeight, fib, groundLevel) {
-        // Left platform
-        const leftWidth = fib[4] * 12; // 60px (comfortable landing)
-        this.platforms.push(new Platform(startX, startHeight, leftWidth, 20, 'normal'));
+        // Left platform - SMALL size (100px) for safer landing after previous jump
+        const leftWidth = this.metrics.PLATFORM.SMALL;
+        this.platforms.push(new Platform(startX, startHeight, leftWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
-        // Gap (no pit, just empty space)
-        const gapWidth = fib[this.rng.randomInt(6, 8)] * 10; // 130-210px (challenging jump)
+        // Gap (no pit, just empty space) - LARGE to MAX (133-161px) challenging!
+        const gapWidths = [this.metrics.GAP.LARGE, this.metrics.GAP.MAX];
+        const gapWidth = gapWidths[this.rng.randomInt(0, gapWidths.length - 1)];
 
-        // Right platform
+        // Right platform - SMALL size (100px)
         const rightX = startX + leftWidth + gapWidth;
-        const rightWidth = fib[4] * 12; // 60px
-        this.platforms.push(new Platform(rightX, startHeight, rightWidth, 20, 'normal'));
+        const rightWidth = this.metrics.PLATFORM.SMALL;
+        this.platforms.push(new Platform(rightX, startHeight, rightWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
         return {
-            exitX: rightX + rightWidth + 20,
+            exitX: rightX + rightWidth + this.metrics.GAP.MIN,
             exitHeight: startHeight
         };
     }
@@ -721,24 +765,24 @@ class PlatformManager {
      * LADDER CHUNK: Vertical ladder connecting heights
      */
     generateLadderChunk(startX, startHeight, fib, heights, groundLevel) {
-        // Platform at bottom
-        const bottomWidth = fib[5] * 10; // 80px (good base)
-        this.platforms.push(new Platform(startX, groundLevel, bottomWidth, 80, 'normal'));
+        // Platform at bottom - SMALL size (100px)
+        const bottomWidth = this.metrics.PLATFORM.SMALL;
+        this.platforms.push(new Platform(startX, groundLevel, bottomWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
-        // Ladder in middle
-        const ladderX = startX + bottomWidth/2 - 20;
+        // Ladder in middle - uses LADDER_WIDTH (40px, same as player)
+        const ladderX = startX + bottomWidth/2 - this.metrics.LADDER_WIDTH/2;
         const targetHeight = heights.midHigh; // Climb to mid-high layer
         const ladderHeight = groundLevel - targetHeight;
         this.ladders.push(new Ladder(ladderX, targetHeight, ladderHeight));
 
-        // Platform at top
-        const topWidth = fib[5] * 10; // 80px
+        // Platform at top - SMALL size (100px)
+        const topWidth = this.metrics.PLATFORM.SMALL;
         const topX = startX + bottomWidth/2 - topWidth/2;
-        this.platforms.push(new Platform(topX, targetHeight - 20, topWidth, 20, 'normal'));
+        this.platforms.push(new Platform(topX, targetHeight - this.metrics.PLATFORM_HEIGHT, topWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
 
         return {
-            exitX: topX + topWidth + 25,
-            exitHeight: targetHeight - 20
+            exitX: topX + topWidth + this.metrics.GAP.SMALL,
+            exitHeight: targetHeight - this.metrics.PLATFORM_HEIGHT
         };
     }
 
@@ -746,16 +790,18 @@ class PlatformManager {
      * CLUSTER CHUNK: Group of platforms in Fibonacci count
      */
     generateClusterChunk(startX, startHeight, fib, heights, groundLevel) {
-        const count = fib[this.rng.randomInt(2, 4)]; // 2, 3, or 5 platforms
+        const count = this.rng.randomInt(3, 5); // 3-5 platforms
         let currentX = startX;
         const heightOptions = [heights.high, heights.midHigh, heights.mid, heights.midLow];
 
         for (let i = 0; i < count; i++) {
-            const platformWidth = fib[this.rng.randomInt(3, 5)] * 10; // 30-80px
+            // Platform width: TINY to SMALL (60-100px)
+            const widths = [this.metrics.PLATFORM.TINY, this.metrics.PLATFORM.SMALL];
+            const platformWidth = widths[this.rng.randomInt(0, widths.length - 1)];
             const platformY = heightOptions[i % heightOptions.length];
 
-            this.platforms.push(new Platform(currentX, platformY, platformWidth, 20, 'normal'));
-            currentX += platformWidth + fib[3] * 15; // 45px spacing
+            this.platforms.push(new Platform(currentX, platformY, platformWidth, this.metrics.PLATFORM_HEIGHT, 'normal'));
+            currentX += platformWidth + this.metrics.GAP.SMALL; // SMALL gap (57px)
         }
 
         return {

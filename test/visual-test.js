@@ -18,7 +18,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const { PNG } = require('pngjs');
-const pixelmatch = require('pixelmatch');
+const pixelmatch = require('pixelmatch').default || require('pixelmatch');
 
 // Configuration
 const CONFIG = {
@@ -37,7 +37,7 @@ const SCENARIOS = [
         description: 'Start screen with logo and menu',
         setup: async (page) => {
             await page.waitForSelector('canvas');
-            await page.waitForTimeout(1000); // Wait for logo animation to settle
+            await wait(1000); // Wait for logo animation to settle
         }
     },
     {
@@ -46,9 +46,9 @@ const SCENARIOS = [
         setup: async (page) => {
             // Navigate to changelog
             await page.keyboard.press('ArrowDown'); // Select Changelog
-            await page.waitForTimeout(200);
+            await wait(200);
             await page.keyboard.press('Enter');
-            await page.waitForTimeout(500); // Wait for changelog to render
+            await wait(500); // Wait for changelog to render
         }
     },
     {
@@ -56,7 +56,7 @@ const SCENARIOS = [
         description: 'Return to start screen',
         setup: async (page) => {
             await page.keyboard.press('KeyB'); // Close changelog
-            await page.waitForTimeout(300);
+            await wait(300);
         }
     },
     {
@@ -65,9 +65,9 @@ const SCENARIOS = [
         setup: async (page) => {
             await page.keyboard.press('ArrowDown'); // Skip Start Game
             await page.keyboard.press('ArrowDown'); // Skip Changelog
-            await page.waitForTimeout(200);
+            await wait(200);
             await page.keyboard.press('Enter'); // Open Settings
-            await page.waitForTimeout(500);
+            await wait(500);
         }
     },
     {
@@ -75,7 +75,7 @@ const SCENARIOS = [
         description: 'Return to start screen from settings',
         setup: async (page) => {
             await page.keyboard.press('Escape');
-            await page.waitForTimeout(300);
+            await wait(300);
         }
     },
     {
@@ -83,7 +83,7 @@ const SCENARIOS = [
         description: 'Initial gameplay state',
         setup: async (page) => {
             await page.keyboard.press('Enter'); // Start Game
-            await page.waitForTimeout(2000); // Wait for level generation
+            await wait(2000); // Wait for level generation
         }
     },
     {
@@ -92,9 +92,9 @@ const SCENARIOS = [
         setup: async (page) => {
             // Move right for a bit
             await page.keyboard.down('KeyD');
-            await page.waitForTimeout(1000);
+            await wait(1000);
             await page.keyboard.up('KeyD');
-            await page.waitForTimeout(500);
+            await wait(500);
         }
     },
     {
@@ -103,16 +103,16 @@ const SCENARIOS = [
         setup: async (page) => {
             // Jump
             await page.keyboard.press('Space');
-            await page.waitForTimeout(300); // Capture mid-jump
+            await wait(300); // Capture mid-jump
         }
     },
     {
         name: '09-pause-menu',
         description: 'Pause menu during gameplay',
         setup: async (page) => {
-            await page.waitForTimeout(500); // Wait to land
+            await wait(500); // Wait to land
             await page.keyboard.press('Escape'); // Open pause menu
-            await page.waitForTimeout(500);
+            await wait(500);
         }
     },
     {
@@ -120,7 +120,7 @@ const SCENARIOS = [
         description: 'Resume from pause',
         setup: async (page) => {
             await page.keyboard.press('Enter'); // Resume
-            await page.waitForTimeout(500);
+            await wait(500);
         }
     }
 ];
@@ -130,6 +130,11 @@ function ensureDir(dirPath) {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
+}
+
+// Helper: Wait for a given number of milliseconds
+async function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Helper: Compare two PNG images
