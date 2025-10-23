@@ -29,6 +29,12 @@ constructor() {
 ### 2. Write Version Note
 Format: `v{VERSION} - {Category}: {Brief Description}`
 
+**IMPORTANT: Keep changelog entries concise and user-focused**
+- Focus on WHAT changed, not HOW or WHY
+- Avoid technical implementation details
+- Technical explanations belong in git commit messages
+- Think: "What does the player experience?"
+
 **Categories:**
 - `New Feature` - Brand new gameplay element
 - `Enhancement` - Improvement to existing feature
@@ -38,13 +44,26 @@ Format: `v{VERSION} - {Category}: {Brief Description}`
 - `Performance` - Optimization
 - `Content` - New levels, assets, etc.
 
-**Examples:**
+**Good Examples (Concise, User-Focused):**
 ```
 v1.2.0 - New Feature: Wall jumping mechanic
-v1.1.5 - Bug Fix: Consumables now spawn correctly on level start
+v1.1.5 - Bug Fix: Consumables now spawn correctly
 v1.1.4 - Balance: Reduced double jump cooldown
 v1.1.3 - UI/UX: Added consumable counter to HUD
 ```
+
+**Bad Examples (Too Technical):**
+```
+❌ v1.1.5 - Bug Fix: Fixed race condition in consumable spawn system initialization
+❌ v1.1.4 - Balance: Adjusted cooldownTime constant from 2000ms to 1500ms
+❌ v1.1.3 - UI/UX: Refactored HUD rendering to use new consumable state manager
+```
+
+**Where to put technical details:**
+- Git commit messages
+- Code comments
+- Documentation files
+- NOT in user-facing changelogs
 
 ### 3. Commit Message Format
 Use descriptive commit messages that reference the version:
