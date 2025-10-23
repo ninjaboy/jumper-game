@@ -1773,18 +1773,18 @@ class PlatformManager {
                 // Apply friction and special effects based on platform type
                 switch (platform.type) {
                     case 'moving':
-                        // Move player with platform and apply full friction (sticks to platform)
+                        // Move player with platform and apply strong friction (sticks to platform)
                         if (platform.deltaX) {
                             player.x += platform.deltaX;
                         }
-                        player.velocityX *= 0.8; // Full friction - player stays on platform
+                        player.velocityX *= 0.7; // Strong friction - player has good control
                         break;
                     case 'ice':
-                        // Less friction on ice (unless sticky gloves active)
+                        // Low friction on ice (unless sticky gloves active)
                         if (player.consumableEffects && player.consumableEffects.stickyGloves) {
-                            player.velocityX *= 0.8; // Normal friction with sticky gloves
+                            player.velocityX *= 0.7; // Normal friction with sticky gloves
                         } else {
-                            player.velocityX *= 0.95; // Slippery without gloves
+                            player.velocityX *= 0.95; // Very slippery without gloves
                         }
                         break;
                     case 'spring':
@@ -1798,13 +1798,16 @@ class PlatformManager {
                                 player.soundManager.playSpring();
                             }
                         } else {
-                            // Normal friction when not bouncing
-                            player.velocityX *= 0.8;
+                            // Strong friction when not bouncing
+                            player.velocityX *= 0.7;
                         }
                         break;
+                    case 'oneway':
+                    case 'bouncy':
+                    case 'normal':
                     default:
-                        // Normal friction for regular platforms
-                        player.velocityX *= 0.8;
+                        // Strong friction for regular platforms - good control
+                        player.velocityX *= 0.7;
                         break;
                 }
                 return;
