@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       });
 
       console.log('Blob created successfully:', blob.url);
+      console.log('Total feedback entries:', allFeedback.length);
 
       return res.status(200).json({
         success: true,
