@@ -305,6 +305,98 @@ class SawBlade {
     }
 }
 
+class AnimatedSpike {
+    constructor(x, y, width = 30, height = 40, cycleTime = 120) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.maxHeight = height;
+        this.cycleTime = cycleTime; // Frames for full cycle (on + off)
+        this.timer = 0;
+        this.isActive = true;
+        this.currentHeight = height;
+        this.warningTimer = 30; // Warning phase before activation
+    }
+
+    update() {
+        this.timer++;
+
+        // Cycle: Active (60f) → Warning (30f) → Retracted (60f) → Warning (30f)
+        const phase = this.timer % this.cycleTime;
+
+        if (phase < 60) {
+            // Active phase - spikes fully extended
+            this.isActive = true;
+            this.currentHeight = this.maxHeight;
+        } else if (phase < 90) {
+            // Warning phase - spikes retracting
+            this.isActive = true;
+            const retractProgress = (phase - 60) / 30;
+            this.currentHeight = this.maxHeight * (1 - retractProgress);
+        } else if (phase < 150) {
+            // Retracted phase - safe
+            this.isActive = false;
+            this.currentHeight = 0;
+        } else {
+            // Warning phase - spikes extending
+            this.isActive = false;
+            const extendProgress = (phase - 150) / 30;
+            this.currentHeight = this.maxHeight * extendProgress;
+        }
+    }
+
+    render(ctx) {
+        if (this.currentHeight === 0) return; // Don't draw when fully retracted
+
+        // Base plate
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(this.x, this.y + this.maxHeight, this.width, 5);
+
+        // Spike body
+        const alpha = this.isActive ? 1 : 0.5;
+        ctx.fillStyle = this.isActive ? '#FF4444' : '#FFAA44';
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(this.x, this.y + (this.maxHeight - this.currentHeight), this.width, this.currentHeight);
+
+        // Draw spike triangles
+        ctx.fillStyle = this.isActive ? '#CC0000' : '#FF8800';
+        ctx.beginPath();
+        const numSpikes = Math.floor(this.width / 6);
+        for (let i = 0; i < numSpikes; i++) {
+            const spikeX = this.x + i * 6;
+            const spikeBase = this.y + this.maxHeight - this.currentHeight;
+            const spikeTop = this.y + (this.maxHeight - this.currentHeight);
+
+            ctx.moveTo(spikeX, this.y + this.maxHeight);
+            ctx.lineTo(spikeX + 3, spikeTop);
+            ctx.lineTo(spikeX + 6, this.y + this.maxHeight);
+        }
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Warning glow when about to activate
+        if (!this.isActive && this.currentHeight > 0) {
+            ctx.strokeStyle = '#FF8800';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(this.x - 2, this.y, this.width + 4, this.maxHeight + 5);
+        }
+    }
+
+    getBounds() {
+        if (!this.isActive || this.currentHeight === 0) {
+            return null; // No collision when retracted or warning
+        }
+
+        return {
+            x: this.x,
+            y: this.y + (this.maxHeight - this.currentHeight),
+            width: this.width,
+            height: this.currentHeight
+        };
+    }
+}
+
 class LavaPit {
     constructor(x, y, width, height = 30) {
         this.x = x;
