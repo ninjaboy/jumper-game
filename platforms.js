@@ -1689,7 +1689,18 @@ class PlatformManager {
                 }
                 break;
             } else if (player.currentLadder === ladder) {
-                // Player left the ladder
+                // Player left the ladder - check if they should jump
+                const wasPressingUp = player.keys.up || player.keys.jump;
+                const reachedTop = player.y <= ladder.y; // At or above ladder top
+
+                if (wasPressingUp || reachedTop) {
+                    // Jump off the ladder
+                    player.velocityY = -player.jumpPower * 0.7; // Small jump to clear platform
+                    if (player.soundManager) {
+                        player.soundManager.playJump();
+                    }
+                }
+
                 player.onLadder = false;
                 player.currentLadder = null;
             }
