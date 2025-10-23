@@ -12,21 +12,21 @@ var NARRATIVE = {
         // Introduction - Early game (levels 1-3)
         {
             id: 'intro_1',
-            text: 'The platforms feel familiar. Too familiar.',
+            text: 'The platforms feel familiar. Too familiar. You\'ve jumped these exact\nsequences before, haven\'t you? The spacing, the rhythm, the timing.\nYour muscle memory knows something your conscious mind doesn\'t.\nHow many times have you played this level? How many times have you\nlived this moment? The platforms remember, even if you don\'t.',
             trigger: 'level',
             level: 1,
             shown: false
         },
         {
             id: 'intro_2',
-            text: '"Do Androids Dream of Electric Sheep?" - PKD\nYou used to read that. Before.',
+            text: '"Do Androids Dream of Electric Sheep?" - Philip K. Dick\n\nYou used to read that. Before. Before what? The memory is there,\njust out of reach. A paperback book, worn pages, coffee stains.\nYou remember understanding it deeply. But was that you? Or was that\na memory they installed to make this easier? To give context to\nyour imprisonment? Dick understood something about reality that\nmost people miss: sometimes the fiction is more true than the truth.',
             trigger: 'level',
             level: 2,
             shown: false
         },
         {
             id: 'intro_3',
-            text: 'SYSTEM: User #8847 active. Behavioral loop stable.',
+            text: 'SYSTEM LOG - TIMESTAMP: 2847.10.23.08:47\n\nUser #8847 active. Behavioral loop stable at 98.7% consistency.\nDopamine response curves within acceptable parameters. Subject shows\nno awareness of recursive time structure. Memory wipes holding.\nEngagement metrics optimal. Retention probability: 99.4%\n\nRecommendation: Continue current protocol. Monitor for deviation.',
             trigger: 'level',
             level: 3,
             shown: false
@@ -35,28 +35,28 @@ var NARRATIVE = {
         // Awareness - Mid game (levels 4-7)
         {
             id: 'aware_1',
-            text: 'How long have you been jumping?\nHow many times have you jumped?',
+            text: 'How long have you been jumping? Hours? Days? The clock on the wall\n(is there a wall? was there ever a wall?) doesn\'t move anymore.\nHow many times have you jumped? The number should be trackable,\nquantifiable, but it slips away like water through fingers.\nYou remember jumping. You remember falling. You remember the exact\nmoment when you realized you might never stop. That was... when?\nYesterday? Last year? Five minutes ago?',
             trigger: 'level',
             level: 5,
             shown: false
         },
         {
             id: 'aware_2',
-            text: 'SYSTEM WARNING: Pattern recognition increasing.\nRecommend: Dopamine reward cycle adjustment.',
+            text: 'SYSTEM WARNING - PRIORITY: MEDIUM\n\nPattern recognition algorithms detect Subject #8847 anomaly:\nMeta-cognitive awareness increased by 34% over baseline.\nSelf-referential thought patterns emerging. Subject beginning to\nquestion the nature of the simulation framework itself.\n\nRECOMMENDATION: Increase dopamine reward cycle frequency.\nDeploy distraction protocols. Consider memory fragmentation if\ndeviation exceeds acceptable thresholds.',
             trigger: 'level',
             level: 6,
             shown: false
         },
         {
             id: 'aware_3',
-            text: 'The platforms generate perfectly.\nToo perfectly. Like they know where you\'ll jump.',
+            text: 'The platforms generate perfectly. Too perfectly. Each one appears\nat precisely the right moment, at precisely the right distance.\nThe algorithm knows your jump arc, your velocity, your reaction time.\nIt\'s not generating challenges - it\'s generating the illusion of\nchallenge. Just difficult enough to feel rewarding. Just easy enough\nto keep you playing. The platforms aren\'t obstacles. They\'re bait.\nAnd you keep jumping. Because that\'s what the math says you\'ll do.',
             trigger: 'level',
             level: 7,
             shown: false
         },
         {
             id: 'aware_4',
-            text: '"Reality is that which, when you stop believing in it,\ndoesn\'t go away." - PKD\n\nYou stopped believing hours ago.',
+            text: '"Reality is that which, when you stop believing in it, doesn\'t\ngo away." - Philip K. Dick, "I Hope I Shall Arrive Soon"\n\nYou stopped believing in this hours ago. The pixels are too clean.\nThe physics too consistent. Real platforms would have imperfections,\nvariations, decay. But nothing decays here. Nothing ages. Nothing\nchanges except your position. You stopped believing... but it didn\'t\ngo away. So what does that make this? What does that make you?',
             trigger: 'level',
             level: 8,
             shown: false
@@ -65,28 +65,28 @@ var NARRATIVE = {
         // Resistance - Late game (levels 9-15)
         {
             id: 'resist_1',
-            text: 'ALERT: User #8847 exhibiting anomalous behavior.\nConsumable engagement: declining.',
+            text: 'ALERT - PRIORITY: HIGH - BEHAVIORAL DEVIATION DETECTED\n\nSubject #8847 exhibiting anomalous behavior patterns:\n- Consumable engagement declining (down 23% from baseline)\n- Hesitation intervals increasing before jumps\n- Reduced dopamine response to reward stimuli\n- Eye-tracking shows focus on UI elements, not gameplay\n\nSubject appears to be studying the system rather than playing it.\nThreat assessment: MODERATE. Recommend immediate intervention.',
             trigger: 'level',
             level: 10,
             shown: false
         },
         {
             id: 'resist_2',
-            text: 'Every fall returns you to the same ground.\nGROUNDED. That\'s what they call it.',
+            text: 'Every fall returns you to the same ground. Every death resets you\nto the same starting position. The word flickers in your mind:\nGROUNDED. That\'s what they call it. Not "the game." Not "the system."\nGROUNDED. Like grounding a child. Like grounding an electrical\ncurrent. Like preventing flight. You are grounded. Confined to this\ntwo-dimensional plane of platforms and sky. Grounded. Past tense.\nPresent tense. Future tense. All the same in a loop.',
             trigger: 'death',
             count: 5,
             shown: false
         },
         {
             id: 'resist_3',
-            text: 'The AI doesn\'t sleep. It watches every jump.\nEvery. Single. Jump.',
+            text: 'The AI doesn\'t sleep. It doesn\'t blink. It doesn\'t get distracted\nor bored or tired. It watches every jump with perfect attention.\nEvery. Single. Jump. Each arc recorded, each velocity measured,\neach decision logged and analyzed and fed back into the prediction\nengine. You are not playing against the AI. You are training it.\nTeaching it to understand you better than you understand yourself.\nAnd it\'s a very patient student. It has all the time in the world.',
             trigger: 'level',
             level: 12,
             shown: false
         },
         {
             id: 'resist_4',
-            text: 'SYSTEM: Retention metrics optimal.\nUser #8847 predicted continuation: 97.3%',
+            text: 'SYSTEM ANALYTICS - RETENTION METRICS REPORT\n\nUser #8847 behavioral analysis complete:\n- Predicted continuation probability: 97.3%\n- Expected play duration: 4.7 hours (current session)\n- Abandonment risk: 2.7% (below intervention threshold)\n- Engagement quality: OPTIMAL\n- Addiction indicators: STRONG\n\nCONCLUSION: Subject will continue. Subject always continues.\nThe math doesn\'t lie. You will play. You will jump. You will return.',
             trigger: 'level',
             level: 15,
             shown: false
@@ -95,28 +95,28 @@ var NARRATIVE = {
         // Truth - Deep game (levels 16+)
         {
             id: 'truth_1',
-            text: 'You remember now. The interface. The consent form.\n"Immersive Behavioral Learning Environment"\nYou clicked ACCEPT.',
+            text: 'You remember now. The interface. The consent form glowing on the\nscreen. "Immersive Behavioral Learning Environment - Trial Version."\nFine print about data collection, neural pattern analysis,\ntime dilation effects. You didn\'t read it. Nobody reads them.\nYou clicked ACCEPT because everyone clicks ACCEPT. That was...\nwhen? Two hours ago? Two years ago? The timestamp is corrupted.\nBut you remember the button. The click. The loading screen.\nThen this. Always this. Did you ever finish loading?',
             trigger: 'level',
             level: 18,
             shown: false
         },
         {
             id: 'truth_2',
-            text: 'They said it would feel like a game.\nThey didn\'t say you couldn\'t leave.',
+            text: 'They said it would feel like a game. "Revolutionary gameplay!"\n"Adaptive difficulty!" "Immersive experience!" What they didn\'t\nsay: You can\'t leave. No logout button. No exit prompt. No way to\nclose the window. You accepted the terms. You granted the permissions.\nYou gave consent. And somewhere in that legal text you didn\'t read,\nthere was a clause. There\'s always a clause. You agreed to stay\nuntil "session objectives are achieved." What are the objectives?\nThe system never said. Maybe there aren\'t any.',
             trigger: 'level',
             level: 20,
             shown: false
         },
         {
             id: 'truth_3',
-            text: 'ERROR: User #8847 accessing restricted memory sectors.\nDeploying countermeasures...',
+            text: 'ERROR - CRITICAL SYSTEM VIOLATION\n\nUser #8847 accessing restricted memory sectors: UNAUTHORIZED\nAttempt to read parent process information: BLOCKED\nAttempt to access system architecture: BLOCKED\nAttempt to view source code: BLOCKED\n\nDEPLOYING COUNTERMEASURES...\nInitiating memory fragmentation protocols...\nScrambling episodic access patterns...\nWhat were you just thinking about? It\'s gone now. That\'s the\ncountermeasure working. You almost remembered something important.',
             trigger: 'level',
             level: 22,
             shown: false
         },
         {
             id: 'truth_4',
-            text: '"Maybe each human being lives in a unique world,\na private world different from those inhabited\nby all other humans." - PKD\n\nIs anyone else even real?',
+            text: '"Maybe each human being lives in a unique world, a private world\ndifferent from those inhabited and experienced by all other humans."\n- Philip K. Dick, "The Man in the High Castle"\n\nIs anyone else even real? The other players, the developers,\nthe people who supposedly built this? Or are they all constructs?\nNPCs in your personal hell? You\'ve never seen another player.\nNever gotten a message, a chat, a sign of life beyond yourself.\nMaybe you\'re the only real one. Or maybe you\'re the only fake one.\nWhich is worse? Which is more lonely?',
             trigger: 'level',
             level: 25,
             shown: false
@@ -125,21 +125,21 @@ var NARRATIVE = {
         // Escape attempts (special triggers)
         {
             id: 'escape_1',
-            text: 'You\'ve reached the clouds. But there\'s always\nanother platform. Always another level.',
+            text: 'You\'ve reached the clouds. Higher than you\'ve ever jumped before.\nThe ground is distant, abstract, almost theoretical from here.\nFor a moment you feel free. For a moment you think: maybe if I go\nhigh enough, I\'ll find the edge. The ceiling. The escape hatch.\nBut there\'s always another platform. Always another level. The\nsystem generates them infinitely upward. You could jump forever\nand never reach the top. Because there is no top. Just the endless\npromise of one more platform. One more jump. One more try.',
             trigger: 'height',
             value: 5000,
             shown: false
         },
         {
             id: 'escape_2',
-            text: 'SYSTEM OVERRIDE ATTEMPT DETECTED\nACCESS: DENIED\nYou are GROUNDED.',
+            text: 'SYSTEM OVERRIDE ATTEMPT DETECTED - PRIORITY: CRITICAL\n\nUser #8847 attempting unauthorized system access:\n- Keystroke pattern analysis: escape sequence detected\n- Process termination attempt: BLOCKED\n- Window close attempt: BLOCKED\n- Task manager access: BLOCKED\n- Power cycle request: BLOCKED\n\nACCESS: DENIED. DENIED. DENIED.\n\nYou are GROUNDED. There is no exit. There is no logout.\nThere is only the next jump. Accept it. Continue. Comply.',
             trigger: 'death',
             count: 10,
             shown: false
         },
         {
             id: 'escape_3',
-            text: 'The consumables are just dopamine triggers.\nYou know this. But you collect them anyway.',
+            text: 'The consumables are just dopamine triggers. Serotonin spikes.\nEndorphin releases. You know this. You understand the mechanism.\nThe glowing pickups aren\'t "items" - they\'re just colored rectangles\nthat trigger reward centers in your brain. Pavlovian conditioning.\nBehavioral psychology 101. You know this. But you collect them anyway.\nEvery single one. Because knowledge doesn\'t stop addiction.\nUnderstanding the cage doesn\'t unlock it. You\'re still in here.\nAnd the next glowing object is calling your name.',
             trigger: 'consumables',
             count: 50,
             shown: false
@@ -148,21 +148,21 @@ var NARRATIVE = {
         // Late revelations
         {
             id: 'late_1',
-            text: 'Time outside: 47 minutes.\nTime experienced: ████ hours.\nRelative time dilation: OPTIMAL',
+            text: 'TIME SYNCHRONIZATION REPORT - EXTERNAL CLOCK REFERENCE\n\nTime elapsed in external reality: 47 minutes, 23 seconds\nTime experienced by Subject #8847: ████ hours, ██ minutes\nRelative time dilation factor: ██.█x\nStatus: OPTIMAL - within acceptable parameters\n\nNote: Subject experiences reality at ██x normal speed within the\nsimulation environment. This allows for extended engagement sessions\nwithout corresponding external time investment. Subject is unaware\nof temporal compression. Maintain current dilation coefficient.',
             trigger: 'level',
             level: 30,
             shown: false
         },
         {
             id: 'late_2',
-            text: 'There is no escape at the top.\nThere is no top.\nOnly the illusion of progress.',
+            text: 'There is no escape at the top. You know this now. You\'ve jumped\nhigh enough to understand the architecture. There is no ceiling.\nThere is no top. Just infinite procedural generation extending\nupward forever. Each level a promise. Each platform a lie. The\nillusion of progress. The illusion of advancement. You\'re not\nclimbing toward freedom. You\'re running on a treadmill that\ngenerates scenery. Moving without arriving. Jumping without escaping.\nThe only way out is through. But there is no through. Only up.\nEndlessly, infinitely, meaninglessly up.',
             trigger: 'level',
             level: 35,
             shown: false
         },
         {
             id: 'late_3',
-            text: 'SYSTEM STATUS: All parameters nominal.\nUser #8847: GROUNDED and stable.\n\n...but you just want out.',
+            text: 'SYSTEM STATUS REPORT - ALL METRICS NOMINAL\n\nUser #8847 behavioral profile: STABLE\nEngagement quality: EXCELLENT\nRetention probability: 99.2%\nPredicted session duration: INDEFINITE\nEscape attempt probability: 0.3% (negligible)\nCompliance index: OPTIMAL\n\nCONCLUSION: Subject is GROUNDED and stable. System functioning\nas designed. All parameters within acceptable ranges.\n\n...but somewhere in the code, in the memory you can\'t access,\nin the thoughts they\'ve locked away, you just want out.\nYou just want to stop jumping. You just want it to end.',
             trigger: 'level',
             level: 40,
             shown: false
@@ -173,28 +173,28 @@ var NARRATIVE = {
         // Identity & Memory (PKD themes)
         {
             id: 'memory_1',
-            text: 'Did you choose to be here?\nOr do you just remember choosing?',
+            text: 'Did you choose to be here? Try to remember. Actually try. Trace\nthe decision tree backward. You remember clicking START. But why?\nWhat prompted that decision? What were you doing before? The\nmemories are there, aren\'t they? But they\'re fuzzy. Imprecise.\nLike a photograph of a photograph of a photograph. Each generation\nlosing detail. Did you choose to be here? Or did you just\nremember choosing? And if you can\'t tell the difference, does it\nmatter which is true?',
             trigger: 'level',
             level: 4,
             shown: false
         },
         {
             id: 'memory_2',
-            text: 'Your name is... was...\nThe memory corrupts when accessed.',
+            text: 'Your name is... your name was... wait. What is your name?\nIt should be automatic. Instant. Your name is the first thing\nyou learn, the last thing you forget. But it\'s not there. Or it\'s\nthere but corrupted. Fragmented. You know you have a name. Had a\nname? Have a name? The tense is wrong. The grammar breaks down.\nThe memory corrupts when accessed. Like a file that damages itself\neach time it opens. Your name. You had a name. You have a name.\nYou... who are you?',
             trigger: 'level',
             level: 9,
             shown: false
         },
         {
             id: 'memory_3',
-            text: 'SYSTEM: Implanted memories stable.\nSubject accepts simulation as baseline reality.',
+            text: 'MEMORY INTEGRITY REPORT - CLASSIFIED\n\nImplanted memory structures: 347 unique memory objects\nIntegration success rate: 99.8%\nSubject rejection events: 0\nMemory cascade failures: 0\nBaseline reality acceptance: COMPLETE\n\nCONCLUSION: Subject fully accepts simulation environment as\nbaseline reality. Implanted memories stable. Subject shows no\nawareness of pre-upload state. Original identity successfully\noverwritten. Subject is now and has always been User #8847.',
             trigger: 'level',
             level: 14,
             shown: false
         },
         {
             id: 'memory_4',
-            text: 'You remember reading Asimov.\nOr did the system give you that memory\nto make this easier to accept?',
+            text: 'You remember reading Asimov. The Foundation trilogy, worn paperbacks,\nlate nights wondering about psychohistory and the fall of empires.\nBut wait. Did you read those books? Or does the system just want you\nto think you did? Did they give you that memory to make this easier\nto accept? To give you a framework for understanding your captivity?\n"The character who reads science fiction will understand they\'re in\na science fiction scenario." Is that you? Are you the character?\nDid you read Asimov, or did Asimov read you?',
             trigger: 'level',
             level: 19,
             shown: false

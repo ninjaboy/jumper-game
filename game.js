@@ -100,7 +100,7 @@ class Game {
         // Narrative message system (PKD-inspired)
         this.narrativeMessage = null; // Current message being displayed
         this.narrativeTimer = 0; // Display duration
-        this.narrativeMaxDuration = 180; // 3 seconds at 60fps
+        this.narrativeMaxDuration = 600; // 10 seconds at 60fps (for longer messages)
         this.totalDeaths = 0; // Track deaths across all levels
         this.totalConsumables = 0; // Track total consumables collected
         this.maxHeightReached = 0; // Track max height for triggers
