@@ -96,6 +96,125 @@ class Platform {
     }
 }
 
+// Ladder class - climbable vertical structures
+class Ladder {
+    constructor(x, y, height) {
+        this.x = x;
+        this.y = y;
+        this.width = 40; // Fixed width for ladders
+        this.height = height;
+        this.rungSpacing = 25; // Space between rungs
+    }
+
+    render(ctx) {
+        // Draw vertical rails
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(this.x, this.y, 8, this.height); // Left rail
+        ctx.fillRect(this.x + this.width - 8, this.y, 8, this.height); // Right rail
+
+        // Draw horizontal rungs
+        ctx.fillStyle = '#A0522D';
+        const rungCount = Math.floor(this.height / this.rungSpacing);
+        for (let i = 0; i <= rungCount; i++) {
+            const rungY = this.y + (i * this.rungSpacing);
+            if (rungY <= this.y + this.height) {
+                ctx.fillRect(this.x, rungY, this.width, 6);
+
+                // Add wood grain effect
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(this.x + 5, rungY + 1, 2, 4);
+                ctx.fillRect(this.x + this.width - 7, rungY + 1, 2, 4);
+                ctx.fillStyle = '#A0522D';
+            }
+        }
+
+        // Add shadow/depth
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(this.x + 2, this.y, 4, this.height);
+        ctx.fillRect(this.x + this.width - 6, this.y, 4, this.height);
+    }
+
+    getBounds() {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    isPlayerOnLadder(player) {
+        // Check if player is overlapping with ladder
+        return player.x + player.width > this.x + 5 &&
+               player.x < this.x + this.width - 5 &&
+               player.y + player.height > this.y &&
+               player.y < this.y + this.height;
+    }
+}
+
+// Pit class - gaps in the ground with varying depths
+class Pit {
+    constructor(x, width, depth) {
+        this.x = x;
+        this.width = width;
+        this.depth = depth; // How deep the pit goes (for rendering)
+        this.groundLevel = 520; // Standard ground level
+        this.y = this.groundLevel; // Pits start at ground level
+    }
+
+    render(ctx) {
+        // Draw pit opening
+        const gradient = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.depth);
+        gradient.addColorStop(0, '#3D2817');
+        gradient.addColorStop(0.3, '#2A1810');
+        gradient.addColorStop(0.7, '#1A0F08');
+        gradient.addColorStop(1, '#000000');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(this.x, this.y, this.width, this.depth);
+
+        // Add edge shadows
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(this.x, this.y, 10, this.depth); // Left edge
+        ctx.fillRect(this.x + this.width - 10, this.y, 10, this.depth); // Right edge
+
+        // Add some depth lines
+        ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 5; i++) {
+            const lineY = this.y + (this.depth / 5) * i;
+            ctx.beginPath();
+            ctx.moveTo(this.x + 5, lineY);
+            ctx.lineTo(this.x + this.width - 5, lineY);
+            ctx.stroke();
+        }
+
+        // Top edge highlight
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + this.width, this.y);
+        ctx.stroke();
+    }
+
+    getBounds() {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.depth
+        };
+    }
+
+    isPlayerInPit(player) {
+        // Check if player has fallen into the pit
+        return player.x + player.width > this.x &&
+               player.x < this.x + this.width &&
+               player.y + player.height > this.y;
+    }
+}
+
 // Hazard classes
 class SawBlade {
     constructor(x, y, radius = 20) {
@@ -282,6 +401,8 @@ class PoisonCloud {
 class PlatformManager {
     constructor(seed = null, bias = 'normal', level = 1, soundManager = null) {
         this.platforms = [];
+        this.ladders = []; // NEW: Climbable structures
+        this.pits = []; // NEW: Ground gaps with depth
         this.spikes = [];
         this.sawBlades = [];
         this.lavaPits = [];
@@ -291,7 +412,12 @@ class PlatformManager {
         this.bias = bias;
         this.level = level;
         this.soundManager = soundManager;
-        this.generateRandomLevel();
+
+        // Mathematical constants for beautiful design
+        this.PHI = 1.618033988749895; // Golden ratio
+        this.GOLDEN_ANGLE = 137.5; // Golden angle in degrees
+
+        this.generateFibonacciLevel(); // NEW: Use Fibonacci-based generation
     }
 
     update(player = null) {
@@ -392,6 +518,204 @@ class PlatformManager {
             const proximity = Math.max(0, 1 - (distance / maxDistance));
             this.soundManager.updateAmbientHazard(`poison_${index}`, 'poison', proximity);
         });
+    }
+
+    // ====================
+    // FIBONACCI & GOLDEN RATIO METHODS
+    // ====================
+
+    /**
+     * Generate Fibonacci sequence up to n terms
+     */
+    generateFibonacci(n) {
+        const fib = [1, 1];
+        for (let i = 2; i < n; i++) {
+            fib.push(fib[i-1] + fib[i-2]);
+        }
+        return fib;
+    }
+
+    /**
+     * Get golden ratio divisions of a value
+     * Returns { major, minor } where major/minor = φ
+     */
+    goldenDivision(value) {
+        return {
+            major: value / this.PHI, // ~0.618 of value
+            minor: value - (value / this.PHI) // ~0.382 of value
+        };
+    }
+
+    /**
+     * Generate aesthetically pleasing platform layout using Fibonacci and Golden Ratio
+     */
+    generateFibonacciLevel() {
+        const levelWidth = 3000;
+        const groundLevel = 520;
+        const baseUnit = 30; // Base spacing unit
+
+        // Generate Fibonacci sequence for spacing
+        const fibSequence = this.generateFibonacci(12); // [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+
+        // Get bias parameters (still use for hazard density, etc.)
+        const biasParams = this.getBiasParameters();
+
+        // ====================
+        // 1. GROUND PLATFORMS WITH FIBONACCI GAPS AND PITS
+        // ====================
+
+        // Start with safe platform
+        this.platforms.push(new Platform(0, groundLevel, 200, 80, 'normal'));
+
+        let currentX = 220;
+        let fibIndex = 0;
+
+        while (currentX < levelWidth - 500) {
+            // Alternating pattern: platform, gap (maybe pit), platform, gap, etc.
+            const platformWidth = fibSequence[fibIndex % 8] * baseUnit; // Use first 8 Fibonacci numbers
+            const gapSize = fibSequence[(fibIndex + 1) % 8] * baseUnit;
+
+            // Create ground platform
+            this.platforms.push(new Platform(currentX, groundLevel, platformWidth, 80, 'normal'));
+            currentX += platformWidth;
+
+            // Sometimes create a pit in the gap
+            const pitChance = 0.4; // 40% chance of pit
+            if (this.rng.random() < pitChance && gapSize > 60) {
+                const pitDepth = fibSequence[(fibIndex + 2) % 6] * 10; // Fibonacci depth (55, 89, 144 pixels)
+                this.pits.push(new Pit(currentX, gapSize, pitDepth));
+            }
+
+            currentX += gapSize;
+            fibIndex++;
+        }
+
+        // ====================
+        // 2. FLOATING PLATFORMS USING GOLDEN RATIO VERTICAL DIVISIONS
+        // ====================
+
+        // Divide vertical space using golden ratio recursively
+        const heightLayers = this.generateGoldenHeightLayers(groundLevel);
+
+        // Generate platform groups in Fibonacci counts: 1, 1, 2, 3, 5, 8...
+        let xPosition = 300;
+        const groupPattern = [1, 1, 2, 3, 5, 8]; // Fibonacci group sizes
+
+        for (let groupIndex = 0; groupIndex < groupPattern.length && xPosition < levelWidth - 500; groupIndex++) {
+            const platformsInGroup = groupPattern[groupIndex];
+            const groupSpacing = fibSequence[groupIndex + 3] * baseUnit; // Use larger Fibonacci numbers for group spacing
+
+            for (let i = 0; i < platformsInGroup; i++) {
+                // Choose height from golden ratio layers
+                const layerIndex = (groupIndex + i) % heightLayers.length;
+                const y = heightLayers[layerIndex];
+
+                // Platform width from Fibonacci
+                const width = fibSequence[(i + 4) % 8] * 10; // 55-144px wide
+                const height = 20;
+
+                // Vary platform types
+                let type = 'normal';
+                const typeRoll = this.rng.random();
+                if (typeRoll < 0.10) type = 'ice';
+                else if (typeRoll < 0.18) type = 'moving';
+                else if (typeRoll < 0.25) type = 'spring';
+
+                this.platforms.push(new Platform(xPosition, y, width, height, type));
+
+                // Spacing within group uses smaller Fibonacci numbers
+                xPosition += fibSequence[(i + 1) % 6] * baseUnit;
+            }
+
+            // Larger gap between groups
+            xPosition += groupSpacing;
+        }
+
+        // ====================
+        // 3. LADDERS CONNECTING HEIGHT LAYERS
+        // ====================
+
+        // Place ladders to connect different height layers
+        this.generateFibonacciLadders(levelWidth, groundLevel, heightLayers);
+
+        // ====================
+        // 4. HAZARDS (using existing generation but less dense for aesthetics)
+        // ====================
+
+        this.generateHazards(levelWidth);
+        this.generateAdvancedHazards(levelWidth, biasParams);
+
+        // ====================
+        // 5. START AND FINISH FLAGS
+        // ====================
+
+        this.startFlag = {x: 50, y: groundLevel - 100, width: 20, height: 100};
+        this.finishFlag = {x: levelWidth - 150, y: groundLevel - 100, width: 20, height: 100};
+
+        // Final platform at the end
+        this.platforms.push(new Platform(levelWidth - 300, groundLevel, 300, 80, 'normal'));
+    }
+
+    /**
+     * Generate height layers using golden ratio divisions
+     * Creates aesthetically pleasing vertical sections
+     */
+    generateGoldenHeightLayers(groundLevel) {
+        const layers = [];
+
+        // Divide total height (0 to groundLevel) using golden ratio
+        // Layer 1 (highest): 0 to groundLevel * 0.382
+        layers.push(groundLevel * 0.15); // Very high
+        layers.push(groundLevel * 0.30); // High
+
+        // Layer 2 (mid-high): groundLevel * 0.382 to groundLevel * 0.618
+        layers.push(groundLevel * 0.45); // Mid-high
+        layers.push(groundLevel * 0.55); // Mid
+
+        // Layer 3 (mid-low): groundLevel * 0.618 to groundLevel
+        layers.push(groundLevel * 0.70); // Mid-low
+        layers.push(groundLevel * 0.82); // Low
+
+        return layers;
+    }
+
+    /**
+     * Generate ladders using Fibonacci spacing
+     * Ladders connect ground to higher platforms
+     */
+    generateFibonacciLadders(levelWidth, groundLevel, heightLayers) {
+        const fibSpacing = this.generateFibonacci(8);
+        const baseUnit = 35;
+
+        let xPosition = 400;
+        let fibIndex = 3; // Start with larger spacing
+
+        while (xPosition < levelWidth - 600) {
+            // Find a platform below this position for ladder base
+            const nearbyPlatforms = this.platforms.filter(p =>
+                Math.abs(p.x - xPosition) < 150 &&
+                p.y >= groundLevel - 200 &&
+                p.y < groundLevel
+            );
+
+            if (nearbyPlatforms.length > 0) {
+                // Choose a random platform from nearby ones
+                const basePlatform = nearbyPlatforms[this.rng.randomInt(0, nearbyPlatforms.length - 1)];
+
+                // Ladder height reaches to a higher platform or layer
+                const targetHeight = heightLayers[this.rng.randomInt(0, heightLayers.length - 1)];
+                const ladderHeight = basePlatform.y - targetHeight;
+
+                if (ladderHeight > 80 && ladderHeight < 400) { // Reasonable ladder heights
+                    const ladderX = basePlatform.x + basePlatform.width / 2 - 20;
+                    this.ladders.push(new Ladder(ladderX, targetHeight, ladderHeight));
+                }
+            }
+
+            // Move to next position using Fibonacci spacing
+            xPosition += fibSpacing[fibIndex % 8] * baseUnit;
+            fibIndex++;
+        }
     }
 
     generateRandomLevel() {
@@ -718,6 +1042,32 @@ class PlatformManager {
             }
         }
 
+        // Check ladder collisions
+        for (let ladder of this.ladders) {
+            if (ladder.isPlayerOnLadder(player)) {
+                // Player is touching ladder
+                if (player.keys.up || player.keys.down) {
+                    // Player wants to climb - attach to ladder
+                    player.onLadder = true;
+                    player.currentLadder = ladder;
+                    player.velocityY = 0; // Stop falling
+                }
+                break;
+            } else if (player.currentLadder === ladder) {
+                // Player left the ladder
+                player.onLadder = false;
+                player.currentLadder = null;
+            }
+        }
+
+        // Check pit collisions (falling into pit = death)
+        for (let pit of this.pits) {
+            if (pit.isPlayerInPit(player)) {
+                // Player fell into pit - respawn
+                return this.respawnPlayer(player);
+            }
+        }
+
         // Check all hazard collisions
         const hazardResult = this.checkHazardCollisions(player);
         if (hazardResult) {
@@ -866,11 +1216,22 @@ class PlatformManager {
     render(ctx, camera) {
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
-        
+
+        // Render pits first (they're behind everything)
+        for (let pit of this.pits) {
+            pit.render(ctx);
+        }
+
+        // Render platforms
         for (let platform of this.platforms) {
             platform.render(ctx);
         }
-        
+
+        // Render ladders (over platforms, behind player)
+        for (let ladder of this.ladders) {
+            ladder.render(ctx);
+        }
+
         // Render all hazards
         this.renderHazards(ctx);
         

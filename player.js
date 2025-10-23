@@ -59,6 +59,11 @@ class Player {
         // Particle system for jump/landing effects
         this.particles = [];
         this.wasOnGround = false; // Track landing
+
+        // Ladder climbing system
+        this.onLadder = false;
+        this.currentLadder = null;
+        this.climbSpeed = 3; // Vertical climb speed
     }
 
     updateMoveSpeed(value) {
@@ -187,6 +192,35 @@ class Player {
     handleInput() {
         // Don't handle input during death animation
         if (this.isDying) return;
+
+        // Handle ladder climbing
+        if (this.onLadder) {
+            // Vertical movement on ladder
+            if (this.keys.up) {
+                this.velocityY = -this.climbSpeed;
+                this.velocityX = 0; // No horizontal movement while climbing
+            } else if (this.keys.down) {
+                this.velocityY = this.climbSpeed;
+                this.velocityX = 0;
+            } else {
+                this.velocityY = 0; // Stay in place on ladder
+            }
+
+            // Allow dismount via left/right or jump
+            if (this.keys.left || this.keys.right || this.keys.jump) {
+                this.onLadder = false;
+                this.currentLadder = null;
+                // If jumping, give upward velocity
+                if (this.keys.jump) {
+                    this.velocityY = -this.jumpPower * 0.8;
+                    if (this.soundManager) {
+                        this.soundManager.playJump();
+                    }
+                }
+            }
+
+            return; // Don't process normal movement while on ladder
+        }
 
         // Check for reversed controls
         const reversedControls = this.consumableEffects && this.consumableEffects.reversedControls;
@@ -496,11 +530,14 @@ class Player {
 
         this.handleInput();
 
-        physics.applyGravity(this);
+        // Apply gravity only when not on a ladder
+        if (!this.onLadder) {
+            physics.applyGravity(this);
 
-        // Wings glide mechanic - reduce fall speed when holding jump in air
-        if (this.consumableEffects && this.consumableEffects.wings && !this.onGround && this.keys.jump && this.velocityY > 0) {
-            this.velocityY *= 0.5; // Reduce fall speed by 50%
+            // Wings glide mechanic - reduce fall speed when holding jump in air
+            if (this.consumableEffects && this.consumableEffects.wings && !this.onGround && this.keys.jump && this.velocityY > 0) {
+                this.velocityY *= 0.5; // Reduce fall speed by 50%
+            }
         }
 
         physics.updatePosition(this);
