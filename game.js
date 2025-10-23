@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.3.3';
+        this.version = '2.3.4';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -42,7 +42,7 @@ class Game {
 
         // Start screen and menu system
         this.selectedMenuItem = 0;
-        this.menuItems = ['Start Game', 'Changelog', 'Settings'];
+        this.menuItems = ['Start Game', 'Changelog', 'Settings', 'Submit Feedback'];
         this.settingsVisible = false;
         this.changelogVisible = false;
         this.changelogScroll = 0;
@@ -390,6 +390,12 @@ class Game {
             case 2: // Settings
                 this.gameState = 'settings';
                 break;
+            case 3: // Submit Feedback
+                this.gameState = 'feedback';
+                this.feedbackText = '';
+                this.feedbackSubmitted = false;
+                this.feedbackSubmitting = false;
+                break;
         }
     }
     
@@ -658,11 +664,8 @@ class Game {
                 this.totalDeaths++;
                 this.triggerNarrativeMessage('death', this.totalDeaths);
 
-                // Transition to feedback screen first
-                this.gameState = 'feedback';
-                this.feedbackText = '';
-                this.feedbackSubmitted = false;
-                this.feedbackSubmitting = false;
+                // Go straight to game over screen
+                this.gameState = 'game_over';
                 return;
             }
 
@@ -1785,7 +1788,7 @@ class Game {
             this.ctx.fillText('✓ Thank you!', this.canvas.width / 2, buttonY);
             this.ctx.fillStyle = '#95a5a6';
             this.ctx.font = '16px Arial';
-            this.ctx.fillText('Press R to restart or N for new level', this.canvas.width / 2, buttonY + 35);
+            this.ctx.fillText('Press ESC or ENTER to return to menu', this.canvas.width / 2, buttonY + 35);
         } else if (this.feedbackSubmitting) {
             this.ctx.fillStyle = '#3498db';
             this.ctx.font = '20px Arial';
@@ -1801,12 +1804,9 @@ class Game {
 
     handleFeedbackInput(e) {
         if (this.feedbackSubmitted) {
-            if (e.code === 'KeyR') {
-                this.gameState = 'game_over';
-                this.restart();
-            } else if (e.code === 'KeyN') {
-                this.gameState = 'game_over';
-                this.generateNewLevel();
+            // Return to start menu after submitting
+            if (e.code === 'Escape' || e.code === 'Enter') {
+                this.gameState = 'start_screen';
             }
             return;
         }
@@ -1814,7 +1814,7 @@ class Game {
         if (this.feedbackSubmitting) return;
 
         if (e.code === 'Escape') {
-            this.gameState = 'game_over';
+            this.gameState = 'start_screen';
             return;
         }
 
