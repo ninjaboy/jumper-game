@@ -15,3 +15,6 @@ test/screenshots/test-results.json
 .idea/
 .vercel
 .env*.local
+
+# Vercel deploy hooks (local only)
+.vercel-deploy-hook
