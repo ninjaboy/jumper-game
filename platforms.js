@@ -1734,19 +1734,19 @@ class PlatformManager {
                 continue; // Skip other collision checks for one-way platforms
             }
 
-            // Normal platforms: check if player is landing on top of platform
-            if (player.velocityY >= 0 &&
-                player.x + player.width > platform.x &&
+            // Normal platforms: check if player is landing on top or standing on platform
+            if (player.x + player.width > platform.x &&
                 player.x < platform.x + platform.width &&
-                player.y + player.height <= platform.y + 10 &&
-                player.y + player.height >= platform.y - 10) {
+                player.y + player.height <= platform.y + 15 &&
+                player.y + player.height >= platform.y - 5 &&
+                player.velocityY >= 0) {
 
                 // Land on platform
                 player.y = platform.y - player.height;
                 player.velocityY = 0;
                 player.onGround = true;
 
-                // Move player with moving platforms
+                // Move player with moving platforms (critical for staying on platform!)
                 if (platform.type === 'moving' && platform.deltaX) {
                     player.x += platform.deltaX;
                 }
