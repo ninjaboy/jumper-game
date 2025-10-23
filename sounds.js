@@ -16,6 +16,7 @@ class SoundManager {
         this.musicMood = 'normal'; // Current music mood based on level bias
         this.musicSection = 0; // Track which section we're on (for A-A-B-A pattern)
         this.musicTimeout = null; // Track the timeout for scheduled music loops
+        this.activeOscillators = []; // Track all active music oscillators so we can stop them immediately
 
         // Ambient sound state (for proximity-based sounds)
         this.ambientSounds = new Map(); // hazardId -> {oscillator, gainNode, currentVolume}
@@ -575,6 +576,21 @@ class SoundManager {
             clearTimeout(this.musicTimeout);
             this.musicTimeout = null;
         }
+
+        // IMMEDIATELY stop all active oscillators to prevent music from continuing
+        for (let oscData of this.activeOscillators) {
+            try {
+                if (oscData.oscillator && oscData.oscillator.stop) {
+                    oscData.oscillator.stop(0); // Stop immediately
+                }
+                if (oscData.gainNode && oscData.gainNode.disconnect) {
+                    oscData.gainNode.disconnect();
+                }
+            } catch (e) {
+                // Oscillator may already be stopped, ignore error
+            }
+        }
+        this.activeOscillators = [];
     }
 
     /**
@@ -721,6 +737,16 @@ class SoundManager {
     playMusicLoop() {
         if (!this.musicPlaying || !this.audioContext) return;
 
+        // Clean up finished oscillators from previous loops to prevent memory leaks
+        this.activeOscillators = this.activeOscillators.filter(oscData => {
+            // Keep oscillators that are still in the "scheduled" or "running" state
+            try {
+                return oscData.oscillator && oscData.oscillator.context && oscData.oscillator.context.state === 'running';
+            } catch (e) {
+                return false; // Remove if we can't check state (likely already finished)
+            }
+        });
+
         const now = this.audioContext.currentTime;
         const params = this.getMusicParameters();
         const beatDuration = params.beatDuration;
@@ -804,6 +830,9 @@ class SoundManager {
             oscillator.start(melodyStartTime);
             oscillator.stop(melodyStartTime + note.duration);
 
+            // Track this oscillator so we can stop it immediately if needed
+            this.activeOscillators.push({ oscillator, gainNode });
+
             melodyStartTime += note.duration;
         });
 
@@ -832,6 +861,9 @@ class SoundManager {
                     oscillator.start(harmonyStartTime);
                     oscillator.stop(harmonyStartTime + arpDuration);
 
+                    // Track this oscillator so we can stop it immediately if needed
+                    this.activeOscillators.push({ oscillator, gainNode });
+
                     harmonyStartTime += arpDuration;
                 });
             }
@@ -857,6 +889,9 @@ class SoundManager {
 
             oscillator.start(bassStartTime);
             oscillator.stop(bassStartTime + chord.duration);
+
+            // Track this oscillator so we can stop it immediately if needed
+            this.activeOscillators.push({ oscillator, gainNode });
 
             bassStartTime += chord.duration;
         });
@@ -895,6 +930,9 @@ class SoundManager {
             gainNode.gain.exponentialRampToValueAtTime(0.01, hitTime + 0.05);
 
             noise.start(hitTime);
+
+            // Track this buffer source so we can stop it immediately if needed
+            this.activeOscillators.push({ oscillator: noise, gainNode });
         }
 
         // Calculate total duration and schedule next loop
