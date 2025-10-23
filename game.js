@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.7';
+        this.version = '2.5.8';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -712,6 +712,7 @@ class Game {
 
         this.camera.x = 0;
         this.camera.y = 0;
+        this.camera.levelWidth = 5000; // Ensure camera knows about new level width
     }
 
     getRandomBias() {
@@ -1007,6 +1008,7 @@ class Game {
 
         this.camera.x = 0;
         this.camera.y = 0;
+        this.camera.levelWidth = 5000; // Ensure camera knows about level width
     }
 
     updateCamera() {
