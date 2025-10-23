@@ -52,38 +52,50 @@ See `VERSION_PROTOCOL.md` for complete guidelines.
 
 ## 🚨 CRITICAL: Deployment Rules
 
-### Primary Deployment Method (Preferred)
-**GitHub auto-deployment:**
-- Push to master branch: `git push`
-- Vercel automatically deploys (usually 30-60 seconds)
-- This is the preferred method for normal development
+### Git Push Policy
+**ALWAYS push commits to GitHub master automatically:**
+- After making changes: `git add -A && git commit -m "..." && git push`
+- Push immediately after each commit
+- Keep GitHub repository up to date
+- This does NOT trigger production deployment automatically
 
-### Manual Deployment (On-Demand Only)
-**Use ONLY when:**
-- User explicitly requests deployment
-- GitHub auto-deploy is failing or rate-limited
-- Need immediate deployment bypass
+### Production Deployment Policy
+**NEVER deploy to production automatically:**
+- Do NOT deploy after every commit
+- Do NOT use `vercel --prod` or `vercel deploy` commands
+- Only deploy when user explicitly requests it
+- Vercel auto-deploy webhook is DISABLED by default
 
-**How to manually deploy:**
+### Manual Deployment (User Request Only)
+**Deploy ONLY when user explicitly asks:**
 ```bash
 ./deploy.sh
 ```
 
 **What this does:**
 - Triggers Vercel deployment via deploy hook
-- Bypasses GitHub webhook
+- Deploys latest code from GitHub master
 - Uses `.vercel-deploy-hook` file (gitignored, local only)
 - Shows deployment status and Vercel dashboard link
 
+**When to suggest deployment:**
+- User says "deploy" or "push to production"
+- Major feature is complete and user wants to test live
+- Bug fix is ready and user needs it live
+- User asks to see changes on the live site
+
 **NEVER:**
-- Use `vercel --prod` or `vercel deploy` commands (can hit rate limits)
-- Manually redeploy from Vercel dashboard without user request
+- Deploy without explicit user request
+- Assume user wants immediate deployment
+- Deploy after every commit or change
+- Use `vercel --prod` commands (can hit rate limits)
 - Share or commit the `.vercel-deploy-hook` file (it's gitignored)
 
 **After deployment:**
 - Wait 30-60 seconds for build to complete
 - Check: https://vercel.com/alexeystolybkos-projects/jumper/deployments
 - Test the production URL to verify changes
+- Inform user deployment is complete
 
 ## 🔄 CRITICAL: Concurrent Session Management
 **Multiple Claude Code sessions may be running simultaneously. Follow these rules to prevent conflicts:**

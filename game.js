@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.4.0';
+        this.version = '2.3.3';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -137,27 +137,32 @@ class Game {
                 e.preventDefault();
             }
 
-            // Don't trigger audio controls if user is typing in HTML elements
-            if (isTypingInElement) {
-                return;
-            }
-
-            // Global audio controls (work in any state)
-            if (e.code === 'KeyM') {
-                // Toggle mute
-                const muted = this.soundManager.toggleMute();
-                console.log(`Audio ${muted ? 'muted' : 'unmuted'}`);
-                return;
-            } else if (e.code === 'KeyB') {
-                // Toggle background music
-                if (this.soundManager.musicPlaying) {
-                    this.soundManager.stopBackgroundMusic();
-                    console.log('Background music stopped');
+            // Don't trigger audio controls if user is typing
+            if (isTypingInElement || isFeedbackScreen) {
+                // In feedback screen, let the feedback handler deal with input
+                if (isFeedbackScreen) {
+                    // Skip to feedback handler below
                 } else {
-                    this.soundManager.startBackgroundMusic();
-                    console.log('Background music started');
+                    return;
                 }
-                return;
+            } else {
+                // Global audio controls (work in any state except feedback)
+                if (e.code === 'KeyM') {
+                    // Toggle mute
+                    const muted = this.soundManager.toggleMute();
+                    console.log(`Audio ${muted ? 'muted' : 'unmuted'}`);
+                    return;
+                } else if (e.code === 'KeyB') {
+                    // Toggle background music
+                    if (this.soundManager.musicPlaying) {
+                        this.soundManager.stopBackgroundMusic();
+                        console.log('Background music stopped');
+                    } else {
+                        this.soundManager.startBackgroundMusic();
+                        console.log('Background music started');
+                    }
+                    return;
+                }
             }
 
             // Handle start screen navigation

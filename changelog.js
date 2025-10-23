@@ -8,7 +8,7 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.4.0 - Feature: Less Distracting Narrative (Current Version)
+v2.4.0 - Feature: Less Distracting Narrative
 ─────────────────────────────────────────────────────────────
 📝 Made narrative messages shorter and less intrusive!
 
@@ -18,6 +18,28 @@ IMPROVEMENTS:
 • Messages now punchy and non-distracting during gameplay
 • Still maintains PKD & Asimov themes, just more concise
 • Better gameplay flow with less text interruption
+
+─────────────────────────────────────────────────────────────
+
+v2.3.3 - Bug Fix: M Key Still Not Working in Feedback (Current Version)
+─────────────────────────────────────────────────────────────
+🐛 Fixed M key STILL not working in feedback form!
+
+BUG FIX:
+• M key was still triggering audio mute instead of typing 'm'
+• Previous fix (v2.3.2) didn't fully resolve the issue
+• Root cause: Audio control handler ran BEFORE feedback handler
+• Audio handler returned early, preventing 'm' from reaching feedback input
+
+THE FIX:
+• Restructured audio control logic from flat if/return to nested if/else
+• Audio controls now wrapped in else block
+• When in feedback screen, skip audio controls entirely
+• M key now properly types 'm' in feedback form
+
+TECHNICAL DETAILS:
+• Before: Audio handler checked KeyM, returned early, blocked feedback
+• After: Check isFeedbackScreen first, skip audio controls, continue to feedback handler
 
 ─────────────────────────────────────────────────────────────
 
