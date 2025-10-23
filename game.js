@@ -110,10 +110,6 @@ class Game {
         this.totalConsumables = 0; // Track total consumables collected
         this.maxHeightReached = 0; // Track max height for triggers
 
-        // Global play counter
-        this.globalPlayCount = 0;
-        this.fetchGlobalPlayCount();
-
         this.lastTime = 0;
         this.isRunning = false;
 
@@ -121,36 +117,6 @@ class Game {
         this.setupPhysicsControls();
         this.setupJumpModes();
         this.setupLevelControls();
-    }
-
-    // Fetch global play count from server
-    async fetchGlobalPlayCount() {
-        try {
-            const response = await fetch('/api/get-play-count');
-            const data = await response.json();
-            if (data.success) {
-                this.globalPlayCount = data.count;
-            }
-        } catch (error) {
-            console.log('Could not fetch global play count:', error);
-            // Silently fail - not critical
-        }
-    }
-
-    // Increment global play count
-    async incrementGlobalPlayCount() {
-        try {
-            const response = await fetch('/api/increment-plays', {
-                method: 'POST'
-            });
-            const data = await response.json();
-            if (data.success) {
-                this.globalPlayCount = data.count;
-            }
-        } catch (error) {
-            console.log('Could not increment global play count:', error);
-            // Silently fail - not critical
-        }
     }
 
     setupEventListeners() {
@@ -477,7 +443,6 @@ class Game {
 
     startGame() {
         this.gameState = 'playing';
-        this.incrementGlobalPlayCount(); // Track global plays
         this.restart(); // Reset player position and generate level
     }
 
@@ -1190,17 +1155,6 @@ class Game {
         this.ctx.shadowBlur = 10;
         this.ctx.fillText('Master the Art of Jumping', this.canvas.width/2, this.canvas.height/3 + 80);
         this.ctx.shadowBlur = 0;
-
-        // Global play counter with subtle glow
-        if (this.globalPlayCount > 0) {
-            const countPulse = Math.sin(this.logoGlitchTimer * 0.5) * 0.2 + 0.8;
-            this.ctx.fillStyle = `rgba(52, 152, 219, ${countPulse})`;
-            this.ctx.font = '16px Arial';
-            this.ctx.shadowColor = '#3498db';
-            this.ctx.shadowBlur = 8;
-            this.ctx.fillText(`🌍 ${this.globalPlayCount.toLocaleString()} plays worldwide`, this.canvas.width/2, this.canvas.height/3 + 115);
-            this.ctx.shadowBlur = 0;
-        }
 
         // Menu items with enhanced effects
         const startY = this.canvas.height/2 + 50;
