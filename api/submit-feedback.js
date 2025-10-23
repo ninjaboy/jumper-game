@@ -49,10 +49,13 @@ export default async function handler(req, res) {
       }
 
       // Write updated feedback back to blob
-      await put('feedback-data.json', JSON.stringify(allFeedback), {
+      const blob = await put('feedback-data.json', JSON.stringify(allFeedback), {
         access: 'public',
-        contentType: 'application/json'
+        contentType: 'application/json',
+        addRandomSuffix: false
       });
+
+      console.log('Blob created successfully:', blob.url);
 
       return res.status(200).json({
         success: true,
@@ -61,15 +64,17 @@ export default async function handler(req, res) {
         storage: 'blob'
       });
     } catch (blobError) {
-      // Blob not available - just acknowledge receipt
-      console.log('Blob not available, feedback logged:', feedbackData);
+      // Blob error - log details
+      console.error('Blob error:', blobError.message, blobError.stack);
+      console.error('BLOB_READ_WRITE_TOKEN exists:', !!process.env.BLOB_READ_WRITE_TOKEN);
 
       return res.status(200).json({
         success: true,
-        message: 'Feedback received (Blob not configured)',
+        message: 'Feedback received (Blob error)',
         id: feedbackId,
         storage: 'console',
-        note: 'Set up Vercel Blob to persist feedback'
+        error: blobError.message,
+        hasToken: !!process.env.BLOB_READ_WRITE_TOKEN
       });
     }
 
