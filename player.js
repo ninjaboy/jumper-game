@@ -17,8 +17,8 @@ class Player {
 
         // Configurable properties
         this.moveSpeed = 5;
-        this.baseJumpPower = 15;
-        this.jumpPower = 15;
+        this.baseJumpPower = 18; // Increased for vertical tower climbing
+        this.jumpPower = 18;
         this.gravity = null; // Will use physics.gravity if null
         this.originalMoveSpeed = null; // For temporary speed boosts
         this.originalJumpPower = null; // For temporary jump boosts
