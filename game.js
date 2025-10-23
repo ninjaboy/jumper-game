@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.3.1';
+        this.version = '2.3.2';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -124,9 +124,11 @@ class Game {
         // Keyboard input
         document.addEventListener('keydown', (e) => {
             // Don't trigger game controls if user is typing in an input field
+            // OR if user is in the feedback screen (canvas-based text input)
             const isTyping = e.target.tagName === 'INPUT' ||
                            e.target.tagName === 'TEXTAREA' ||
-                           e.target.isContentEditable;
+                           e.target.isContentEditable ||
+                           this.gameState === 'feedback';
 
             // Allow M and B keys without preventDefault for audio controls
             const isAudioControl = e.code === 'KeyM' || e.code === 'KeyB';

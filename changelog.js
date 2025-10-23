@@ -8,7 +8,19 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.3.1 - Bug Fixes: Input & Audio (Current Version)
+v2.3.2 - Bug Fix: Feedback Form Input (Current Version)
+─────────────────────────────────────────────────────────────
+🐛 Fixed 'M' key not working in feedback form!
+
+BUG FIX:
+• Fixed 'M' key not typing in canvas-based feedback form
+• Previous fix only checked for HTML input elements
+• Now also checks if gameState === 'feedback'
+• All keyboard input now works properly in feedback screen
+
+─────────────────────────────────────────────────────────────
+
+v2.3.1 - Bug Fixes: Input & Audio
 ─────────────────────────────────────────────────────────────
 🐛 Fixed two annoying bugs!
 
