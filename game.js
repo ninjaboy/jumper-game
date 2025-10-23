@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.5';
+        this.version = '2.5.6';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');

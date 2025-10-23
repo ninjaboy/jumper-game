@@ -8,7 +8,45 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.5.5 - Reduced Trap Density! (Current Version)
+v2.5.6 - Fixed Consumable Persistence! (Current Version)
+─────────────────────────────────────────────────────────────
+🔧 Major refactor to fix effect persistence bugs!
+
+THE BUGS:
+• Size from mushrooms wasn't persisting between levels
+• Confusion/reversed controls persisted when they shouldn't
+• Incomplete initialization of consumableEffects
+• No clear distinction between permanent vs temporary effects
+
+THE FIXES:
+• PERMANENT effects (persist across levels, reset on restart):
+  - Size changes from mushrooms (sizeMultiplier)
+  - Wings of Icarus
+• TEMPORARY effects (reset between levels):
+  - All other consumables (confusion, speed, shields, etc)
+
+TECHNICAL CHANGES:
+• Fully initialized all consumableEffects in player.js constructor
+• nextLevel() now properly:
+  - Saves ONLY permanent effects (size, wings)
+  - Resets ALL temporary effects to defaults
+  - Restores permanent effects after reset
+• restart() now properly:
+  - Resets ALL effects (both permanent and temporary)
+  - Clears all charges, timers, and status flags
+  - Returns player to completely fresh state
+
+WHAT THIS MEANS:
+✅ Mushroom size changes persist across levels as intended
+✅ Wings persist across levels (permanent upgrade)
+✅ Confusion potion effects properly clear between levels
+✅ Shield charges, dash charges reset between levels
+✅ Restart (R key) fully resets everything to normal
+✅ No more lingering cursed effects!
+
+─────────────────────────────────────────────────────────────
+
+v2.5.5 - Reduced Trap Density!
 ─────────────────────────────────────────────────────────────
 🎮 Significantly reduced hazards for better gameplay balance!
 
