@@ -19,6 +19,12 @@ class SoundManager {
         this.musicRestartTimeout = null; // Track pending music restart to prevent overlaps
         this.activeOscillators = []; // Track all active music oscillators so we can stop them immediately
 
+        // Music track rotation system
+        this.currentTrack = 0; // Index of current track (0-4)
+        this.trackSwitchTimer = null; // Timer for switching tracks
+        this.trackSwitchInterval = 180000; // 3 minutes in milliseconds
+        this.availableTracks = ['upbeat', 'chill', 'epic', 'mystery', 'energetic'];
+
         // Ambient sound state (for proximity-based sounds)
         this.ambientSounds = new Map(); // hazardId -> {oscillator, gainNode, currentVolume}
     }
@@ -564,6 +570,9 @@ class SoundManager {
 
         this.musicPlaying = true;
         this.playMusicLoop();
+
+        // Start track rotation timer (switch tracks every 3 minutes)
+        this.startTrackRotation();
     }
 
     /**
@@ -576,6 +585,12 @@ class SoundManager {
         if (this.musicTimeout) {
             clearTimeout(this.musicTimeout);
             this.musicTimeout = null;
+        }
+
+        // Stop track rotation timer
+        if (this.trackSwitchTimer) {
+            clearTimeout(this.trackSwitchTimer);
+            this.trackSwitchTimer = null;
         }
 
         // IMMEDIATELY stop all active oscillators to prevent music from continuing
@@ -622,6 +637,134 @@ class SoundManager {
                 }
             }, 200);
         }
+    }
+
+    /**
+     * Start track rotation timer - switches to random track every 3 minutes
+     */
+    startTrackRotation() {
+        // Clear any existing timer
+        if (this.trackSwitchTimer) {
+            clearTimeout(this.trackSwitchTimer);
+        }
+
+        // Schedule next track switch
+        this.trackSwitchTimer = setTimeout(() => {
+            this.switchToRandomTrack();
+        }, this.trackSwitchInterval);
+    }
+
+    /**
+     * Switch to a random different track
+     */
+    switchToRandomTrack() {
+        if (!this.musicPlaying) return;
+
+        // Pick a random track different from current
+        let newTrack;
+        do {
+            newTrack = Math.floor(Math.random() * this.availableTracks.length);
+        } while (newTrack === this.currentTrack && this.availableTracks.length > 1);
+
+        this.currentTrack = newTrack;
+        console.log(`Switching to track: ${this.availableTracks[newTrack]}`);
+
+        // Restart music with new track
+        this.stopBackgroundMusic();
+        this.musicPlaying = true;
+        this.playMusicLoop();
+        this.startTrackRotation(); // Schedule next switch
+    }
+
+    /**
+     * Get track-specific music parameters
+     */
+    getTrackParameters() {
+        const trackName = this.availableTracks[this.currentTrack];
+        const params = {
+            beatDuration: 0.35,
+            chordProgression: null,
+            melodyTranspose: 0,
+            tempoMultiplier: 1.0,
+            bassVolume: 0.12,
+            melodyVolume: 0.15,
+            harmonyVolume: 0.08,
+            percussionVolume: 0.06
+        };
+
+        switch (trackName) {
+            case 'upbeat':
+                // Happy, energetic C major progression
+                params.chordProgression = [
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                ];
+                params.melodyTranspose = 0;
+                params.melodyVolume = 0.18;
+                break;
+
+            case 'chill':
+                // Relaxed, laid-back vibe
+                params.beatDuration = 0.45;
+                params.tempoMultiplier = 1.3;
+                params.chordProgression = [
+                    { root: 246.94, notes: [246.94, 293.66, 369.99], duration: params.beatDuration * 4 }, // B major
+                    { root: 329.63, notes: [329.63, 392.00, 493.88], duration: params.beatDuration * 4 }, // E major
+                    { root: 293.66, notes: [293.66, 369.99, 440.00], duration: params.beatDuration * 4 }, // D major
+                    { root: 220.00, notes: [220.00, 277.18, 329.63], duration: params.beatDuration * 4 }, // A major
+                ];
+                params.melodyTranspose = 3;
+                params.bassVolume = 0.08;
+                params.percussionVolume = 0.03;
+                break;
+
+            case 'epic':
+                // Dramatic, powerful minor key
+                params.beatDuration = 0.38;
+                params.chordProgression = [
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 174.61, notes: [174.61, 220.00, 261.63], duration: params.beatDuration * 4 }, // F major
+                    { root: 261.63, notes: [261.63, 329.63, 392.00], duration: params.beatDuration * 4 }, // C major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                ];
+                params.melodyTranspose = -2;
+                params.bassVolume = 0.16;
+                params.percussionVolume = 0.09;
+                break;
+
+            case 'mystery':
+                // Mysterious, haunting feel
+                params.beatDuration = 0.40;
+                params.chordProgression = [
+                    { root: 164.81, notes: [164.81, 196.00, 246.94], duration: params.beatDuration * 4 }, // E minor
+                    { root: 196.00, notes: [196.00, 233.08, 293.66], duration: params.beatDuration * 4 }, // G minor
+                    { root: 220.00, notes: [220.00, 261.63, 329.63], duration: params.beatDuration * 4 }, // A minor
+                    { root: 246.94, notes: [246.94, 293.66, 369.99], duration: params.beatDuration * 4 }, // B major
+                ];
+                params.melodyTranspose = -4;
+                params.melodyVolume = 0.12;
+                params.harmonyVolume = 0.10;
+                break;
+
+            case 'energetic':
+                // Fast, driving beat
+                params.beatDuration = 0.28;
+                params.tempoMultiplier = 0.85;
+                params.chordProgression = [
+                    { root: 293.66, notes: [293.66, 369.99, 440.00], duration: params.beatDuration * 4 }, // D major
+                    { root: 220.00, notes: [220.00, 277.18, 329.63], duration: params.beatDuration * 4 }, // A major
+                    { root: 246.94, notes: [246.94, 311.13, 369.99], duration: params.beatDuration * 4 }, // B major
+                    { root: 196.00, notes: [196.00, 246.94, 293.66], duration: params.beatDuration * 4 }, // G major
+                ];
+                params.melodyTranspose = 5;
+                params.bassVolume = 0.15;
+                params.percussionVolume = 0.11;
+                break;
+        }
+
+        return params;
     }
 
     /**
@@ -759,7 +902,8 @@ class SoundManager {
         });
 
         const now = this.audioContext.currentTime;
-        const params = this.getMusicParameters();
+        // Use track-based parameters instead of mood-based
+        const params = this.getTrackParameters();
         const beatDuration = params.beatDuration;
 
         // === CHORD PROGRESSION ===
