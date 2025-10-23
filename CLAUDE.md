@@ -51,12 +51,39 @@ Uses a lightweight HTML5 Canvas-based game framework for simplicity and educatio
 See `VERSION_PROTOCOL.md` for complete guidelines.
 
 ## 🚨 CRITICAL: Deployment Rules
-**NEVER manually redeploy to Vercel. EVER.**
-- GitHub integration handles auto-deployment
-- After git push, wait for Vercel to auto-deploy (usually 30-60 seconds)
-- Do NOT use: `vercel --prod`, `vercel deploy`, or any manual deployment commands
-- Do NOT trigger redeployments manually
-- Just push to GitHub and let the automation work
+
+### Primary Deployment Method (Preferred)
+**GitHub auto-deployment:**
+- Push to master branch: `git push`
+- Vercel automatically deploys (usually 30-60 seconds)
+- This is the preferred method for normal development
+
+### Manual Deployment (On-Demand Only)
+**Use ONLY when:**
+- User explicitly requests deployment
+- GitHub auto-deploy is failing or rate-limited
+- Need immediate deployment bypass
+
+**How to manually deploy:**
+```bash
+./deploy.sh
+```
+
+**What this does:**
+- Triggers Vercel deployment via deploy hook
+- Bypasses GitHub webhook
+- Uses `.vercel-deploy-hook` file (gitignored, local only)
+- Shows deployment status and Vercel dashboard link
+
+**NEVER:**
+- Use `vercel --prod` or `vercel deploy` commands (can hit rate limits)
+- Manually redeploy from Vercel dashboard without user request
+- Share or commit the `.vercel-deploy-hook` file (it's gitignored)
+
+**After deployment:**
+- Wait 30-60 seconds for build to complete
+- Check: https://vercel.com/alexeystolybkos-projects/jumper/deployments
+- Test the production URL to verify changes
 
 ## 🔄 CRITICAL: Concurrent Session Management
 **Multiple Claude Code sessions may be running simultaneously. Follow these rules to prevent conflicts:**
