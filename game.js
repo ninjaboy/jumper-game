@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.1.2';
+        this.version = '2.2.0';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -161,9 +161,7 @@ class Game {
             
             // Handle settings menu
             if (this.gameState === 'settings') {
-                if (e.code === 'Escape' || e.code === 'Backspace') {
-                    this.gameState = 'start_screen';
-                }
+                this.handleSettingsInput(e);
                 return;
             }
             
@@ -1169,24 +1167,88 @@ class Game {
     }
     
     renderSettingsScreen() {
-        // Dark background
-        this.ctx.fillStyle = '#2c3e50';
+        // Dark background with gradient
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#1a1a1a');
+        gradient.addColorStop(1, '#2c3e50');
+        this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
+        // Settings title
         this.ctx.textAlign = 'center';
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = '#ecf0f1';
         this.ctx.font = 'bold 48px Arial';
-        this.ctx.fillText('SETTINGS', this.canvas.width/2, 100);
-        
-        this.ctx.fillStyle = '#bdc3c7';
-        this.ctx.font = '24px Arial';
-        this.ctx.fillText('Settings will be implemented here!', this.canvas.width/2, this.canvas.height/2);
-        this.ctx.fillText('For now, you can adjust settings in-game', this.canvas.width/2, this.canvas.height/2 + 40);
-        
-        this.ctx.fillStyle = '#95a5a6';
+        this.ctx.shadowColor = '#3498db';
+        this.ctx.shadowBlur = 10;
+        this.ctx.fillText('SETTINGS', this.canvas.width / 2, 100);
+        this.ctx.shadowBlur = 0;
+
+        // Settings items
+        const startY = 180;
+        const lineHeight = 50;
+
+        for (let i = 0; i < this.settingsMenuItems.length; i++) {
+            const item = this.settingsMenuItems[i];
+            const isSelected = i === this.selectedSettingsItem;
+            const y = startY + i * lineHeight;
+
+            // Item name
+            if (isSelected) {
+                this.ctx.fillStyle = '#3498db';
+                this.ctx.font = 'bold 24px Arial';
+                this.ctx.shadowColor = '#3498db';
+                this.ctx.shadowBlur = 8;
+            } else {
+                this.ctx.fillStyle = '#95a5a6';
+                this.ctx.font = '22px Arial';
+            }
+
+            this.ctx.textAlign = 'left';
+            this.ctx.fillText(item.name + ':', 100, y);
+            this.ctx.shadowBlur = 0;
+
+            // Item value/control
+            this.ctx.textAlign = 'right';
+            if (item.type === 'slider') {
+                const value = this.settings[item.key];
+                const percentage = Math.round(((value - item.min) / (item.max - item.min)) * 100);
+                this.ctx.fillText(`${percentage}%`, this.canvas.width - 100, y);
+
+                // Draw slider bar
+                if (isSelected) {
+                    const barWidth = 200;
+                    const barX = this.canvas.width - 100 - barWidth - 20;
+                    const barY = y - 15;
+
+                    // Background
+                    this.ctx.fillStyle = '#34495e';
+                    this.ctx.fillRect(barX, barY, barWidth, 20);
+
+                    // Border
+                    this.ctx.strokeStyle = '#555';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(barX, barY, barWidth, 20);
+
+                    // Fill
+                    this.ctx.fillStyle = '#3498db';
+                    this.ctx.fillRect(barX + 2, barY + 2, (barWidth - 4) * ((value - item.min) / (item.max - item.min)), 16);
+                }
+            } else if (item.type === 'toggle') {
+                const value = this.settings[item.key];
+                this.ctx.fillStyle = value ? '#27ae60' : '#c0392b';
+                this.ctx.fillText(value ? 'ON' : 'OFF', this.canvas.width - 100, y);
+            } else if (item.type === 'cycle') {
+                const value = this.settings[item.key];
+                this.ctx.fillText(value.toUpperCase(), this.canvas.width - 100, y);
+            }
+        }
+
+        // Controls hint
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#7f8c8d';
         this.ctx.font = '16px Arial';
-        this.ctx.fillText('Press ESC or BACKSPACE to return', this.canvas.width/2, this.canvas.height - 50);
-        
+        this.ctx.fillText('W/S or ↑/↓: Navigate • A/D or ←/→: Adjust • SPACE: Toggle • ESC: Back', this.canvas.width / 2, this.canvas.height - 50);
+
         this.ctx.textAlign = 'left';
     }
     
@@ -1453,7 +1515,12 @@ class Game {
         const item = this.settingsMenuItems[this.selectedSettingsItem];
 
         if (e.code === 'Escape' || e.code === 'Backspace') {
-            this.settingsVisible = false;
+            // Return to appropriate screen based on where we came from
+            if (this.gameState === 'settings') {
+                this.gameState = 'start_screen';
+            } else {
+                this.settingsVisible = false;
+            }
             return;
         }
 
@@ -1466,7 +1533,12 @@ class Game {
         } else if (e.code === 'KeyD' || e.code === 'ArrowRight') {
             this.adjustSetting(item, 1);
         } else if ((e.code === 'Space' || e.code === 'Enter') && item.type === 'button') {
-            this.settingsVisible = false;
+            // "Back" button
+            if (this.gameState === 'settings') {
+                this.gameState = 'start_screen';
+            } else {
+                this.settingsVisible = false;
+            }
         } else if ((e.code === 'Space' || e.code === 'Enter') && item.type === 'toggle') {
             this.settings[item.key] = !this.settings[item.key];
             this.applySettings();
@@ -1495,8 +1567,9 @@ class Game {
     applySettings() {
         // Apply audio settings
         if (this.soundManager) {
-            // You'll need to add volume control methods to SoundManager
-            // For now, this is a placeholder
+            this.soundManager.setMasterVolume(this.settings.masterVolume);
+            this.soundManager.sfxVolume = this.settings.sfxVolume;
+            this.soundManager.musicVolume = this.settings.musicVolume;
         }
 
         // Apply retro mode
