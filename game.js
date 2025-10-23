@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.6.0';
+        this.version = '2.6.1';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -1014,7 +1014,7 @@ class Game {
     updateCamera() {
         if (this.camera.followPlayer) {
             // Check if this is a vertical tower level (has exitDoor)
-            const isVerticalLevel = this.platformManager && this.platformManager.exitDoor;
+            const isVerticalLevel = this.platforms && this.platforms.exitDoor;
 
             if (isVerticalLevel) {
                 // Vertical tower level camera (centered horizontally, follows player vertically)
