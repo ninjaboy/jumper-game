@@ -657,11 +657,17 @@ class Game {
             this.soundManager.stopAllAmbient();
         }
 
-        // Save player's current powerups
+        // Save player's PERMANENT effects
         const savedMaxJumps = this.player.maxJumps;
         const savedMoveSpeed = this.player.moveSpeed;
         const savedOriginalMoveSpeed = this.player.originalMoveSpeed;
-        const savedConsumableEffects = { ...this.player.consumableEffects };
+
+        // Save size (permanent mushroom effect)
+        const savedSizeMultiplier = this.player.sizeMultiplier;
+        const savedTargetSizeMultiplier = this.player.targetSizeMultiplier;
+
+        // Save only PERMANENT consumable effects (wings)
+        const savedWings = this.player.consumableEffects.wings;
 
         // Increment level and generate new level
         this.currentLevel++;
@@ -697,12 +703,43 @@ class Game {
         this.player.keys.jump = false;
         this.player.keys.shift = false;
 
-        // Restore powerups
+        // Reset ALL consumable effects to defaults (clears temporary effects)
+        this.player.consumableEffects = {
+            wings: false,
+            doubleJump: false,
+            tripleJump: false,
+            springShoes: false,
+            ghostMode: false,
+            magnetRadius: 0,
+            stickyGloves: false,
+            freezeHazards: false,
+            slowTime: false,
+            luckBoost: 1.0,
+            shieldCharges: 0,
+            dashCharges: 0,
+            reversedControls: false,
+            drunk: false,
+            drunkTimer: 0,
+            giant: false,
+            shrink: false,
+            tiny: false
+        };
+
+        // Restore ONLY permanent effects
         this.player.maxJumps = savedMaxJumps;
         this.player.jumpsRemaining = savedMaxJumps;
         this.player.moveSpeed = savedMoveSpeed;
         this.player.originalMoveSpeed = savedOriginalMoveSpeed;
-        this.player.consumableEffects = savedConsumableEffects;
+
+        // Restore permanent size from mushrooms
+        this.player.sizeMultiplier = savedSizeMultiplier;
+        this.player.targetSizeMultiplier = savedTargetSizeMultiplier;
+        this.player.width = this.player.baseWidth * this.player.sizeMultiplier;
+        this.player.height = this.player.baseHeight * this.player.sizeMultiplier;
+        this.player.jumpPower = this.player.baseJumpPower * Math.pow(this.player.sizeMultiplier, 0.5);
+
+        // Restore wings (permanent)
+        this.player.consumableEffects.wings = savedWings;
 
         // Clear victory particles
         this.victoryParticles = [];
@@ -962,7 +999,7 @@ class Game {
         this.player.onGround = true;
         this.player.resetLives(); // Reset lives to 3
 
-        // Reset consumable effects on player
+        // Reset ALL consumable effects (both permanent and temporary)
         this.player.maxJumps = 1;
         this.player.jumpsRemaining = 1;
         if (this.player.originalMoveSpeed !== null) {
@@ -970,16 +1007,34 @@ class Game {
             this.player.originalMoveSpeed = null;
         }
 
-        // Reset size multiplier (mushrooms)
+        // Reset ALL consumable effects to defaults
+        this.player.consumableEffects = {
+            wings: false,
+            doubleJump: false,
+            tripleJump: false,
+            springShoes: false,
+            ghostMode: false,
+            magnetRadius: 0,
+            stickyGloves: false,
+            freezeHazards: false,
+            slowTime: false,
+            luckBoost: 1.0,
+            shieldCharges: 0,
+            dashCharges: 0,
+            reversedControls: false,
+            drunk: false,
+            drunkTimer: 0,
+            giant: false,
+            shrink: false,
+            tiny: false
+        };
+
+        // Reset size multiplier (mushrooms) to normal
         this.player.sizeMultiplier = 1.0;
-        this.player.targetSizeMultiplier = 1.0; // Reset target for smooth transitions
+        this.player.targetSizeMultiplier = 1.0;
         this.player.width = this.player.baseWidth;
         this.player.height = this.player.baseHeight;
         this.player.jumpPower = this.player.baseJumpPower;
-        this.player.originalSize = null; // Clear any legacy references
-        this.player.consumableEffects.giant = false;
-        this.player.consumableEffects.shrink = false;
-        this.player.consumableEffects.tiny = false;
 
         // Clear victory particles
         this.victoryParticles = [];
@@ -1135,7 +1190,18 @@ class Game {
         this.ctx.shadowBlur = 10;
         this.ctx.fillText('Master the Art of Jumping', this.canvas.width/2, this.canvas.height/3 + 80);
         this.ctx.shadowBlur = 0;
-        
+
+        // Global play counter with subtle glow
+        if (this.globalPlayCount > 0) {
+            const countPulse = Math.sin(this.logoGlitchTimer * 0.5) * 0.2 + 0.8;
+            this.ctx.fillStyle = `rgba(52, 152, 219, ${countPulse})`;
+            this.ctx.font = '16px Arial';
+            this.ctx.shadowColor = '#3498db';
+            this.ctx.shadowBlur = 8;
+            this.ctx.fillText(`🌍 ${this.globalPlayCount.toLocaleString()} plays worldwide`, this.canvas.width/2, this.canvas.height/3 + 115);
+            this.ctx.shadowBlur = 0;
+        }
+
         // Menu items with enhanced effects
         const startY = this.canvas.height/2 + 50;
         for (let i = 0; i < this.menuItems.length; i++) {

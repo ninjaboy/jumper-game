@@ -37,9 +37,41 @@ class Player {
         this.jumpsRemaining = 1;
 
         // Consumable effects tracking
+        // PERMANENT effects (persist across levels, reset on restart):
+        // - Size changes (sizeMultiplier tracked separately)
+        // - wings
+        // TEMPORARY effects (reset between levels AND on restart):
+        // - All others
         this.consumableEffects = {
+            // Permanent
+            wings: false,
+
+            // Multi-jump
             doubleJump: false,
-            tripleJump: false
+            tripleJump: false,
+
+            // Temporary effects
+            springShoes: false,
+            ghostMode: false,
+            magnetRadius: 0,
+            stickyGloves: false,
+            freezeHazards: false,
+            slowTime: false,
+            luckBoost: 1.0,
+
+            // Charges
+            shieldCharges: 0,
+            dashCharges: 0,
+
+            // Cursed effects (temporary)
+            reversedControls: false,
+            drunk: false,
+            drunkTimer: 0,
+
+            // Size effects (managed via sizeMultiplier)
+            giant: false,
+            shrink: false,
+            tiny: false
         };
 
         // Life system
