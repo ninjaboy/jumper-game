@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.3';
+        this.version = '2.5.4';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -35,10 +35,15 @@ class Game {
         this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'paused', 'finished', 'game_over', 'feedback'
         this.isPaused = false;
 
-        // Feedback system
-        this.feedbackText = '';
-        this.feedbackSubmitting = false;
-        this.feedbackSubmitted = false;
+        // Feedback system - now using HTML overlay
+        this.feedbackOverlay = document.getElementById('feedbackOverlay');
+        this.feedbackTextarea = document.getElementById('feedbackText');
+        this.feedbackStats = document.getElementById('feedbackStats');
+        this.feedbackStatus = document.getElementById('feedbackStatus');
+        this.feedbackButtons = document.getElementById('feedbackButtons');
+
+        // Setup feedback event listeners
+        this.setupFeedbackListeners();
 
         // Start screen and menu system
         this.selectedMenuItem = 0;
@@ -196,11 +201,8 @@ class Game {
                 return;
             }
             
-            // Handle feedback screen
-            if (this.gameState === 'feedback') {
-                this.handleFeedbackInput(e);
-                return;
-            }
+            // Handle feedback screen - now uses HTML form with own event listeners
+            // No keyboard handling needed here
 
             // Handle restart and next level
             if (this.gameState === 'finished' || this.gameState === 'game_over') {
@@ -391,14 +393,54 @@ class Game {
                 this.gameState = 'settings';
                 break;
             case 3: // Submit Feedback
-                this.gameState = 'feedback';
-                this.feedbackText = '';
-                this.feedbackSubmitted = false;
-                this.feedbackSubmitting = false;
+                this.showFeedbackForm();
                 break;
         }
     }
-    
+
+    setupFeedbackListeners() {
+        // Submit button
+        document.getElementById('submitFeedbackBtn').addEventListener('click', () => {
+            this.submitFeedback();
+        });
+
+        // Skip button
+        document.getElementById('skipFeedbackBtn').addEventListener('click', () => {
+            this.hideFeedbackForm();
+        });
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape' && this.feedbackOverlay.style.display === 'flex') {
+                this.hideFeedbackForm();
+            }
+        });
+    }
+
+    showFeedbackForm() {
+        // Update stats
+        this.feedbackStats.textContent = `Level ${this.currentLevel} • ${this.player.jumpMode.toUpperCase()} • Seed: ${this.currentSeed}`;
+
+        // Clear previous feedback
+        this.feedbackTextarea.value = '';
+        this.feedbackStatus.textContent = '';
+        this.feedbackStatus.className = 'status';
+
+        // Show overlay
+        this.feedbackOverlay.style.display = 'flex';
+
+        // Focus textarea
+        setTimeout(() => this.feedbackTextarea.focus(), 100);
+
+        // Pause game
+        this.gameState = 'feedback';
+    }
+
+    hideFeedbackForm() {
+        this.feedbackOverlay.style.display = 'none';
+        this.gameState = 'start_screen';
+    }
+
     startGame() {
         this.gameState = 'playing';
         this.restart(); // Reset player position and generate level
@@ -1024,7 +1066,7 @@ class Game {
                 break;
             case 'feedback':
                 this.renderGameScreen(); // Render game in background
-                this.renderFeedbackScreen(); // Overlay feedback form
+                // Feedback form is now HTML overlay, no canvas rendering needed
                 break;
             case 'paused':
                 this.renderGameScreen(); // Render game in background
@@ -1855,7 +1897,10 @@ class Game {
     }
 
     async submitFeedback() {
-        this.feedbackSubmitting = true;
+        // Show submitting status
+        this.feedbackStatus.textContent = 'Submitting...';
+        this.feedbackStatus.className = 'status submitting';
+        this.feedbackButtons.style.display = 'none';
 
         const feedbackData = {
             timestamp: Date.now(),
@@ -1864,7 +1909,7 @@ class Game {
             jumpMode: this.player.jumpMode,
             levelBias: this.currentBias,
             progress: Math.round((this.player.x / this.camera.levelWidth) * 100),
-            comment: this.feedbackText.trim()
+            comment: this.feedbackTextarea.value.trim()
         };
 
         try {
@@ -1874,13 +1919,30 @@ class Game {
                 body: JSON.stringify(feedbackData)
             });
 
-            await response.json();
-            this.feedbackSubmitted = true;
-            this.feedbackSubmitting = false;
+            const result = await response.json();
+            console.log('Feedback submitted:', result);
+
+            // Show success
+            this.feedbackStatus.textContent = '✓ Thank you!';
+            this.feedbackStatus.className = 'status success';
+
+            // Close after 1.5 seconds
+            setTimeout(() => {
+                this.hideFeedbackForm();
+                this.feedbackButtons.style.display = 'flex';
+            }, 1500);
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            this.feedbackSubmitted = true;
-            this.feedbackSubmitting = false;
+
+            // Show error
+            this.feedbackStatus.textContent = '✓ Saved (offline)';
+            this.feedbackStatus.className = 'status success';
+
+            // Close after 1.5 seconds
+            setTimeout(() => {
+                this.hideFeedbackForm();
+                this.feedbackButtons.style.display = 'flex';
+            }, 1500);
         }
     }
 

@@ -111,9 +111,134 @@
         input[type="range"] {
             width: 100px;
         }
+
+        /* Feedback Form Overlay */
+        #feedbackOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #feedbackForm {
+            background-color: #2c3e50;
+            padding: 30px;
+            border-radius: 12px;
+            border: 3px solid #3498db;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #feedbackForm h2 {
+            margin: 0 0 10px 0;
+            color: #ecf0f1;
+            text-align: center;
+        }
+
+        #feedbackForm .stats {
+            color: #bdc3c7;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #feedbackForm textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #555;
+            border-radius: 6px;
+            background-color: #34495e;
+            color: #ecf0f1;
+            font-family: Arial, sans-serif;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        #feedbackForm textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            background-color: #3d556e;
+        }
+
+        #feedbackForm textarea::placeholder {
+            color: #7f8c8d;
+        }
+
+        #feedbackForm .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        #feedbackForm button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        #feedbackForm .submit-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        #feedbackForm .submit-btn:hover {
+            background-color: #229954;
+        }
+
+        #feedbackForm .skip-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        #feedbackForm .skip-btn:hover {
+            background-color: #7f8c8d;
+        }
+
+        #feedbackForm .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #feedbackForm .status.success {
+            color: #27ae60;
+        }
+
+        #feedbackForm .status.submitting {
+            color: #3498db;
+        }
     </style>
 </head>
 <body>
+    <!-- Feedback Form Overlay -->
+    <div id="feedbackOverlay">
+        <div id="feedbackForm">
+            <h2>How was your run?</h2>
+            <div class="stats" id="feedbackStats">Level 1 • MARIO • Seed: 12345</div>
+            <textarea id="feedbackText" placeholder="Share your thoughts (optional)..." maxlength="200"></textarea>
+            <div class="buttons" id="feedbackButtons">
+                <button class="submit-btn" id="submitFeedbackBtn">Submit</button>
+                <button class="skip-btn" id="skipFeedbackBtn">Skip (ESC)</button>
+            </div>
+            <div class="status" id="feedbackStatus"></div>
+        </div>
+    </div>
+
     <h1>Jumper Game - Learning Jump Mechanics</h1>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     

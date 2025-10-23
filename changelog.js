@@ -8,7 +8,42 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.5.3 - Wings Are Now Permanent! (Current Version)
+v2.5.4 - HTML Feedback Form! (Current Version)
+─────────────────────────────────────────────────────────────
+📝 Replaced canvas text input with proper HTML textarea!
+
+NEW FEEDBACK FORM:
+• Native HTML textarea instead of canvas-based input
+• Cmd+A, Cmd+C, Cmd+V all work naturally
+• Easy text editing with cursor positioning
+• Select, copy, paste text normally
+• Backspace, delete, arrow keys work as expected
+
+IMPROVED UX:
+• Styled overlay with semi-transparent background
+• Auto-focus on textarea when form opens
+• ESC key to close form
+• Submit and Skip buttons
+• Shows "Submitting..." status
+• Auto-closes after successful submission
+• Clean, professional appearance
+
+FEATURES:
+• 200 character limit (enforced by HTML)
+• Displays current level, mode, and seed
+• Responsive design
+• Better visual feedback
+• No more awkward canvas text editing!
+
+TECHNICAL:
+• HTML overlay with CSS styling
+• Event listeners for buttons and ESC key
+• Removed old canvas rendering code
+• Much cleaner implementation
+
+─────────────────────────────────────────────────────────────
+
+v2.5.3 - Wings Are Now Permanent!
 ─────────────────────────────────────────────────────────────
 🪽 Wings of Icarus are now permanent like mushrooms!
 
