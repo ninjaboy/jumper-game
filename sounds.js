@@ -884,8 +884,9 @@ class SoundManager {
             // Bass envelope - punchy attack with mood-based volume
             const volume = this.getMusicVolume() * params.bassVolume;
             gainNode.gain.setValueAtTime(volume, bassStartTime);
-            gainNode.gain.exponentialRampToValueAtTime(volume * 0.3, bassStartTime + chord.duration * 0.9);
-            gainNode.gain.linearRampToValueAtTime(0.01, bassStartTime + chord.duration);
+            // exponentialRampToValueAtTime can't handle 0, use a small minimum value
+            gainNode.gain.exponentialRampToValueAtTime(Math.max(0.001, volume * 0.3), bassStartTime + chord.duration * 0.9);
+            gainNode.gain.linearRampToValueAtTime(0.001, bassStartTime + chord.duration);
 
             oscillator.start(bassStartTime);
             oscillator.stop(bassStartTime + chord.duration);

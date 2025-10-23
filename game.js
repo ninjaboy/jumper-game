@@ -123,10 +123,20 @@ class Game {
 
         // Keyboard input
         document.addEventListener('keydown', (e) => {
+            // Don't trigger game controls if user is typing in an input field
+            const isTyping = e.target.tagName === 'INPUT' ||
+                           e.target.tagName === 'TEXTAREA' ||
+                           e.target.isContentEditable;
+
             // Allow M and B keys without preventDefault for audio controls
             const isAudioControl = e.code === 'KeyM' || e.code === 'KeyB';
-            if (!isAudioControl) {
+            if (!isAudioControl && !isTyping) {
                 e.preventDefault();
+            }
+
+            // Don't trigger audio controls if user is typing
+            if (isTyping) {
+                return;
             }
 
             // Global audio controls (work in any state)
