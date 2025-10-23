@@ -743,13 +743,13 @@ class Game {
             const playerResult = this.player.update(this.physics, this.platforms);
 
             // Screen wrapping (like Doodle Jump)
-            // If player goes off left edge of screen, wrap to right edge
+            // If player goes off left edge of visible screen, wrap to right edge
             if (this.player.x + this.player.width < this.camera.x) {
-                this.player.x = this.camera.x + this.canvas.width;
+                this.player.x = this.camera.x + this.canvas.width - this.player.width;
             }
-            // If player goes off right edge of screen, wrap to left edge
+            // If player goes off right edge of visible screen, wrap to left edge
             else if (this.player.x > this.camera.x + this.canvas.width) {
-                this.player.x = this.camera.x;
+                this.player.x = this.camera.x + this.player.width;
             }
 
             // Handle player death animation completion
