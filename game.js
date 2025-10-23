@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.7.4';
+        this.version = '2.8.0';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -741,6 +741,16 @@ class Game {
             this.consumables.update(this.player, this);
 
             const playerResult = this.player.update(this.physics, this.platforms);
+
+            // Screen wrapping (like Doodle Jump)
+            // If player goes off left edge of screen, wrap to right edge
+            if (this.player.x + this.player.width < this.camera.x) {
+                this.player.x = this.camera.x + this.canvas.width;
+            }
+            // If player goes off right edge of screen, wrap to left edge
+            else if (this.player.x > this.camera.x + this.canvas.width) {
+                this.player.x = this.camera.x;
+            }
 
             // Handle player death animation completion
             if (playerResult === 'death_complete') {
