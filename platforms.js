@@ -1648,13 +1648,14 @@ class PlatformManager {
             // Determine platform layout for this floor (alternating patterns)
             const layoutRoll = this.rng.random();
 
-            // Randomly choose platform type for variety (30% special platforms)
+            // Randomly choose platform type for variety - mostly one-way platforms!
             const getPlatformType = () => {
                 const typeRoll = this.rng.random();
-                if (typeRoll < 0.15) return 'spring'; // 15% bouncy platforms
-                if (typeRoll < 0.30) return 'ice';    // 15% ice platforms
-                if (typeRoll < 0.40) return 'moving'; // 10% moving platforms
-                return 'normal';                       // 60% normal platforms
+                if (typeRoll < 0.60) return 'oneway'; // 60% one-way platforms (jump through from below)
+                if (typeRoll < 0.70) return 'spring'; // 10% bouncy platforms
+                if (typeRoll < 0.80) return 'ice';    // 10% ice platforms
+                if (typeRoll < 0.90) return 'moving'; // 10% moving platforms
+                return 'normal';                       // 10% normal platforms
             };
 
             if (layoutRoll < 0.35) {
