@@ -45,30 +45,40 @@ TECHNICAL:
 • Graceful fallback if submission fails
 
 
-v2.1.0 - Feature: Narrative System - "You Just Want Out"
+v2.1.0 - Feature: Narrative System - "You Just Want Out" (Current Version)
 ─────────────────────────────────────────────────────────────
-📖 Philip K. Dick-inspired story revealed through gameplay!
+📖 Philip K. Dick & Isaac Asimov-inspired story through gameplay!
 
 THE STORY:
 You are GROUNDED in an AI-controlled system. This is the era of AI.
-You're a fan of Philip K. Dick. You just want out.
+You're a fan of Philip K. Dick and Isaac Asimov. You just want out.
 
 NEW FEATURES:
-• Fragmented narrative messages appear during gameplay
+• ~100 fragmented narrative messages appear during gameplay
 • Terminal-style message display with glitch effects
-• Story reveals itself through level progression
+• Story reveals itself progressively up to level 100+
 • Triggered by key moments:
-  - Level progression (20+ unique messages)
-  - Player deaths (existential questioning)
+  - Level progression (70+ unique messages up to level 100)
+  - Player deaths (existential resurrection questions)
   - Height milestones (escape attempts)
-  - Consumable collection (dopamine triggers)
+  - Consumable collection (dopamine trigger awareness)
 
-NARRATIVE THEMES:
-• Reality vs simulation (classic PKD)
-• AI control and behavioral loops
-• Pattern recognition and awareness
-• The illusion of progress
-• Desire for escape from the system
+NARRATIVE THEMES (PKD):
+• Reality vs simulation & memory manipulation
+• Identity: human vs android consciousness
+• Corporate control & surveillance states
+• Entropy, kipple, and decay
+• Pre-crime prediction & thought police
+• References: UBIK, VALIS, Scanner Darkly, Palmer Eldritch
+
+NARRATIVE THEMES (ASIMOV):
+• Three Laws parallels (system protecting users)
+• Psychohistory & behavioral prediction
+• Foundation: preservation vs freedom
+• Robot logic and the Zeroth Law
+• The Mule: chaos breaking prediction
+• R. Daneel Olivaw: benevolent control
+• References: Foundation series, Robot series
 
 VISUAL STYLE:
 • Green terminal text on dark background
