@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.6';
+        this.version = '2.5.7';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -19,7 +19,7 @@ class Game {
         this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
         // Spawn initial consumables
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player, this.platforms.platforms);
+        this.consumables.spawnRandomConsumables(5000, this.platforms.rng, this.player, this.platforms.platforms);
 
         this.updateSeedDisplay();
         
@@ -28,7 +28,7 @@ class Game {
             x: 0,
             y: 0,
             followPlayer: true,
-            levelWidth: 3000 // Total level width
+            levelWidth: 5000 // Total level width (increased from 3000 for longer levels)
         };
         
         // Game state
@@ -635,7 +635,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player, this.platforms.platforms);
+        this.consumables.spawnRandomConsumables(5000, this.platforms.rng, this.player, this.platforms.platforms);
 
         this.restart();
     }
@@ -685,7 +685,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player, this.platforms.platforms);
+        this.consumables.spawnRandomConsumables(5000, this.platforms.rng, this.player, this.platforms.platforms);
 
         // Reset player position but keep powerups
         this.gameState = 'playing';

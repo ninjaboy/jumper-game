@@ -878,7 +878,7 @@ class PlatformManager {
      * Proper architecture with meaningful chunks, not random platforms
      */
     generateFibonacciLevel() {
-        const levelWidth = 3000;
+        const levelWidth = 5000;
         const groundLevel = 520;
 
         // Fibonacci sequence for chunk composition
@@ -1166,7 +1166,7 @@ class PlatformManager {
     // Removed old generateFibonacciLadders - now using chunk-based generation
 
     generateRandomLevel() {
-        const levelWidth = 3000;
+        const levelWidth = 5000;
         const groundLevel = 520;
         const platformTypes = ['normal', 'ice', 'moving', 'spring'];
 

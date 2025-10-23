@@ -978,8 +978,8 @@ class ConsumableManager {
         // Lucky Clover effect - better loot!
         const luckBoost = (player && player.consumableEffects && player.consumableEffects.luckBoost) || 1.0;
 
-        // Spawn 12-18 total consumables (up from 5-10)
-        const totalCount = rng.randomInt(12, 18);
+        // Spawn 4-8 total consumables (reduced for scarcity)
+        const totalCount = rng.randomInt(4, 8);
 
         // Rarity limits per level (boosted by luck)
         const rareLimit = Math.min(3, Math.floor(1 * luckBoost)); // Max 1-3 rare
@@ -1018,9 +1018,9 @@ class ConsumableManager {
             this.spawnConsumable(ConsumableClass, x, y);
         }
 
-        // Special mushroom spawning: Place 3-6 mushrooms on platform surfaces
+        // Special mushroom spawning: Place 1-3 mushrooms on platform surfaces
         if (platforms && platforms.length > 0) {
-            const mushroomCount = rng.randomInt(3, 6);
+            const mushroomCount = rng.randomInt(1, 3);
             const mushroomTypes = [GiantMushroomConsumable, ShrinkMushroomConsumable];
 
             for (let i = 0; i < mushroomCount; i++) {
