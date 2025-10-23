@@ -1272,7 +1272,7 @@ class PlatformManager {
                         max: Math.floor(200 - (this.level - 1) * 8)
                     },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: clamp(0.7 + (this.level - 1) * 0.05, 0, 1),
+                    hazardChance: clamp(0.4 + (this.level - 1) * 0.03, 0, 0.8),
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'hazard_heavy':
@@ -1281,7 +1281,7 @@ class PlatformManager {
                     gapSize: { min: 50, max: 150 },
                     platformWidth: { min: 150, max: 250 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: clamp(0.95 + (this.level - 1) * 0.02, 0, 1.5), // More hazards spawn
+                    hazardChance: clamp(0.6 + (this.level - 1) * 0.02, 0, 0.9), // More hazards spawn
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'safe_zone':
@@ -1296,7 +1296,7 @@ class PlatformManager {
                         max: Math.floor(Math.max(150, 280 - (this.level - 1) * 8))
                     },
                     platformsPerSection: { min: 3, max: 5 },
-                    hazardChance: clamp(0.3 + (this.level - 1) * 0.03, 0, 0.7), // Slowly adds hazards
+                    hazardChance: clamp(0.2 + (this.level - 1) * 0.02, 0, 0.5), // Slowly adds hazards
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'high_route':
@@ -1305,7 +1305,7 @@ class PlatformManager {
                     gapSize: { min: 50, max: 150 },
                     platformWidth: { min: 150, max: 250 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: clamp(0.6 + (this.level - 1) * 0.05, 0, 1),
+                    hazardChance: clamp(0.35 + (this.level - 1) * 0.03, 0, 0.7),
                     highPlatforms: {
                         min: 8 + Math.floor((this.level - 1) * 1), // More high platforms
                         max: 14 + Math.floor((this.level - 1) * 2)
@@ -1327,7 +1327,7 @@ class PlatformManager {
                         min: 3 + Math.floor((this.level - 1) * 0.2), // More platforms
                         max: 5 + Math.floor((this.level - 1) * 0.3)
                     },
-                    hazardChance: clamp(0.7 + (this.level - 1) * 0.05, 0, 1),
+                    hazardChance: clamp(0.4 + (this.level - 1) * 0.03, 0, 0.8),
                     highPlatforms: { min: 4, max: 8 }
                 };
             case 'spike_gauntlet':
@@ -1336,7 +1336,7 @@ class PlatformManager {
                     gapSize: { min: 80, max: 160 },
                     platformWidth: { min: 120, max: 200 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.4, // Moderate hazard chance, but mostly spikes
+                    hazardChance: 0.25, // Moderate hazard chance, but mostly spikes
                     spikeChance: 0.95, // Almost all hazards are spikes
                     highPlatforms: { min: 4, max: 8 }
                 };
@@ -1346,7 +1346,7 @@ class PlatformManager {
                     gapSize: { min: 60, max: 150 },
                     platformWidth: { min: 140, max: 220 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.5, // Moderate hazard chance
+                    hazardChance: 0.3, // Moderate hazard chance
                     poisonChance: 0.9, // Almost all hazards are poison clouds
                     highPlatforms: { min: 5, max: 9 }
                 };
@@ -1356,7 +1356,7 @@ class PlatformManager {
                     gapSize: { min: 70, max: 140 },
                     platformWidth: { min: 130, max: 210 },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: 0.6, // Moderate-high hazard chance
+                    hazardChance: 0.35, // Moderate-high hazard chance
                     sawChance: 0.85, // Most hazards are saw blades
                     highPlatforms: { min: 4, max: 8 }
                 };
@@ -1364,7 +1364,7 @@ class PlatformManager {
                 return {
                     name: 'Vertical Climb',
                     // Vertical levels use different generation, these params are mostly ignored
-                    hazardChance: 0.7,
+                    hazardChance: 0.4,
                     highPlatforms: { min: 30, max: 30 } // 30 floors tall
                 };
             default: // normal
@@ -1379,7 +1379,7 @@ class PlatformManager {
                         max: Math.floor(Math.max(120, 250 - (this.level - 1) * 5))
                     },
                     platformsPerSection: { min: 2, max: 4 },
-                    hazardChance: clamp(0.7 + (this.level - 1) * 0.04, 0, 1),
+                    hazardChance: clamp(0.4 + (this.level - 1) * 0.03, 0, 0.8),
                     highPlatforms: { min: 4, max: 8 }
                 };
         }
@@ -1426,15 +1426,15 @@ class PlatformManager {
 
             // Check for bias-specific hazard chances
             if (biasParams.spikeChance && typeRoll < biasParams.spikeChance) {
-                // Spawn animated spikes
-                const spikeCount = this.rng.randomInt(2, 4);
+                // Spawn animated spikes (reduced from 2-4 to 1-2)
+                const spikeCount = this.rng.randomInt(1, 2);
                 for (let i = 0; i < spikeCount; i++) {
                     const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 80);
                     this.spikes.push(new AnimatedSpike(x, 480, 30, 40));
                 }
             } else if (biasParams.poisonChance && typeRoll < biasParams.poisonChance) {
-                // Spawn moving poison clouds
-                const poisonCount = this.rng.randomInt(2, 3);
+                // Spawn moving poison clouds (reduced from 2-3 to 1)
+                const poisonCount = 1;
                 for (let i = 0; i < poisonCount; i++) {
                     const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
                     const y = this.rng.randomInt(100, 250); // Higher in the sky (was 200-350)
@@ -1443,42 +1443,33 @@ class PlatformManager {
                     this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
                 }
             } else if (biasParams.sawChance && typeRoll < biasParams.sawChance) {
-                // Spawn saw blades
-                const sawCount = this.rng.randomInt(2, 4);
+                // Spawn saw blades (reduced from 2-4 to 1-2)
+                const sawCount = this.rng.randomInt(1, 2);
                 for (let i = 0; i < sawCount; i++) {
                     const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
                     const y = this.rng.randomInt(350, 450);
                     this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
                 }
             } else {
-                // Default mixed hazards (for normal bias)
+                // Default mixed hazards (for normal bias) - ONLY spawn one type, not all three
                 const mixedRoll = this.rng.random();
-                if (mixedRoll < 0.3) {
-                    // Saw blades
-                    const sawCount = this.rng.randomInt(1, 3);
-                    for (let i = 0; i < sawCount; i++) {
-                        const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
-                        const y = this.rng.randomInt(350, 450);
-                        this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
-                    }
-                } else if (mixedRoll < 0.5) {
-                    // Lava pits
-                    const lavaCount = this.rng.randomInt(1, 2);
-                    for (let i = 0; i < lavaCount; i++) {
-                        const x = this.rng.randomInt(sectionStart + 30, sectionEnd - 100);
-                        const width = this.rng.randomInt(60, 120);
-                        this.lavaPits.push(new LavaPit(x, 490, width));
-                    }
+                if (mixedRoll < 0.35) {
+                    // Saw blade (reduced from 1-3 to just 1)
+                    const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
+                    const y = this.rng.randomInt(350, 450);
+                    this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
+                } else if (mixedRoll < 0.65) {
+                    // Lava pit (kept at 1)
+                    const x = this.rng.randomInt(sectionStart + 30, sectionEnd - 100);
+                    const width = this.rng.randomInt(60, 120);
+                    this.lavaPits.push(new LavaPit(x, 490, width));
                 } else {
-                    // Moving poison clouds
-                    const poisonCount = this.rng.randomInt(1, 2);
-                    for (let i = 0; i < poisonCount; i++) {
-                        const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
-                        const y = this.rng.randomInt(100, 250); // Higher in the sky (was 200-350)
-                        const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
-                        const pattern = this.rng.choice(patterns);
-                        this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
-                    }
+                    // Moving poison cloud (kept at 1)
+                    const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
+                    const y = this.rng.randomInt(100, 250); // Higher in the sky
+                    const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
+                    const pattern = this.rng.choice(patterns);
+                    this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
                 }
             }
         }

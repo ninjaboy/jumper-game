@@ -8,7 +8,43 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.5.4 - HTML Feedback Form! (Current Version)
+v2.5.5 - Reduced Trap Density! (Current Version)
+─────────────────────────────────────────────────────────────
+🎮 Significantly reduced hazards for better gameplay balance!
+
+HAZARD COUNT REDUCTIONS:
+• Spikes per section: 2-4 → 1-2
+• Poison clouds per section: 2-3 → 1
+• Saw blades per section: 2-4 → 1-2
+• Mixed hazards: 1-3 → 1 (single hazard)
+
+HAZARD SPAWN PROBABILITY REDUCED:
+• Normal bias: 0.7 → 0.4 (start) | 1.0 → 0.8 (max)
+• Safe Zone: 0.3 → 0.2 (start) | 0.7 → 0.5 (max)
+• Hazard Heavy: 0.95 → 0.6 (start) | 1.5 → 0.9 (max)
+• Wide Gap: 0.7 → 0.4 (start) | 1.0 → 0.8 (max)
+• High Route: 0.6 → 0.35 (start) | 1.0 → 0.7 (max)
+• Tight Spaces: 0.7 → 0.4 (start) | 1.0 → 0.8 (max)
+• Spike Gauntlet: 0.4 → 0.25 (fixed)
+• Toxic Hell: 0.5 → 0.3 (fixed)
+• Blade Runner: 0.6 → 0.35 (fixed)
+• Vertical Climb: 0.7 → 0.4 (fixed)
+
+WHY:
+• Game was too punishing - too many traps per level
+• Players couldn't enjoy core mechanics and collectibles
+• Now you can pass through several levels and experience gameplay
+• Difficulty still scales with level but starts much gentler
+
+IMPACT:
+• Much more enjoyable early game experience
+• Can actually collect mushrooms and explore mechanics
+• Traps are still present but not overwhelming
+• Better balance between challenge and fun!
+
+─────────────────────────────────────────────────────────────
+
+v2.5.4 - HTML Feedback Form!
 ─────────────────────────────────────────────────────────────
 📝 Replaced canvas text input with proper HTML textarea!
 

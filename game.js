@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.5.4';
+        this.version = '2.5.5';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -110,13 +110,47 @@ class Game {
         this.totalConsumables = 0; // Track total consumables collected
         this.maxHeightReached = 0; // Track max height for triggers
 
+        // Global play counter
+        this.globalPlayCount = 0;
+        this.fetchGlobalPlayCount();
+
         this.lastTime = 0;
         this.isRunning = false;
-        
+
         this.setupEventListeners();
         this.setupPhysicsControls();
         this.setupJumpModes();
         this.setupLevelControls();
+    }
+
+    // Fetch global play count from server
+    async fetchGlobalPlayCount() {
+        try {
+            const response = await fetch('/api/get-play-count');
+            const data = await response.json();
+            if (data.success) {
+                this.globalPlayCount = data.count;
+            }
+        } catch (error) {
+            console.log('Could not fetch global play count:', error);
+            // Silently fail - not critical
+        }
+    }
+
+    // Increment global play count
+    async incrementGlobalPlayCount() {
+        try {
+            const response = await fetch('/api/increment-plays', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.globalPlayCount = data.count;
+            }
+        } catch (error) {
+            console.log('Could not increment global play count:', error);
+            // Silently fail - not critical
+        }
     }
 
     setupEventListeners() {
@@ -443,6 +477,7 @@ class Game {
 
     startGame() {
         this.gameState = 'playing';
+        this.incrementGlobalPlayCount(); // Track global plays
         this.restart(); // Reset player position and generate level
     }
 
