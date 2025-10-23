@@ -871,20 +871,17 @@ class WingsConsumable extends Consumable {
         super({
             id: 'wings',
             name: 'Wings of Icarus',
-            description: 'Hold jump to glide!',
+            description: 'Hold jump to glide! (Permanent)',
             x: x,
             y: y,
             color: '#FFE4B5',
             glowColor: '#FFD700',
             icon: '🪽',
-            duration: 900, // 15 seconds
-            effectType: 'active',
-            rarity: 'rare',
+            duration: 0, // Permanent effect
+            effectType: 'permanent',
+            rarity: 'uncommon', // More common now since permanent
             onPickup: (player, consumable, game) => {
                 player.consumableEffects.wings = true;
-            },
-            onExpire: (player, consumable, game) => {
-                player.consumableEffects.wings = false;
             }
         });
     }
@@ -947,12 +944,12 @@ class ConsumableManager {
             rare: [
                 DoubleJumpConsumable,
                 TripleJumpConsumable,
-                ChaosDiceConsumable,
-                WingsConsumable
+                ChaosDiceConsumable
             ],
             uncommon: [
                 GiantMushroomConsumable,
                 ShrinkMushroomConsumable,
+                WingsConsumable,
                 FeatherConsumable,
                 RocketBootsConsumable,
                 ShieldAmuletConsumable,

@@ -8,7 +8,31 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.5.2 - Smooth Mushroom Transitions (Current Version)
+v2.5.3 - Wings Are Now Permanent! (Current Version)
+─────────────────────────────────────────────────────────────
+🪽 Wings of Icarus are now permanent like mushrooms!
+
+CHANGES:
+• Wings effect is now PERMANENT (no duration timer)
+• Once you get wings, you keep them for the entire run
+• Moved from rare to uncommon (more common now)
+• Hold jump in air to glide smoothly downward forever
+
+WHY:
+• Makes wings more valuable as a permanent upgrade
+• Consistent with mushroom permanent mechanics
+• More strategic gameplay - find wings early for easier run
+• No more losing wings mid-level
+
+IMPACT:
+• Wings are now a powerful permanent upgrade
+• Find them once, keep them forever (until restart/death)
+• Gliding becomes a core mechanic once acquired
+• Much more satisfying to collect
+
+─────────────────────────────────────────────────────────────
+
+v2.5.2 - Smooth Mushroom Transitions
 ─────────────────────────────────────────────────────────────
 ✨ Mushroom size changes now animate smoothly instead of instant!
 
