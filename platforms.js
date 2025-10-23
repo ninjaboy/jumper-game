@@ -66,13 +66,15 @@ class Platform {
         this.y = y;
         this.originalX = x;
         this.originalY = y;
+        // Make platforms taller for better visibility
         this.width = width;
-        this.height = height;
+        this.height = Math.max(height, 25); // Minimum height of 25px
         this.type = type;
         this.color = this.getColorByType();
         this.moveTimer = 0;
         this.moveSpeed = 1;
         this.moveRange = 100;
+        this.animOffset = Math.random() * 100; // For animations
     }
 
     getColorByType() {
@@ -99,31 +101,66 @@ class Platform {
     }
 
     render(ctx, style = null) {
-        // Use style colors if provided, otherwise fall back to defaults
-        const platformColor = style ? style.platforms : this.color;
-        const highlightColor = style ? style.platformHighlight : '#A0522D';
+        // Save context for transformations
+        ctx.save();
 
-        // Add visual details based on type
+        const time = Date.now() / 1000 + this.animOffset;
+
+        // Add visual details based on type with ELABORATE designs
         switch (this.type) {
             case 'ice':
-                // Translucent glowy ice platform
-                // Base layer with glow
+                // ELABORATE ICE PLATFORM - Frozen crystal palace
+                // Outer glow aura
                 ctx.shadowColor = '#00FFFF';
-                ctx.shadowBlur = 15;
-                ctx.fillStyle = 'rgba(200, 230, 255, 0.7)';
+                ctx.shadowBlur = 25;
+
+                // Multi-layer ice structure
+                // Base ice block
+                const iceGrad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+                iceGrad.addColorStop(0, 'rgba(180, 230, 255, 0.95)');
+                iceGrad.addColorStop(0.5, 'rgba(200, 240, 255, 0.85)');
+                iceGrad.addColorStop(1, 'rgba(150, 220, 255, 0.95)');
+                ctx.fillStyle = iceGrad;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 ctx.shadowBlur = 0;
 
-                // Inner crystal effect
-                ctx.fillStyle = 'rgba(230, 245, 255, 0.9)';
-                ctx.fillRect(this.x + 3, this.y + 3, this.width - 6, this.height - 6);
-
-                // Ice crystals
-                ctx.fillStyle = 'rgba(150, 220, 255, 0.5)';
-                for (let i = 0; i < 3; i++) {
-                    const crystalX = this.x + (i + 0.5) * (this.width / 3);
-                    ctx.fillRect(crystalX - 2, this.y + 2, 4, this.height - 4);
+                // Ice reflection stripes (animated)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                const iceWave = Math.sin(time * 2) * 3;
+                for (let i = 0; i < 4; i++) {
+                    const stripeX = this.x + i * (this.width / 4) + iceWave;
+                    ctx.fillRect(stripeX, this.y, this.width / 8, this.height);
                 }
+
+                // Crystalline structures
+                ctx.strokeStyle = 'rgba(100, 200, 255, 0.7)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < this.width / 40; i++) {
+                    const cx = this.x + (i + 0.5) * 40;
+                    const cy = this.y + this.height / 2;
+                    // Draw snowflake
+                    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx + Math.cos(angle) * 8, cy + Math.sin(angle) * 8);
+                        ctx.stroke();
+                    }
+                }
+
+                // Frost particles
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                for (let i = 0; i < this.width / 20; i++) {
+                    const px = this.x + i * 20 + Math.sin(time + i) * 5;
+                    const py = this.y + this.height * 0.3 + Math.cos(time + i) * 3;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Ice border with shimmer
+                ctx.strokeStyle = 'rgba(100, 200, 255, 0.9)';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
                 break;
 
             case 'moving':
@@ -272,8 +309,8 @@ class Platform {
             default:
                 // Premium normal platform with gradient and shine
                 const gradient = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
-                gradient.addColorStop(0, platformColor);
-                gradient.addColorStop(1, this.darkenColor(platformColor, 0.3));
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, this.darkenColor(this.color, 0.3));
                 ctx.fillStyle = gradient;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
 
@@ -281,8 +318,9 @@ class Platform {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
                 ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height / 3);
 
-                // Subtle texture
-                ctx.fillStyle = highlightColor;
+                // Subtle texture with lighter color
+                const lighterColor = this.darkenColor(this.color, -0.2); // Lighten instead of darken
+                ctx.fillStyle = lighterColor;
                 ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, 3);
                 break;
         }
@@ -291,6 +329,9 @@ class Platform {
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+        // Restore context
+        ctx.restore();
     }
 
     darkenColor(color, factor) {
