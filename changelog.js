@@ -8,7 +8,33 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v1.8.3 - New Feature: Scrolling Changelog Viewer (Current Version)
+v2.0.0 - Major Fix: Music Stops Instantly (Current Version)
+─────────────────────────────────────────────────────────────
+🎵 Fixed music bleeding between levels!
+
+CRITICAL FIX:
+• Music now stops INSTANTLY when changing levels
+• No more "music in the pipeline" issue
+• Background music cleanup is immediate and complete
+
+TECHNICAL:
+• Track all active oscillators in real-time
+• stopBackgroundMusic() forcefully stops all scheduled audio
+• Disconnect audio nodes completely on stop
+• Automatic cleanup prevents memory leaks
+
+THE PROBLEM:
+Web Audio API schedules oscillators ahead of time. Even after
+setting musicPlaying=false, already-scheduled notes kept playing
+because they were in JavaScript's event queue.
+
+THE SOLUTION:
+Track every oscillator/buffer source we create. When stopping music,
+iterate through all active audio nodes and call stop(0) + disconnect()
+immediately. This kills all sound instantly, no bleed-through!
+
+
+v1.8.3 - New Feature: Scrolling Changelog Viewer
 ─────────────────────────────────────────────────────────────
 📜 Beautiful in-game changelog viewer!
 
