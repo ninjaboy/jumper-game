@@ -161,8 +161,8 @@ class DoubleJumpConsumable extends Consumable {
     constructor(x, y) {
         super({
             id: 'double_jump',
-            name: 'Double Jump',
-            description: 'Jump again in mid-air!',
+            name: 'Extra Jump',
+            description: 'Adds +1 mid-air jump! (Stacks)',
             x: x,
             y: y,
             color: '#00CED1',
@@ -170,9 +170,9 @@ class DoubleJumpConsumable extends Consumable {
             icon: '⬆',
             duration: 0, // Permanent
             effectType: 'passive',
-            rarity: 'rare',
+            rarity: 'uncommon', // More common now (was rare)
             onPickup: (player, consumable, game) => {
-                player.maxJumps = 2;
+                player.maxJumps += 1; // Add one jump instead of setting to 2
                 player.consumableEffects.doubleJump = true;
             }
         });
@@ -183,8 +183,8 @@ class TripleJumpConsumable extends Consumable {
     constructor(x, y) {
         super({
             id: 'triple_jump',
-            name: 'Triple Jump',
-            description: 'Jump three times in mid-air!',
+            name: 'Extra Jump x2',
+            description: 'Adds +2 mid-air jumps! (Stacks)',
             x: x,
             y: y,
             color: '#9370DB',
@@ -194,7 +194,7 @@ class TripleJumpConsumable extends Consumable {
             effectType: 'passive',
             rarity: 'rare',
             onPickup: (player, consumable, game) => {
-                player.maxJumps = 3;
+                player.maxJumps += 2; // Add two jumps instead of setting to 3
                 player.consumableEffects.tripleJump = true;
             }
         });
@@ -942,11 +942,11 @@ class ConsumableManager {
         // Define consumable pools by rarity
         const rarityPools = {
             rare: [
-                DoubleJumpConsumable,
-                TripleJumpConsumable,
                 ChaosDiceConsumable
             ],
             uncommon: [
+                DoubleJumpConsumable, // Now more common!
+                TripleJumpConsumable, // Now more common!
                 GiantMushroomConsumable,
                 ShrinkMushroomConsumable,
                 WingsConsumable,
@@ -1290,13 +1290,23 @@ class ConsumableManager {
         // Show jump upgrade (permanent)
         if (hasJumpUpgrade) {
             ctx.font = '12px Arial';
-            if (player.maxJumps === 2) {
-                ctx.fillStyle = '#00CED1';
-                ctx.fillText('⬆ Double Jump', 15, currentY);
-            } else if (player.maxJumps === 3) {
-                ctx.fillStyle = '#9370DB';
-                ctx.fillText('⬆⬆ Triple Jump', 15, currentY);
+            const extraJumps = player.maxJumps - 1; // -1 because base jump doesn't count
+            const arrows = '⬆'.repeat(Math.min(extraJumps, 5)); // Max 5 arrows to display
+            const jumpText = extraJumps === 1 ? 'Extra Jump' :
+                            extraJumps === 2 ? 'Triple Jump' :
+                            `${extraJumps + 1}x Jump`;
+
+            // Color based on jump count
+            if (extraJumps >= 5) {
+                ctx.fillStyle = '#FFD700'; // Gold for 5+
+            } else if (extraJumps >= 3) {
+                ctx.fillStyle = '#FF1493'; // Pink for 3-4
+            } else if (extraJumps === 2) {
+                ctx.fillStyle = '#9370DB'; // Purple for 2
+            } else {
+                ctx.fillStyle = '#00CED1'; // Cyan for 1
             }
+            ctx.fillText(`${arrows} ${jumpText} (${player.maxJumps}x)`, 15, currentY);
             ctx.fillStyle = 'white';
             ctx.fillText('∞', 200, currentY);
             currentY += 25;
