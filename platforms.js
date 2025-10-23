@@ -1586,13 +1586,25 @@ class PlatformManager {
             return hazardResult;
         }
 
-        // Check finish line
-        if (player.x + player.width > this.finishFlag.x &&
+        // Check finish line (horizontal levels)
+        if (this.finishFlag &&
+            player.x + player.width > this.finishFlag.x &&
             player.x < this.finishFlag.x + this.finishFlag.width &&
             player.y + player.height > this.finishFlag.y &&
             player.y < this.finishFlag.y + this.finishFlag.height) {
-            
+
             return 'finish'; // Signal that player reached the end
+        }
+
+        // Check exit door (vertical levels)
+        if (this.exitDoor &&
+            player.x + player.width > this.exitDoor.x &&
+            player.x < this.exitDoor.x + this.exitDoor.width &&
+            player.y + player.height > this.exitDoor.y &&
+            player.y < this.exitDoor.y + this.exitDoor.height) {
+
+            this.exitDoor.open = true; // Open the door
+            return 'finish'; // Signal that player reached the exit
         }
 
         return 'playing';
@@ -1746,16 +1758,51 @@ class PlatformManager {
         ctx.fillStyle = 'white';
         ctx.font = '12px Arial';
         ctx.fillText('START', this.startFlag.x - 10, this.startFlag.y - 5);
-        
-        // Render finish flag
-        ctx.fillStyle = '#FFD700';
-        ctx.fillRect(this.finishFlag.x, this.finishFlag.y, this.finishFlag.width, this.finishFlag.height);
-        ctx.fillStyle = '#FF8800';
-        ctx.fillRect(this.finishFlag.x + 5, this.finishFlag.y + 10, 10, 30);
-        ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
-        ctx.fillText('FINISH', this.finishFlag.x - 10, this.finishFlag.y - 5);
-        
+
+        // Render finish flag (for horizontal levels)
+        if (this.finishFlag) {
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(this.finishFlag.x, this.finishFlag.y, this.finishFlag.width, this.finishFlag.height);
+            ctx.fillStyle = '#FF8800';
+            ctx.fillRect(this.finishFlag.x + 5, this.finishFlag.y + 10, 10, 30);
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText('FINISH', this.finishFlag.x - 10, this.finishFlag.y - 5);
+        }
+
+        // Render exit door (for vertical levels)
+        if (this.exitDoor) {
+            // Door frame
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(this.exitDoor.x - 10, this.exitDoor.y - 10, this.exitDoor.width + 20, this.exitDoor.height + 10);
+
+            // Door (changes color based on open state)
+            if (this.exitDoor.open) {
+                ctx.fillStyle = '#00AA00';
+            } else {
+                ctx.fillStyle = '#4A4A4A';
+            }
+            ctx.fillRect(this.exitDoor.x, this.exitDoor.y, this.exitDoor.width, this.exitDoor.height);
+
+            // Door details
+            ctx.strokeStyle = '#2A2A2A';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(this.exitDoor.x, this.exitDoor.y, this.exitDoor.width, this.exitDoor.height);
+
+            // Door handle
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(this.exitDoor.x + this.exitDoor.width - 15, this.exitDoor.y + this.exitDoor.height / 2, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // "EXIT" text
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('EXIT', this.exitDoor.x + this.exitDoor.width / 2, this.exitDoor.y + this.exitDoor.height / 2);
+            ctx.textAlign = 'left';
+        }
+
         ctx.restore();
     }
 }

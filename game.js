@@ -913,25 +913,36 @@ class Game {
 
     updateCamera() {
         if (this.camera.followPlayer) {
-            // Center camera on player horizontally
-            this.camera.x = this.player.x - this.canvas.width / 2;
+            // Check if this is a vertical tower level (has exitDoor)
+            const isVerticalLevel = this.platformManager && this.platformManager.exitDoor;
 
-            // Clamp camera to level bounds horizontally
-            this.camera.x = Math.max(0, Math.min(this.camera.x, this.camera.levelWidth - this.canvas.width));
+            if (isVerticalLevel) {
+                // Vertical tower level camera (centered horizontally, follows player vertically)
+                this.camera.x = (800 - this.canvas.width) / 2; // Center on 800px wide tower
+                this.camera.x = Math.max(0, this.camera.x);
 
-            // Improved vertical camera following for multi-floor platforming
-            // Center player in middle of screen (50%) for better vertical view
-            const targetY = this.player.y - this.canvas.height * 0.5;
+                // Vertical camera follows player closely
+                const targetY = this.player.y - this.canvas.height * 0.5;
+                this.camera.y += (targetY - this.camera.y) * 0.2; // Faster response
 
-            // Smooth camera movement with faster response for vertical
-            this.camera.y += (targetY - this.camera.y) * 0.15;
+                // Clamp vertically - allow viewing entire tower (30 floors * 180px = 5400px)
+                const minCameraY = -6000; // High enough to see top of tallest tower
+                const maxCameraY = 520 - this.canvas.height + 100;
+                this.camera.y = Math.max(minCameraY, Math.min(maxCameraY, this.camera.y));
+            } else {
+                // Horizontal level camera (standard behavior)
+                this.camera.x = this.player.x - this.canvas.width / 2;
+                this.camera.x = Math.max(0, Math.min(this.camera.x, this.camera.levelWidth - this.canvas.width));
 
-            // Clamp camera vertically to show level bounds
-            // Allow camera to go up to show high platforms
-            const minCameraY = -200; // Can see 200px above level top
-            const maxCameraY = 520 - this.canvas.height + 100; // Don't go too far down
+                // Vertical following for multi-floor platforming
+                const targetY = this.player.y - this.canvas.height * 0.5;
+                this.camera.y += (targetY - this.camera.y) * 0.15;
 
-            this.camera.y = Math.max(minCameraY, Math.min(maxCameraY, this.camera.y));
+                // Clamp camera vertically
+                const minCameraY = -200;
+                const maxCameraY = 520 - this.canvas.height + 100;
+                this.camera.y = Math.max(minCameraY, Math.min(maxCameraY, this.camera.y));
+            }
         }
     }
 
