@@ -103,25 +103,51 @@ class Platform {
         const platformColor = style ? style.platforms : this.color;
         const highlightColor = style ? style.platformHighlight : '#A0522D';
 
-        ctx.fillStyle = platformColor;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-
         // Add visual details based on type
         switch (this.type) {
             case 'ice':
-                ctx.fillStyle = '#E6F3FF';
-                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+                // Translucent glowy ice platform
+                // Base layer with glow
+                ctx.shadowColor = '#00FFFF';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = 'rgba(200, 230, 255, 0.7)';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.shadowBlur = 0;
+
+                // Inner crystal effect
+                ctx.fillStyle = 'rgba(230, 245, 255, 0.9)';
+                ctx.fillRect(this.x + 3, this.y + 3, this.width - 6, this.height - 6);
+
+                // Ice crystals
+                ctx.fillStyle = 'rgba(150, 220, 255, 0.5)';
+                for (let i = 0; i < 3; i++) {
+                    const crystalX = this.x + (i + 0.5) * (this.width / 3);
+                    ctx.fillRect(crystalX - 2, this.y + 2, 4, this.height - 4);
+                }
                 break;
+
             case 'moving':
+                // Animated moving platform
+                ctx.fillStyle = '#FF6B6B';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
                 ctx.fillStyle = '#FF8E8E';
                 ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 8);
+                // Direction indicators
+                ctx.fillStyle = '#FFB3B3';
+                ctx.fillRect(this.x + 6, this.y + this.height/2 - 2, this.width - 12, 4);
                 break;
+
             case 'spring':
-                ctx.fillStyle = '#B5FFB5';
-                ctx.fillRect(this.x + 3, this.y + 3, this.width - 6, this.height - 6);
+                // Bouncy spring platform with gradient
+                const springGrad = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+                springGrad.addColorStop(0, '#90EE90');
+                springGrad.addColorStop(1, '#32CD32');
+                ctx.fillStyle = springGrad;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+
                 // Spring coil effect
-                ctx.strokeStyle = '#32CD32';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#228B22';
+                ctx.lineWidth = 3;
                 ctx.beginPath();
                 for (let i = 0; i < 3; i++) {
                     const springY = this.y + (i * this.height / 3) + this.height / 6;
@@ -130,12 +156,16 @@ class Platform {
                 }
                 ctx.stroke();
                 break;
+
             case 'oneway':
-                // Add dashed line pattern to indicate one-way nature
+                // Orange one-way platform
+                ctx.fillStyle = '#FF8C00';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
                 ctx.fillStyle = '#FFC870';
                 ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
-                // Draw upward arrows to show you can jump through from below
-                ctx.fillStyle = '#FF8C00';
+
+                // Draw upward arrows
+                ctx.fillStyle = '#FF6600';
                 const arrowCount = Math.floor(this.width / 30);
                 for (let i = 0; i < arrowCount; i++) {
                     const arrowX = this.x + (i + 0.5) * (this.width / arrowCount);
@@ -149,17 +179,127 @@ class Platform {
                     ctx.fill();
                 }
                 break;
+
+            case 'crumbling':
+                // Crumbling platform with cracks
+                ctx.fillStyle = '#8B7355';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#A0826D';
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+
+                // Cracks
+                ctx.strokeStyle = '#654321';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width * 0.3, this.y);
+                ctx.lineTo(this.x + this.width * 0.3, this.y + this.height);
+                ctx.moveTo(this.x + this.width * 0.7, this.y);
+                ctx.lineTo(this.x + this.width * 0.7, this.y + this.height);
+                ctx.stroke();
+                break;
+
+            case 'disappearing':
+                // Fading platform with phase effect
+                const phase = Math.sin(Date.now() / 500) * 0.3 + 0.7;
+                ctx.globalAlpha = phase;
+                ctx.fillStyle = '#9370DB';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#BA55D3';
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+                ctx.globalAlpha = 1.0;
+                break;
+
+            case 'speed':
+                // Speed boost platform with arrows
+                const speedGrad = ctx.createLinearGradient(this.x, this.y, this.x + this.width, this.y);
+                speedGrad.addColorStop(0, '#FFD700');
+                speedGrad.addColorStop(1, '#FFA500');
+                ctx.fillStyle = speedGrad;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+
+                // Speed arrows
+                ctx.fillStyle = '#FF8C00';
+                for (let i = 0; i < 3; i++) {
+                    const arrowX = this.x + (i + 0.3) * (this.width / 3);
+                    const arrowY = this.y + this.height / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(arrowX, arrowY - 4);
+                    ctx.lineTo(arrowX + 8, arrowY);
+                    ctx.lineTo(arrowX, arrowY + 4);
+                    ctx.fill();
+                }
+                break;
+
+            case 'conveyor':
+                // Conveyor belt platform
+                ctx.fillStyle = '#708090';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.fillStyle = '#A9A9A9';
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+
+                // Belt lines (animated)
+                const beltOffset = (Date.now() / 50) % 20;
+                ctx.strokeStyle = '#696969';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = -1; i < this.width / 20 + 1; i++) {
+                    const lineX = this.x + i * 20 + beltOffset;
+                    ctx.moveTo(lineX, this.y + 5);
+                    ctx.lineTo(lineX, this.y + this.height - 5);
+                }
+                ctx.stroke();
+                break;
+
+            case 'bouncy':
+                // Extra bouncy platform (different from spring)
+                ctx.shadowColor = '#FF1493';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = '#FF69B4';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.shadowBlur = 0;
+
+                // Soft bouncy texture
+                ctx.fillStyle = '#FFB6C1';
+                for (let i = 0; i < 5; i++) {
+                    const circleX = this.x + (i + 0.5) * (this.width / 5);
+                    ctx.beginPath();
+                    ctx.arc(circleX, this.y + this.height / 2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                break;
+
             case 'normal':
-                // Add highlight for normal platforms using style color
+            default:
+                // Premium normal platform with gradient and shine
+                const gradient = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+                gradient.addColorStop(0, platformColor);
+                gradient.addColorStop(1, this.darkenColor(platformColor, 0.3));
+                ctx.fillStyle = gradient;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+
+                // Shine effect on top
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height / 3);
+
+                // Subtle texture
                 ctx.fillStyle = highlightColor;
-                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, 4);
+                ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, 3);
                 break;
         }
 
-        // Platform border
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        // Platform border with better shadow
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
+    }
+
+    darkenColor(color, factor) {
+        // Helper to darken a color
+        const hex = color.replace('#', '');
+        const r = Math.max(0, parseInt(hex.substr(0, 2), 16) * (1 - factor));
+        const g = Math.max(0, parseInt(hex.substr(2, 2), 16) * (1 - factor));
+        const b = Math.max(0, parseInt(hex.substr(4, 2), 16) * (1 - factor));
+        return `rgb(${r}, ${g}, ${b})`;
     }
 }
 
@@ -1656,11 +1796,16 @@ class PlatformManager {
             // Randomly choose platform type for variety - mostly one-way platforms!
             const getPlatformType = () => {
                 const typeRoll = this.rng.random();
-                if (typeRoll < 0.60) return 'oneway'; // 60% one-way platforms (jump through from below)
-                if (typeRoll < 0.70) return 'spring'; // 10% bouncy platforms
-                if (typeRoll < 0.80) return 'ice';    // 10% ice platforms
-                if (typeRoll < 0.90) return 'moving'; // 10% moving platforms
-                return 'normal';                       // 10% normal platforms
+                if (typeRoll < 0.40) return 'oneway';       // 40% one-way platforms
+                if (typeRoll < 0.48) return 'spring';       // 8% spring platforms
+                if (typeRoll < 0.56) return 'bouncy';       // 8% super bouncy platforms
+                if (typeRoll < 0.64) return 'ice';          // 8% ice platforms
+                if (typeRoll < 0.72) return 'moving';       // 8% moving platforms
+                if (typeRoll < 0.78) return 'speed';        // 6% speed boost platforms
+                if (typeRoll < 0.84) return 'conveyor';     // 6% conveyor platforms
+                if (typeRoll < 0.89) return 'crumbling';    // 5% crumbling platforms
+                if (typeRoll < 0.93) return 'disappearing'; // 4% disappearing platforms
+                return 'normal';                             // 7% normal platforms
             };
 
             if (layoutRoll < 0.35) {
@@ -1812,8 +1957,62 @@ class PlatformManager {
                             player.velocityX *= 0.7;
                         }
                         break;
-                    case 'oneway':
                     case 'bouncy':
+                        // Extra bouncy platform (more than spring)
+                        if (player.velocityY >= 0) {
+                            player.velocityY = -player.jumpPower * 2.0; // Even bouncier!
+                            player.onGround = false;
+                            if (player.soundManager) {
+                                player.soundManager.playSpring();
+                            }
+                        }
+                        player.velocityX *= 0.7;
+                        break;
+                    case 'speed':
+                        // Speed boost platform - temporarily increase move speed
+                        if (!player.originalMoveSpeed) {
+                            player.originalMoveSpeed = player.moveSpeed;
+                        }
+                        player.moveSpeed = player.originalMoveSpeed * 1.8; // 80% speed boost
+                        player.velocityX *= 0.7;
+                        // Reset speed after 3 seconds (handled elsewhere)
+                        setTimeout(() => {
+                            if (player.originalMoveSpeed) {
+                                player.moveSpeed = player.originalMoveSpeed;
+                                player.originalMoveSpeed = null;
+                            }
+                        }, 3000);
+                        break;
+                    case 'conveyor':
+                        // Conveyor belt - constantly pushes player
+                        player.velocityX += 2; // Push player to the right
+                        player.velocityX *= 0.7;
+                        break;
+                    case 'crumbling':
+                        // Crumbling platform - will break after landing
+                        // Mark platform for removal after delay
+                        if (!platform.crumbling) {
+                            platform.crumbling = true;
+                            setTimeout(() => {
+                                const index = this.platforms.indexOf(platform);
+                                if (index > -1) {
+                                    this.platforms.splice(index, 1);
+                                }
+                            }, 800); // Break after 0.8 seconds
+                        }
+                        player.velocityX *= 0.7;
+                        break;
+                    case 'disappearing':
+                        // Disappearing platform - phases out periodically
+                        const isVisible = Math.sin(Date.now() / 500) > -0.3;
+                        if (!isVisible) {
+                            // Platform is invisible, player falls through
+                            player.onGround = false;
+                            return; // Skip friction
+                        }
+                        player.velocityX *= 0.7;
+                        break;
+                    case 'oneway':
                     case 'normal':
                     default:
                         // Strong friction for regular platforms - good control
