@@ -8,7 +8,20 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.3.0 - Feature: Player Feedback System (Current Version)
+v2.3.1 - Bug Fixes: Input & Audio (Current Version)
+─────────────────────────────────────────────────────────────
+🐛 Fixed two annoying bugs!
+
+BUG FIXES:
+• Fixed 'M' key triggering mute while typing in feedback textarea
+• Now checks if user is typing before processing audio hotkeys
+• Fixed audio crash: exponentialRampToValueAtTime error with 0 value
+• Audio envelopes now use minimum value of 0.001 to prevent errors
+• Both fixes improve overall game stability
+
+─────────────────────────────────────────────────────────────
+
+v2.3.0 - Feature: Player Feedback System
 ─────────────────────────────────────────────────────────────
 📝 Collect optional feedback after every death!
 
