@@ -13,3 +13,4 @@ test/screenshots/test-results.json
 # IDE
 .vscode/
 .idea/
+.vercel

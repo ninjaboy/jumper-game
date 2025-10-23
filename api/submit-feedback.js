@@ -1,5 +1,5 @@
 // Vercel Serverless Function to submit player feedback
-// Uses Vercel KV (Redis) for simple storage with fallback
+// Uses Vercel Blob for persistent storage
 
 export default async function handler(req, res) {
   // Only accept POST requests
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     // Generate unique ID for this feedback entry
-    const feedbackId = `feedback:${Date.now()}:${Math.random().toString(36).substr(2, 9)}`;
+    const feedbackId = `feedback-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     const feedbackData = {
       ...feedback,
@@ -24,35 +24,52 @@ export default async function handler(req, res) {
       submittedAt: new Date().toISOString()
     };
 
-    // Try to use Vercel KV if available
+    // Try to use Vercel Blob if available
     try {
-      const { kv } = await import('@vercel/kv');
+      const { put, list } = await import('@vercel/blob');
 
-      // Store in Vercel KV
-      await kv.set(feedbackId, feedbackData);
+      // Read existing feedback
+      let allFeedback = [];
+      try {
+        const existingBlobs = await list({ prefix: 'feedback-data' });
+        if (existingBlobs.blobs.length > 0) {
+          const response = await fetch(existingBlobs.blobs[0].url);
+          allFeedback = await response.json();
+        }
+      } catch (readError) {
+        console.log('No existing feedback, starting fresh');
+      }
 
-      // Also add to a sorted set for easy retrieval
-      await kv.zadd('feedback:all', {
-        score: Date.now(),
-        member: feedbackId
+      // Add new feedback
+      allFeedback.unshift(feedbackData); // Add to beginning (newest first)
+
+      // Keep only last 1000 entries to manage blob size
+      if (allFeedback.length > 1000) {
+        allFeedback = allFeedback.slice(0, 1000);
+      }
+
+      // Write updated feedback back to blob
+      await put('feedback-data.json', JSON.stringify(allFeedback), {
+        access: 'public',
+        contentType: 'application/json'
       });
 
       return res.status(200).json({
         success: true,
         message: 'Feedback submitted successfully!',
         id: feedbackId,
-        storage: 'kv'
+        storage: 'blob'
       });
-    } catch (kvError) {
-      // KV not available - just acknowledge receipt
-      console.log('KV not available, feedback logged to console:', feedbackData);
+    } catch (blobError) {
+      // Blob not available - just acknowledge receipt
+      console.log('Blob not available, feedback logged:', feedbackData);
 
       return res.status(200).json({
         success: true,
-        message: 'Feedback received (KV not configured)',
+        message: 'Feedback received (Blob not configured)',
         id: feedbackId,
         storage: 'console',
-        note: 'Set up Vercel KV to persist feedback'
+        note: 'Set up Vercel Blob to persist feedback'
       });
     }
 

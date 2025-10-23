@@ -1,5 +1,5 @@
 // Vercel Serverless Function to retrieve all feedback
-// Fetches from Vercel KV and returns as JSON array
+// Fetches from Vercel Blob and returns as JSON array
 
 export default async function handler(req, res) {
   // Allow GET requests
@@ -8,43 +8,40 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try to use Vercel KV if available
+    // Try to use Vercel Blob if available
     try {
-      const { kv } = await import('@vercel/kv');
+      const { list } = await import('@vercel/blob');
 
-      // Get all feedback IDs from sorted set (newest first)
-      const feedbackIds = await kv.zrange('feedback:all', 0, -1, { rev: true });
+      // Get the feedback blob
+      const existingBlobs = await list({ prefix: 'feedback-data' });
 
-      if (!feedbackIds || feedbackIds.length === 0) {
+      if (existingBlobs.blobs.length === 0) {
         return res.status(200).json({
           success: true,
           count: 0,
           feedback: [],
-          storage: 'kv'
+          storage: 'blob'
         });
       }
 
-      // Fetch all feedback entries
-      const feedbackPromises = feedbackIds.map(id => kv.get(id));
-      const feedbackEntries = await Promise.all(feedbackPromises);
-
-      // Filter out any null entries (deleted feedback)
-      const validFeedback = feedbackEntries.filter(entry => entry !== null);
+      // Fetch the feedback data
+      const response = await fetch(existingBlobs.blobs[0].url);
+      const allFeedback = await response.json();
 
       return res.status(200).json({
         success: true,
-        count: validFeedback.length,
-        feedback: validFeedback,
-        storage: 'kv'
+        count: allFeedback.length,
+        feedback: allFeedback,
+        storage: 'blob'
       });
-    } catch (kvError) {
-      // KV not available - return empty array
+    } catch (blobError) {
+      // Blob not available - return empty array
       return res.status(200).json({
         success: true,
         count: 0,
         feedback: [],
         storage: 'console',
-        note: 'Set up Vercel KV to persist feedback. Check Vercel logs for console output.'
+        note: 'Set up Vercel Blob to persist feedback. Check Vercel logs for console output.'
       });
     }
 
