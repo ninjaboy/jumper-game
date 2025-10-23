@@ -299,17 +299,19 @@ class SawBlade {
         this.rotation += this.rotationSpeed;
     }
 
-    render(ctx) {
+    render(ctx, style = null) {
+        const sawColor = style ? style.saws : '#888888';
+
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
-        
+
         // Draw saw blade
-        ctx.fillStyle = '#888888';
+        ctx.fillStyle = sawColor;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Draw saw teeth
         ctx.fillStyle = '#666666';
         const teeth = 8;
@@ -323,7 +325,7 @@ class SawBlade {
             ctx.closePath();
             ctx.fill();
         }
-        
+
         ctx.restore();
     }
 
@@ -378,21 +380,24 @@ class AnimatedSpike {
         }
     }
 
-    render(ctx) {
+    render(ctx, style = null) {
         if (this.currentHeight === 0) return; // Don't draw when fully retracted
 
+        const spikeColor = style ? style.spikes : '#FF4444';
+        const baseColor = style ? style.platforms : '#8B4513';
+
         // Base plate
-        ctx.fillStyle = '#8B4513';
+        ctx.fillStyle = baseColor;
         ctx.fillRect(this.x, this.y + this.maxHeight, this.width, 5);
 
         // Spike body
         const alpha = this.isActive ? 1 : 0.5;
-        ctx.fillStyle = this.isActive ? '#FF4444' : '#FFAA44';
+        ctx.fillStyle = this.isActive ? spikeColor : '#FFAA44';
         ctx.globalAlpha = alpha;
         ctx.fillRect(this.x, this.y + (this.maxHeight - this.currentHeight), this.width, this.currentHeight);
 
         // Draw spike triangles
-        ctx.fillStyle = this.isActive ? '#CC0000' : '#FF8800';
+        ctx.fillStyle = this.isActive ? spikeColor : '#FF8800';
         ctx.beginPath();
         const numSpikes = Math.floor(this.width / 6);
         for (let i = 0; i < numSpikes; i++) {
@@ -460,15 +465,17 @@ class LavaPit {
         });
     }
 
-    render(ctx) {
+    render(ctx, style = null) {
+        const lavaColor = style ? style.lava : '#FF4500';
+
         // Draw lava
-        ctx.fillStyle = '#FF4500';
+        ctx.fillStyle = lavaColor;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-        
+
         // Draw lava glow effect
         ctx.fillStyle = '#FF6500';
         ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
-        
+
         // Draw bubbles
         for (let bubble of this.bubbles) {
             ctx.fillStyle = `rgba(255, 100, 0, ${bubble.life / 60})`;
@@ -528,25 +535,36 @@ class PoisonCloud {
         }
     }
 
-    render(ctx) {
+    render(ctx, style = null) {
+        // Parse poison color or use default
+        let r = 128, g = 0, b = 128;
+        if (style && style.poison) {
+            const match = style.poison.match(/#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})/i);
+            if (match) {
+                r = parseInt(match[1], 16);
+                g = parseInt(match[2], 16);
+                b = parseInt(match[3], 16);
+            }
+        }
+
         ctx.save();
         ctx.translate(this.x, this.y);
-        
+
         // Draw poison cloud
-        ctx.fillStyle = 'rgba(128, 0, 128, 0.6)';
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.6)`;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Draw particles
         for (let particle of this.particles) {
             const alpha = particle.life / 150;
-            ctx.fillStyle = `rgba(128, 0, 128, ${alpha * 0.8})`;
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * 0.8})`;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
             ctx.fill();
         }
-        
+
         ctx.restore();
     }
 

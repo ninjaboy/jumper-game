@@ -8,7 +8,39 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.5.6 - Fixed Consumable Persistence! (Current Version)
+v2.7.0 - Visual Style Themes! (Current Version)
+─────────────────────────────────────────────────────────────
+🎨 Every level now has a unique visual style theme!
+
+10 DISTINCT THEMES:
+• Classic - Sky blue with brown platforms (Level 1)
+• Sunset - Orange sky with dark platforms (Level 2)
+• Night - Deep blue atmosphere with moody tones (Level 3)
+• Forest - Green sky with nature colors (Level 4)
+• Desert - Sandy beige with warm earth tones (Level 5)
+• Ice - Light blue with icy platforms (Level 6)
+• Volcano - Dark smoky atmosphere with lava tones (Level 7)
+• Candy - Pink dreamscape with vibrant colors (Level 8)
+• Matrix - Green-on-black cyber aesthetic (Level 9)
+• Space - Deep purple cosmic void (Level 10)
+
+TECHNICAL:
+• Styles cycle through all 10 themes every 10 levels
+• Each theme recolors: sky, platforms, hazards (spikes, saws, lava, poison)
+• Style name displayed in HUD
+• All rendering updated to use dynamic style system
+• Smooth color transitions maintain visual clarity
+
+IMPACT:
+• Fresh visual experience every level!
+• Helps track progress through color themes
+• Makes each level feel unique and memorable
+• Better visual variety keeps game interesting
+• No two consecutive levels look the same
+
+─────────────────────────────────────────────────────────────
+
+v2.5.6 - Fixed Consumable Persistence!
 ─────────────────────────────────────────────────────────────
 🔧 Major refactor to fix effect persistence bugs!
 

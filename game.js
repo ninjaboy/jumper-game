@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.6.2';
+        this.version = '2.7.0';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -1459,14 +1459,19 @@ class Game {
     }
     
     renderGameScreen() {
+        // Draw sky background using level style
+        const skyColor = this.platforms.style ? this.platforms.style.sky : '#87CEEB';
+        this.ctx.fillStyle = skyColor;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
         // Draw scrolling background
         this.ctx.save();
         this.ctx.translate(-this.camera.x, -this.camera.y);
-        
+
         // Draw extended ground
         this.ctx.fillStyle = '#27ae60';
         this.ctx.fillRect(0, this.physics.groundLevel, this.camera.levelWidth, this.canvas.height - this.physics.groundLevel + this.camera.y);
-        
+
         // Draw ground line
         this.ctx.strokeStyle = '#2c3e50';
         this.ctx.lineWidth = 2;
@@ -1474,7 +1479,7 @@ class Game {
         this.ctx.moveTo(0, this.physics.groundLevel);
         this.ctx.lineTo(this.camera.levelWidth, this.physics.groundLevel);
         this.ctx.stroke();
-        
+
         this.ctx.restore();
         
         // Draw platforms (handles its own camera translation)
@@ -1501,9 +1506,10 @@ class Game {
         this.ctx.fillText('WASD/Arrow Keys: Move | Space: Jump', 10, 25);
         this.ctx.fillText(`Mode: ${this.player.jumpMode.toUpperCase()} | Level: ${this.currentLevel}`, 10, 45);
 
-        // Show level bias
+        // Show level bias and style
         const biasName = this.platforms.getBiasParameters().name;
-        this.ctx.fillText(`Type: ${biasName}`, 10, 60);
+        const styleName = this.platforms.style ? this.platforms.style.name : 'Classic';
+        this.ctx.fillText(`Type: ${biasName} | Style: ${styleName}`, 10, 60);
 
         this.ctx.fillText(`Position: ${Math.round(this.player.x)}/${this.camera.levelWidth}`, 10, 75);
 
