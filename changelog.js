@@ -8,7 +8,34 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.0.0 - Major Fix: Music Stops Instantly (Current Version)
+v2.2.0 - Feature: Fully Functional Settings Menu (Current Version)
+─────────────────────────────────────────────────────────────
+⚙️ Complete settings menu implementation!
+
+NEW FEATURES:
+• Fully functional settings menu accessible from start screen
+• Adjustable audio settings:
+  - Master Volume control
+  - Music Volume control
+  - SFX Volume control
+• Visual settings available (retro mode, pixel size, scanlines, etc.)
+• Same settings menu accessible from pause menu during gameplay
+• Real-time audio adjustments apply immediately
+• Smooth gradient backgrounds and visual polish
+
+CONTROLS:
+• W/S or ↑/↓: Navigate menu items
+• A/D or ←/→: Adjust slider values and cycle options
+• SPACE: Toggle boolean options
+• ESC/BACKSPACE: Return to previous screen
+
+TECHNICAL:
+• SoundManager volume controls properly connected
+• Settings state persists across screens
+• Clean navigation flow between start/settings/pause menus
+
+
+v2.0.0 - Major Fix: Music Stops Instantly
 ─────────────────────────────────────────────────────────────
 🎵 Fixed music bleeding between levels!
 
