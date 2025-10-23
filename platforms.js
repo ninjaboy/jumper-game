@@ -776,11 +776,9 @@ class PlatformManager {
             platform.update();
         }
 
-        // Then, if player is on a moving platform, move them with it BEFORE player.update()
-        if (player && player.currentPlatform && player.currentPlatform.type === 'moving' && player.currentPlatform.deltaX) {
-            player.x += player.currentPlatform.deltaX;
-            // Keep player locked to platform
-            player.velocityX = 0;
+        // Clear currentPlatform reference - will be reset in checkCollisions if still on platform
+        if (player) {
+            player.currentPlatform = null;
         }
 
         // Check if hazards should be frozen or slowed
@@ -1769,19 +1767,18 @@ class PlatformManager {
                 player.velocityY = 0;
                 player.onGround = true;
 
-                // Store reference to current platform for moving platform tracking
+                // Store reference to current platform
                 player.currentPlatform = platform;
 
-                // Move player with moving platforms (critical for staying on platform!)
-                if (platform.type === 'moving' && platform.deltaX) {
-                    player.x += platform.deltaX;
-                    // Cancel player's horizontal momentum to stick to platform
-                    // This prevents sliding off when platform reverses direction
-                    player.velocityX = 0;
-                }
-
-                // Apply friction based on platform type
+                // Apply friction and special effects based on platform type
                 switch (platform.type) {
+                    case 'moving':
+                        // Move player with platform and apply full friction (sticks to platform)
+                        if (platform.deltaX) {
+                            player.x += platform.deltaX;
+                        }
+                        player.velocityX *= 0.8; // Full friction - player stays on platform
+                        break;
                     case 'ice':
                         // Less friction on ice (unless sticky gloves active)
                         if (player.consumableEffects && player.consumableEffects.stickyGloves) {
@@ -1804,9 +1801,6 @@ class PlatformManager {
                             // Normal friction when not bouncing
                             player.velocityX *= 0.8;
                         }
-                        break;
-                    case 'moving':
-                        // Friction already applied above by setting velocityX = 0
                         break;
                     default:
                         // Normal friction for regular platforms
