@@ -8,7 +8,31 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.7.4 - More Platform Variety! (Current Version)
+v2.8.0 - Screen Wrapping! (Current Version)
+─────────────────────────────────────────────────────────────
+🌀 Added Doodle Jump-style screen wrapping!
+
+SCREEN WRAPPING:
+• Move off the left edge → appear on right side
+• Move off the right edge → appear on left side
+• Seamless wrapping maintains velocity and momentum
+• Works in both horizontal and vertical tower levels
+
+TECHNICAL:
+• Wrapping calculated in screen-space coordinates
+• Checks after camera update for accurate positioning
+• playerScreenX = player.x - camera.x
+• Triggers when fully off visible screen edges
+
+GAMEPLAY IMPACT:
+• More strategic movement options
+• Can escape hazards by wrapping around
+• Easier to navigate tight platforming sections
+• Classic arcade-style feel like Pac-Man and Doodle Jump
+
+─────────────────────────────────────────────────────────────
+
+v2.7.4 - More Platform Variety!
 ─────────────────────────────────────────────────────────────
 🎪 Added lots more bouncy and ice platforms for variety!
 
