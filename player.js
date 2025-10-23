@@ -2,6 +2,9 @@ class Player {
     constructor(x, y, soundManager = null) {
         this.x = x;
         this.y = y;
+        this.baseWidth = 40;
+        this.baseHeight = 40;
+        this.sizeMultiplier = 1.0; // Track cumulative size changes from mushrooms
         this.width = 40;
         this.height = 40;
         this.velocityX = 0;
@@ -12,6 +15,7 @@ class Player {
 
         // Configurable properties
         this.moveSpeed = 5;
+        this.baseJumpPower = 15;
         this.jumpPower = 15;
         this.gravity = null; // Will use physics.gravity if null
         this.originalMoveSpeed = null; // For temporary speed boosts
@@ -72,6 +76,22 @@ class Player {
 
     updateJumpPower(value) {
         this.jumpPower = parseFloat(value);
+    }
+
+    applySizeMultiplier(multiplier) {
+        // Apply the multiplier to the current size multiplier (stacking)
+        this.sizeMultiplier *= multiplier;
+
+        // Clamp to reasonable limits (0.1x to 10x)
+        this.sizeMultiplier = Math.max(0.1, Math.min(10, this.sizeMultiplier));
+
+        // Update actual dimensions
+        this.width = this.baseWidth * this.sizeMultiplier;
+        this.height = this.baseHeight * this.sizeMultiplier;
+
+        // Scale jump power with size: bigger = stronger jumps
+        // Use square root scaling so it's not too extreme
+        this.jumpPower = this.baseJumpPower * Math.pow(this.sizeMultiplier, 0.5);
     }
 
     setJumpMode(mode) {

@@ -375,72 +375,174 @@ class GiantMushroomConsumable extends Consumable {
         super({
             id: 'giant_mushroom',
             name: 'Giant Mushroom',
-            description: 'Grow to 3x size!',
+            description: 'Grow bigger! (Permanent, stacks)',
             x: x,
             y: y,
+            width: 30,
+            height: 35,
             color: '#FF0000',
             glowColor: '#FF6347',
             icon: '🍄',
-            duration: 1800, // 30 seconds
-            effectType: 'active',
-            rarity: 'rare',
+            duration: 0, // Permanent effect
+            effectType: 'permanent',
+            rarity: 'uncommon', // More common now
             onPickup: (player, consumable, game) => {
-                if (!player.originalSize) {
-                    player.originalSize = {
-                        width: player.width,
-                        height: player.height
-                    };
-                }
-                player.width = player.originalSize.width * 3;
-                player.height = player.originalSize.height * 3;
+                // Permanent 1.5x size increase (stacks multiplicatively)
+                player.applySizeMultiplier(1.5);
                 player.consumableEffects.giant = true;
-            },
-            onExpire: (player, consumable, game) => {
-                if (player.originalSize) {
-                    player.width = player.originalSize.width;
-                    player.height = player.originalSize.height;
-                    player.originalSize = null;
-                }
-                player.consumableEffects.giant = false;
             }
         });
     }
+
+    // Custom render to look like a mushroom growing on platform
+    render(ctx) {
+        if (this.collected) return;
+
+        const displayY = this.y + this.floatOffset;
+
+        // Draw glow particles
+        for (let particle of this.particles) {
+            const alpha = particle.life / particle.maxLife;
+            ctx.fillStyle = this.glowColor;
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Mushroom stem (white/cream)
+        const stemWidth = 12;
+        const stemHeight = 18;
+        const stemX = this.x + this.width/2 - stemWidth/2;
+        const stemY = displayY + this.height - stemHeight;
+
+        ctx.fillStyle = '#F5F5DC';
+        ctx.fillRect(stemX, stemY, stemWidth, stemHeight);
+        ctx.strokeStyle = '#DDD';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(stemX, stemY, stemWidth, stemHeight);
+
+        // Mushroom cap (red with white spots)
+        const capWidth = this.width;
+        const capHeight = 20;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.glowColor;
+
+        // Red cap (rounded top)
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(this.x + this.width/2, displayY + 10, capWidth/2, capHeight/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // White spots on cap
+        ctx.fillStyle = 'white';
+        const spots = [
+            {x: this.x + this.width/2, y: displayY + 8, size: 4},
+            {x: this.x + this.width/2 - 8, y: displayY + 12, size: 3},
+            {x: this.x + this.width/2 + 8, y: displayY + 12, size: 3},
+        ];
+        for (let spot of spots) {
+            ctx.beginPath();
+            ctx.arc(spot.x, spot.y, spot.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw name below
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.name, this.x + this.width/2, displayY + this.height + 12);
+        ctx.textAlign = 'left';
+    }
 }
 
-class ShrinkPotionConsumable extends Consumable {
+class ShrinkMushroomConsumable extends Consumable {
     constructor(x, y) {
         super({
-            id: 'shrink_potion',
-            name: 'Shrinking Potion',
-            description: 'Shrink to 1/3 size!',
+            id: 'shrink_mushroom',
+            name: 'Shrink Mushroom',
+            description: 'Get smaller! (Permanent, stacks)',
             x: x,
             y: y,
-            color: '#9370DB',
-            glowColor: '#8A2BE2',
-            icon: '🧪',
-            duration: 1800, // 30 seconds
-            effectType: 'active',
-            rarity: 'rare',
+            width: 30,
+            height: 35,
+            color: '#6A5ACD',
+            glowColor: '#9370DB',
+            icon: '🍄',
+            duration: 0, // Permanent effect
+            effectType: 'permanent',
+            rarity: 'uncommon', // More common now
             onPickup: (player, consumable, game) => {
-                if (!player.originalSize) {
-                    player.originalSize = {
-                        width: player.width,
-                        height: player.height
-                    };
-                }
-                player.width = player.originalSize.width * 0.33;
-                player.height = player.originalSize.height * 0.33;
+                // Permanent 0.67x size decrease (1/1.5, stacks multiplicatively)
+                player.applySizeMultiplier(0.67);
                 player.consumableEffects.tiny = true;
-            },
-            onExpire: (player, consumable, game) => {
-                if (player.originalSize) {
-                    player.width = player.originalSize.width;
-                    player.height = player.originalSize.height;
-                    player.originalSize = null;
-                }
-                player.consumableEffects.tiny = false;
             }
         });
+    }
+
+    // Custom render to look like a mushroom growing on platform
+    render(ctx) {
+        if (this.collected) return;
+
+        const displayY = this.y + this.floatOffset;
+
+        // Draw glow particles
+        for (let particle of this.particles) {
+            const alpha = particle.life / particle.maxLife;
+            ctx.fillStyle = this.glowColor;
+            ctx.globalAlpha = alpha * 0.6;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Mushroom stem (white/cream)
+        const stemWidth = 10;
+        const stemHeight = 16;
+        const stemX = this.x + this.width/2 - stemWidth/2;
+        const stemY = displayY + this.height - stemHeight;
+
+        ctx.fillStyle = '#E6E6FA';
+        ctx.fillRect(stemX, stemY, stemWidth, stemHeight);
+        ctx.strokeStyle = '#CCC';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(stemX, stemY, stemWidth, stemHeight);
+
+        // Mushroom cap (purple/blue)
+        const capWidth = this.width;
+        const capHeight = 20;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.glowColor;
+
+        // Purple cap (rounded top)
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(this.x + this.width/2, displayY + 10, capWidth/2, capHeight/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Lighter purple spots on cap
+        ctx.fillStyle = '#9370DB';
+        const spots = [
+            {x: this.x + this.width/2, y: displayY + 8, size: 3},
+            {x: this.x + this.width/2 - 7, y: displayY + 12, size: 2.5},
+            {x: this.x + this.width/2 + 7, y: displayY + 12, size: 2.5},
+        ];
+        for (let spot of spots) {
+            ctx.beginPath();
+            ctx.arc(spot.x, spot.y, spot.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw name below
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.name, this.x + this.width/2, displayY + this.height + 12);
+        ctx.textAlign = 'left';
     }
 }
 
@@ -839,18 +941,18 @@ class ConsumableManager {
     }
 
     // Spawn random consumables in level with rarity system
-    spawnRandomConsumables(levelWidth, rng, player = null) {
+    spawnRandomConsumables(levelWidth, rng, player = null, platforms = []) {
         // Define consumable pools by rarity
         const rarityPools = {
             rare: [
                 DoubleJumpConsumable,
                 TripleJumpConsumable,
-                GiantMushroomConsumable,
-                ShrinkPotionConsumable,
                 ChaosDiceConsumable,
                 WingsConsumable
             ],
             uncommon: [
+                GiantMushroomConsumable,
+                ShrinkMushroomConsumable,
                 FeatherConsumable,
                 RocketBootsConsumable,
                 ShieldAmuletConsumable,
@@ -917,6 +1019,25 @@ class ConsumableManager {
             }
 
             this.spawnConsumable(ConsumableClass, x, y);
+        }
+
+        // Special mushroom spawning: Place 3-6 mushrooms on platform surfaces
+        if (platforms && platforms.length > 0) {
+            const mushroomCount = rng.randomInt(3, 6);
+            const mushroomTypes = [GiantMushroomConsumable, ShrinkMushroomConsumable];
+
+            for (let i = 0; i < mushroomCount; i++) {
+                // Pick a random platform
+                const platform = rng.choice(platforms);
+
+                // Place mushroom on top of platform
+                const mushroomX = platform.x + rng.randomInt(10, platform.width - 40);
+                const mushroomY = platform.y - 35; // Position on top of platform
+
+                // Randomly choose giant or shrink mushroom
+                const MushroomClass = rng.choice(mushroomTypes);
+                this.spawnConsumable(MushroomClass, mushroomX, mushroomY);
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 class Game {
     constructor() {
         // Version tracking
-        this.version = '2.3.5';
+        this.version = '2.4.0';
         // Full changelog available in changelog.js - check start menu!
 
         this.canvas = document.getElementById('gameCanvas');
@@ -19,7 +19,7 @@ class Game {
         this.player = new Player(100, this.physics.groundLevel - 40, this.soundManager);
 
         // Spawn initial consumables
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player, this.platforms.platforms);
 
         this.updateSeedDisplay();
         
@@ -558,7 +558,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player, this.platforms.platforms);
 
         this.restart();
     }
@@ -602,7 +602,7 @@ class Game {
 
         // Reset and respawn consumables for new level
         this.consumables.reset();
-        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player);
+        this.consumables.spawnRandomConsumables(3000, this.platforms.rng, this.player, this.platforms.platforms);
 
         // Reset player position but keep powerups
         this.gameState = 'playing';
@@ -893,14 +893,15 @@ class Game {
             this.player.originalMoveSpeed = null;
         }
 
-        // Reset size (giant mushroom, shrink potion, etc.)
-        if (this.player.originalSize) {
-            this.player.width = this.player.originalSize.width;
-            this.player.height = this.player.originalSize.height;
-            this.player.originalSize = null;
-        }
+        // Reset size multiplier (mushrooms)
+        this.player.sizeMultiplier = 1.0;
+        this.player.width = this.player.baseWidth;
+        this.player.height = this.player.baseHeight;
+        this.player.jumpPower = this.player.baseJumpPower;
+        this.player.originalSize = null; // Clear any legacy references
         this.player.consumableEffects.giant = false;
         this.player.consumableEffects.shrink = false;
+        this.player.consumableEffects.tiny = false;
 
         // Clear victory particles
         this.victoryParticles = [];

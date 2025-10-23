@@ -528,6 +528,155 @@ class PoisonCloud {
     }
 }
 
+// MovingPoisonCloud - Animated poison clouds that move in patterns and rain toxic particles
+class MovingPoisonCloud {
+    constructor(x, y, radius = 50, pattern = 'horizontal') {
+        this.originalX = x;
+        this.originalY = y;
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.originalRadius = radius;
+        this.pulseTimer = 0;
+        this.moveTimer = 0;
+        this.pattern = pattern; // 'horizontal', 'vertical', 'circle', 'figure8'
+        this.moveSpeed = 1;
+        this.moveRange = 100;
+
+        // Cloud particles (swirling inside)
+        this.cloudParticles = [];
+        for (let i = 0; i < 25; i++) {
+            this.cloudParticles.push({
+                x: Math.random() * radius * 2 - radius,
+                y: Math.random() * radius * 2 - radius,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                life: Math.random() * 100 + 50
+            });
+        }
+
+        // Rain particles (falling down from cloud)
+        this.rainParticles = [];
+        for (let i = 0; i < 15; i++) {
+            this.rainParticles.push({
+                x: (Math.random() - 0.5) * radius * 2,
+                y: radius + Math.random() * 100,
+                vy: Math.random() * 2 + 1,
+                life: Math.random() * 60 + 30,
+                maxLife: 60
+            });
+        }
+    }
+
+    update() {
+        // Update position based on movement pattern
+        this.moveTimer += 0.02;
+
+        switch (this.pattern) {
+            case 'horizontal':
+                this.x = this.originalX + Math.sin(this.moveTimer) * this.moveRange;
+                break;
+            case 'vertical':
+                this.y = this.originalY + Math.sin(this.moveTimer) * this.moveRange;
+                break;
+            case 'circle':
+                this.x = this.originalX + Math.cos(this.moveTimer) * this.moveRange;
+                this.y = this.originalY + Math.sin(this.moveTimer) * this.moveRange;
+                break;
+            case 'figure8':
+                this.x = this.originalX + Math.sin(this.moveTimer) * this.moveRange;
+                this.y = this.originalY + Math.sin(this.moveTimer * 2) * (this.moveRange * 0.5);
+                break;
+        }
+
+        // Pulse animation
+        this.pulseTimer += 0.05;
+        this.radius = this.originalRadius + Math.sin(this.pulseTimer) * 5;
+
+        // Update cloud particles (swirling)
+        for (let particle of this.cloudParticles) {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.life--;
+
+            // Respawn cloud particles
+            if (particle.life <= 0) {
+                particle.x = Math.random() * this.radius * 2 - this.radius;
+                particle.y = Math.random() * this.radius * 2 - this.radius;
+                particle.life = Math.random() * 100 + 50;
+            }
+        }
+
+        // Update rain particles (falling)
+        for (let particle of this.rainParticles) {
+            particle.y += particle.vy;
+            particle.life--;
+
+            // Respawn rain particles at cloud bottom
+            if (particle.life <= 0) {
+                particle.x = (Math.random() - 0.5) * this.radius * 2;
+                particle.y = this.radius;
+                particle.vy = Math.random() * 2 + 1;
+                particle.life = Math.random() * 60 + 30;
+                particle.maxLife = particle.life;
+            }
+        }
+    }
+
+    render(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Draw rain particles first (behind cloud)
+        for (let particle of this.rainParticles) {
+            const alpha = particle.life / particle.maxLife;
+            ctx.fillStyle = `rgba(100, 0, 128, ${alpha * 0.6})`;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw rain streak
+            ctx.strokeStyle = `rgba(128, 0, 128, ${alpha * 0.4})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(particle.x, particle.y + particle.vy * 3);
+            ctx.stroke();
+        }
+
+        // Draw poison cloud (main body)
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+        gradient.addColorStop(0, 'rgba(128, 0, 128, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(128, 0, 128, 0.6)');
+        gradient.addColorStop(1, 'rgba(128, 0, 128, 0.2)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw cloud particles (swirling)
+        for (let particle of this.cloudParticles) {
+            const alpha = particle.life / 150;
+            ctx.fillStyle = `rgba(150, 0, 150, ${alpha * 0.9})`;
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+
+    getBounds() {
+        // Bounds include the cloud and some rain particles below
+        return {
+            x: this.x - this.radius,
+            y: this.y - this.radius,
+            width: this.radius * 2,
+            height: this.radius * 2 + 100 // Include rain area
+        };
+    }
+}
+
 class PlatformManager {
     constructor(seed = null, bias = 'normal', level = 1, soundManager = null) {
         this.platforms = [];
@@ -551,7 +700,12 @@ class PlatformManager {
         this.PHI = 1.618033988749895; // Golden ratio
         this.GOLDEN_ANGLE = 137.5; // Golden angle in degrees
 
-        this.generateFibonacciLevel(); // NEW: Use Fibonacci-based generation
+        // Choose level generation type based on bias
+        if (this.bias === 'vertical_climb') {
+            this.generateVerticalTowerLevel();
+        } else {
+            this.generateFibonacciLevel(); // Standard horizontal level
+        }
     }
 
     update(player = null) {
@@ -562,6 +716,13 @@ class PlatformManager {
         // Check if hazards should be frozen or slowed
         const freezeHazards = player && player.consumableEffects && player.consumableEffects.freezeHazards;
         const slowTime = player && player.consumableEffects && player.consumableEffects.slowTime;
+
+        // Update spikes (animate on/off cycles)
+        if (!freezeHazards) {
+            for (let spike of this.spikes) {
+                spike.update();
+            }
+        }
 
         // Update all hazards (skip if frozen, slow if time slowed)
         if (!freezeHazards) {
@@ -1171,7 +1332,7 @@ class PlatformManager {
                 // 50% chance to add spikes in larger gaps
                 if (gapWidth > 80 && this.rng.random() < 0.5) {
                     const spikeX = gapStart + (gapWidth / 2) - 15;
-                    this.spikes.push({x: spikeX, y: 480, width: 30, height: 40});
+                    this.spikes.push(new AnimatedSpike(spikeX, 480, 30, 40));
                 }
             }
         }
@@ -1205,15 +1366,112 @@ class PlatformManager {
                     this.lavaPits.push(new LavaPit(x, 490, width));
                 }
             } else if (hazardRoll < biasParams.hazardChance) {
-                // Add poison clouds
+                // Add moving poison clouds with different patterns
                 const poisonCount = this.rng.randomInt(1, 2);
                 for (let i = 0; i < poisonCount; i++) {
                     const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
-                    const y = this.rng.randomInt(300, 400);
-                    this.poisonClouds.push(new PoisonCloud(x, y, this.rng.randomInt(30, 50)));
+                    const y = this.rng.randomInt(200, 350);
+                    const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
+                    const pattern = this.rng.choice(patterns);
+                    this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
                 }
             }
         }
+    }
+
+    /**
+     * Generate a vertical tower level that goes 30+ platforms high
+     * Player must climb to reach the exit door at the top
+     */
+    generateVerticalTowerLevel() {
+        const towerWidth = 800; // Narrower than standard levels for vertical focus
+        const groundLevel = 520;
+        const platformHeight = 20;
+        const numFloors = 30; // Number of vertical platforms/floors
+        const floorHeight = 180; // Vertical distance between floors
+        const centerX = towerWidth / 2;
+
+        // Starting platform at bottom
+        this.platforms.push(new Platform(centerX - 150, groundLevel, 300, platformHeight, 'normal'));
+
+        // Generate 30 floors going upward
+        for (let floor = 1; floor <= numFloors; floor++) {
+            const floorY = groundLevel - (floor * floorHeight);
+
+            // Determine platform layout for this floor (alternating patterns)
+            const layoutRoll = this.rng.random();
+
+            if (layoutRoll < 0.25) {
+                // Single centered platform
+                const width = this.rng.randomInt(120, 200);
+                this.platforms.push(new Platform(
+                    centerX - width/2,
+                    floorY,
+                    width,
+                    platformHeight,
+                    'normal'
+                ));
+            } else if (layoutRoll < 0.5) {
+                // Two side platforms (gap in middle)
+                const width = this.rng.randomInt(100, 150);
+                this.platforms.push(new Platform(50, floorY, width, platformHeight, 'normal'));
+                this.platforms.push(new Platform(towerWidth - 50 - width, floorY, width, platformHeight, 'normal'));
+            } else if (layoutRoll < 0.75) {
+                // Three platforms (left, center, right)
+                const width = this.rng.randomInt(80, 120);
+                this.platforms.push(new Platform(80, floorY, width, platformHeight, 'normal'));
+                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'normal'));
+                this.platforms.push(new Platform(towerWidth - 80 - width, floorY, width, platformHeight, 'normal'));
+            } else {
+                // Moving platform
+                const width = this.rng.randomInt(100, 140);
+                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'moving'));
+            }
+
+            // Add hazards based on floor number (gets harder as you climb)
+            const hazardChance = Math.min(0.7, floor / numFloors); // 0% at floor 1, 70% at top
+
+            if (this.rng.random() < hazardChance) {
+                const hazardType = this.rng.random();
+
+                if (hazardType < 0.3) {
+                    // Animated spikes
+                    const spikeX = this.rng.randomInt(100, towerWidth - 130);
+                    this.spikes.push(new AnimatedSpike(spikeX, floorY + platformHeight, 30, 40));
+                } else if (hazardType < 0.6) {
+                    // Moving poison cloud
+                    const cloudX = this.rng.randomInt(150, towerWidth - 150);
+                    const cloudY = floorY - this.rng.randomInt(60, 120);
+                    const patterns = ['horizontal', 'circle'];
+                    const pattern = this.rng.choice(patterns);
+                    this.poisonClouds.push(new MovingPoisonCloud(cloudX, cloudY, 45, pattern));
+                } else {
+                    // Saw blade
+                    const sawX = this.rng.randomInt(100, towerWidth - 100);
+                    const sawY = floorY - this.rng.randomInt(40, 100);
+                    this.sawBlades.push(new SawBlade(sawX, sawY, 30, 'horizontal'));
+                }
+            }
+        }
+
+        // Top platform with exit door
+        const exitY = groundLevel - (numFloors * floorHeight) - 100;
+        this.platforms.push(new Platform(centerX - 200, exitY, 400, platformHeight, 'normal'));
+
+        // Create exit door at the top
+        this.exitDoor = {
+            x: centerX - 40,
+            y: exitY - 120,
+            width: 80,
+            height: 120,
+            open: false
+        };
+
+        // Start flag at bottom
+        this.startFlag = {x: centerX - 10, y: groundLevel - 100, width: 20, height: 100};
+
+        // Finish flag at top (replaces traditional finish)
+        this.finishFlag = null; // No horizontal finish in vertical levels
     }
 
 
@@ -1351,10 +1609,13 @@ class PlatformManager {
 
         // Check spike collisions
         for (let spike of this.spikes) {
-            if (player.x + player.width > spike.x &&
-                player.x < spike.x + spike.width &&
-                player.y + player.height > spike.y &&
-                player.y < spike.y + spike.height) {
+            const bounds = spike.getBounds();
+            // Only check collision if spike is active (getBounds returns null when safe)
+            if (bounds &&
+                player.x + player.width > bounds.x &&
+                player.x < bounds.x + bounds.width &&
+                player.y + player.height > bounds.y &&
+                player.y < bounds.y + bounds.height) {
                 return this.respawnPlayer(player);
             }
         }
@@ -1434,21 +1695,9 @@ class PlatformManager {
     }
 
     renderHazards(ctx) {
-        // Render spikes
+        // Render spikes (using animated spike rendering)
         for (let spike of this.spikes) {
-            ctx.fillStyle = '#FF4444';
-            ctx.fillRect(spike.x, spike.y, spike.width, spike.height);
-            
-            // Draw spike triangles
-            ctx.fillStyle = '#CC0000';
-            ctx.beginPath();
-            for (let i = 0; i < spike.width; i += 6) {
-                ctx.moveTo(spike.x + i, spike.y + spike.height);
-                ctx.lineTo(spike.x + i + 3, spike.y);
-                ctx.lineTo(spike.x + i + 6, spike.y + spike.height);
-                ctx.closePath();
-            }
-            ctx.fill();
+            spike.render(ctx);
         }
 
         // Render saw blades

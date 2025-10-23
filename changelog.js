@@ -8,7 +8,36 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.3.5 (Current Version)
+v2.4.0 - MUSHROOM POWER! (Current Version)
+─────────────────────────────────────────────────────────────
+🍄 Major Mushroom Overhaul - Now a core progression mechanic!
+
+NEW MECHANICS:
+• Mushrooms are now PERMANENT (no duration - effects last forever!)
+• STACKING SYSTEM: Eat multiple mushrooms to grow/shrink further
+• Giant Mushroom: 1.5x size multiplier per mushroom (40 → 60 → 90...)
+• Shrink Mushroom: 0.67x size multiplier (40 → 27 → 18...)
+• Jump power scales with size: Bigger = stronger jumps!
+• Size affects: (sqrt scaling for balance)
+
+VISUAL UPGRADE:
+• Beautiful mushroom sprites with caps and stems
+• Giant Mushroom: Red cap with white spots (Mario-style!)
+• Shrink Mushroom: Purple/blue cap
+• Mushrooms GROW ON PLATFORMS like real mushrooms!
+• 3-6 guaranteed mushrooms per level on platform surfaces
+
+GAMEPLAY CHANGES:
+• Mushrooms much more common (uncommon rarity, not rare)
+• Strategic choice: Go big for power or small for dodging?
+• Size limits: 0.1x to 10x (can't get too tiny or huge)
+• Resets to normal size when restarting level
+
+This changes everything! Size is now your primary progression.
+
+─────────────────────────────────────────────────────────────
+
+v2.3.5
 ─────────────────────────────────────────────────────────────
 🐛 Fixed giant mushroom carrying over to next level! Player size
 now properly resets when starting new levels or restarting.
