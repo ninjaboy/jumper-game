@@ -8,7 +8,38 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.7.2 - Shrink Mushroom Buff! (Current Version)
+v2.7.3 - Made Levels Much Easier! (Current Version)
+─────────────────────────────────────────────────────────────
+✅ Major difficulty reduction - levels are now completable!
+
+LEVEL CHANGES:
+• Floors reduced: 30 → 20 (shorter levels)
+• Floor height reduced: 120 → 100 (easier to reach next platform)
+• Starting platform: 300 → 400 width (bigger safe starting area)
+
+PLATFORM IMPROVEMENTS:
+• Single platforms: 120-200 → 150-250 width (much bigger!)
+• Two-platform layouts: 100-150 → 140-180 width each
+• Three-platform layouts: 80-120 → 100-140 width each
+• Moving platforms: 100-140 → 140-180 width
+• Platforms closer together with less gaps
+
+HAZARD REDUCTION:
+• Max hazard chance: 70% → 30% (less than half!)
+• Early floors: 0% hazards (safe learning area)
+• Gradual difficulty: hazards only appear higher up
+• Much more room to maneuver
+
+GAMEPLAY IMPACT:
+• Can actually complete levels now!
+• Less frustrating, more fun
+• Still challenging but fair
+• Better learning curve for new players
+• Room to collect mushrooms and explore
+
+─────────────────────────────────────────────────────────────
+
+v2.7.2 - Shrink Mushroom Buff!
 ─────────────────────────────────────────────────────────────
 ⚡ Shrink mushrooms now make you FASTER and JUMPIER!
 

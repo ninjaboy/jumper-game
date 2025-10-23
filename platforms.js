@@ -1626,23 +1626,23 @@ class PlatformManager {
         const towerWidth = 800; // Narrower than standard levels for vertical focus
         const groundLevel = 520;
         const platformHeight = 20;
-        const numFloors = 30; // Number of vertical platforms/floors
-        const floorHeight = 120; // Vertical distance between floors (reduced to be jumpable)
+        const numFloors = 20; // Reduced from 30 to make levels shorter
+        const floorHeight = 100; // Reduced from 120 - easier to reach platforms
         const centerX = towerWidth / 2;
 
-        // Starting platform at bottom
-        this.platforms.push(new Platform(centerX - 150, groundLevel, 300, platformHeight, 'normal'));
+        // Starting platform at bottom (larger for easier start)
+        this.platforms.push(new Platform(centerX - 200, groundLevel, 400, platformHeight, 'normal'));
 
-        // Generate 30 floors going upward
+        // Generate 20 floors going upward
         for (let floor = 1; floor <= numFloors; floor++) {
             const floorY = groundLevel - (floor * floorHeight);
 
             // Determine platform layout for this floor (alternating patterns)
             const layoutRoll = this.rng.random();
 
-            if (layoutRoll < 0.25) {
-                // Single centered platform
-                const width = this.rng.randomInt(120, 200);
+            if (layoutRoll < 0.35) {
+                // Single centered platform (LARGER and more common)
+                const width = this.rng.randomInt(150, 250);
                 this.platforms.push(new Platform(
                     centerX - width/2,
                     floorY,
@@ -1650,25 +1650,25 @@ class PlatformManager {
                     platformHeight,
                     'normal'
                 ));
-            } else if (layoutRoll < 0.5) {
-                // Two side platforms (gap in middle)
-                const width = this.rng.randomInt(100, 150);
-                this.platforms.push(new Platform(50, floorY, width, platformHeight, 'normal'));
-                this.platforms.push(new Platform(towerWidth - 50 - width, floorY, width, platformHeight, 'normal'));
-            } else if (layoutRoll < 0.75) {
-                // Three platforms (left, center, right)
-                const width = this.rng.randomInt(80, 120);
-                this.platforms.push(new Platform(80, floorY, width, platformHeight, 'normal'));
-                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'normal'));
-                this.platforms.push(new Platform(towerWidth - 80 - width, floorY, width, platformHeight, 'normal'));
-            } else {
-                // Moving platform
+            } else if (layoutRoll < 0.65) {
+                // Two side platforms (LARGER, closer together)
+                const width = this.rng.randomInt(140, 180);
+                this.platforms.push(new Platform(60, floorY, width, platformHeight, 'normal'));
+                this.platforms.push(new Platform(towerWidth - 60 - width, floorY, width, platformHeight, 'normal'));
+            } else if (layoutRoll < 0.85) {
+                // Three platforms (LARGER)
                 const width = this.rng.randomInt(100, 140);
+                this.platforms.push(new Platform(70, floorY, width, platformHeight, 'normal'));
+                this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'normal'));
+                this.platforms.push(new Platform(towerWidth - 70 - width, floorY, width, platformHeight, 'normal'));
+            } else {
+                // Moving platform (LARGER and slower)
+                const width = this.rng.randomInt(140, 180);
                 this.platforms.push(new Platform(centerX - width/2, floorY, width, platformHeight, 'moving'));
             }
 
-            // Add hazards based on floor number (gets harder as you climb)
-            const hazardChance = Math.min(0.7, floor / numFloors); // 0% at floor 1, 70% at top
+            // Add hazards based on floor number (MUCH LESS hazards)
+            const hazardChance = Math.min(0.3, floor / numFloors * 0.5); // 0% at floor 1, max 30% at top
 
             if (this.rng.random() < hazardChance) {
                 const hazardType = this.rng.random();
