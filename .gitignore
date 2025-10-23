@@ -14,3 +14,4 @@ test/screenshots/test-results.json
 .vscode/
 .idea/
 .vercel
+.env*.local

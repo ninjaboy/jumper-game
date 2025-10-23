@@ -1,6 +1,8 @@
 // Vercel Serverless Function to submit player feedback
 // Uses Vercel Blob for persistent storage
 
+import { put, list } from '@vercel/blob';
+
 export default async function handler(req, res) {
   // Only accept POST requests
   if (req.method !== 'POST') {
@@ -24,10 +26,8 @@ export default async function handler(req, res) {
       submittedAt: new Date().toISOString()
     };
 
-    // Try to use Vercel Blob if available
+    // Use Vercel Blob for storage
     try {
-      const { put, list } = await import('@vercel/blob');
-
       // Read existing feedback
       let allFeedback = [];
       try {

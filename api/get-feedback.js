@@ -1,6 +1,8 @@
 // Vercel Serverless Function to retrieve all feedback
 // Fetches from Vercel Blob and returns as JSON array
 
+import { list } from '@vercel/blob';
+
 export default async function handler(req, res) {
   // Allow GET requests
   if (req.method !== 'GET') {
@@ -8,10 +10,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Try to use Vercel Blob if available
+    // Use Vercel Blob for storage
     try {
-      const { list } = await import('@vercel/blob');
-
       // Get the feedback blob
       const existingBlobs = await list({ prefix: 'feedback-data' });
 
