@@ -571,8 +571,7 @@ class SoundManager {
         this.musicPlaying = true;
         this.playMusicLoop();
 
-        // Start track rotation timer (switch tracks every 3 minutes)
-        this.startTrackRotation();
+        // Track rotation disabled - music now changes based on level bias/mood
     }
 
     /**
@@ -902,8 +901,8 @@ class SoundManager {
         });
 
         const now = this.audioContext.currentTime;
-        // Use track-based parameters instead of mood-based
-        const params = this.getTrackParameters();
+        // Use mood-based parameters to match level bias/style
+        const params = this.getMusicParameters();
         const beatDuration = params.beatDuration;
 
         // === CHORD PROGRESSION ===
