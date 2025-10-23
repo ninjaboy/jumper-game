@@ -16,6 +16,7 @@ class SoundManager {
         this.musicMood = 'normal'; // Current music mood based on level bias
         this.musicSection = 0; // Track which section we're on (for A-A-B-A pattern)
         this.musicTimeout = null; // Track the timeout for scheduled music loops
+        this.musicRestartTimeout = null; // Track pending music restart to prevent overlaps
         this.activeOscillators = []; // Track all active music oscillators so we can stop them immediately
 
         // Ambient sound state (for proximity-based sounds)
@@ -602,14 +603,24 @@ class SoundManager {
         this.musicSection = 0; // Reset section counter
 
         // Restart music if already playing
-        if (this.musicPlaying) {
+        const wasPlaying = this.musicPlaying;
+        if (wasPlaying) {
+            // Cancel any pending restart to prevent overlaps
+            if (this.musicRestartTimeout) {
+                clearTimeout(this.musicRestartTimeout);
+                this.musicRestartTimeout = null;
+            }
+
             this.stopBackgroundMusic();
-            // Brief delay before restarting to prevent overlap
-            setTimeout(() => {
-                if (!this.musicPlaying) { // Only restart if still stopped
+
+            // Schedule restart with longer delay to ensure full stop
+            this.musicRestartTimeout = setTimeout(() => {
+                this.musicRestartTimeout = null;
+                // Only restart if music is still stopped (user didn't manually stop it)
+                if (!this.musicPlaying) {
                     this.startBackgroundMusic();
                 }
-            }, 100);
+            }, 200);
         }
     }
 

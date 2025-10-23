@@ -8,7 +8,56 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.4.0 - MUSHROOM POWER! (Current Version)
+v2.5.1 - Bug Fix: Music Overlapping (Current Version)
+─────────────────────────────────────────────────────────────
+🐛 Fixed background music starting multiple times and overlapping!
+
+BUG FIX:
+• Music was being restarted multiple times when changing levels
+• Multiple overlapping music tracks would play simultaneously
+• Eventually music would stop due to too many overlaps
+• Root cause: setMusicMood() called rapidly without canceling pending restarts
+
+THE FIX:
+• Added musicRestartTimeout to track pending music restarts
+• Cancel any pending restart before scheduling a new one
+• Increased restart delay to 200ms for full stop
+• Now only one music restart can be pending at a time
+
+IMPACT:
+• Music now properly stops and restarts cleanly between levels
+• No more overlapping tracks or sudden music cutoffs
+• Smooth music transitions when changing level biases
+
+─────────────────────────────────────────────────────────────
+
+v2.5.0 - ANIMATED TRAPS & VERTICAL TOWERS!
+─────────────────────────────────────────────────────────────
+⚡ New Feature: Animated hazards and vertical tower levels!
+
+ANIMATED HAZARDS:
+• Spikes now extend/retract in timed cycles (Active → Safe → Active)
+• Visual warning glow before spikes extend
+• Poison clouds move in patterns (horizontal, vertical, circle, figure-8)
+• Toxic rain particles fall from moving poison clouds
+
+VERTICAL TOWER LEVELS:
+• New level type: Climb 30 platforms to reach exit door at top
+• Exit door appears at top of tower instead of finish flag
+• Camera follows player vertically through tall towers
+• Hazards increase in difficulty as you climb higher
+
+NEW LEVEL BIASES:
+• spike_gauntlet - Levels filled with animated spikes
+• toxic_hell - Levels dominated by moving poison clouds
+• blade_runner - Levels with mostly saw blades
+• vertical_climb - Activates vertical tower generation
+
+Try the new biases to experience focused challenges!
+
+─────────────────────────────────────────────────────────────
+
+v2.4.0 - MUSHROOM POWER!
 ─────────────────────────────────────────────────────────────
 🍄 Major Mushroom Overhaul - Now a core progression mechanic!
 
