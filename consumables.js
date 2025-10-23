@@ -951,6 +951,12 @@ class ConsumableManager {
                     this.soundManager.playCollect();
                 }
 
+                // Track consumable collection for narrative system
+                if (game && game.totalConsumables !== undefined) {
+                    game.totalConsumables++;
+                    game.triggerNarrativeMessage('consumables', game.totalConsumables);
+                }
+
                 // Create screen flash effect based on rarity
                 this.createScreenFlash(consumable);
 

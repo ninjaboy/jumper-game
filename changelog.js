@@ -8,7 +8,83 @@ var CHANGELOG = `
                     Version History & Changelog
 ═══════════════════════════════════════════════════════════════
 
-v2.2.0 - Feature: Fully Functional Settings Menu (Current Version)
+v2.3.0 - Feature: Player Feedback System (Current Version)
+─────────────────────────────────────────────────────────────
+📝 Collect optional feedback after every death!
+
+NEW FEATURES:
+• Optional feedback screen shown after game over
+• Players can share thoughts about their run
+• Simple text input - totally optional, can skip with ESC
+• Auto-collects gameplay stats: level, mode, seed, progress, bias
+• Feedback stored in Vercel KV (Redis) for analysis
+• Beautiful feedback dashboard at /feedback.html
+• View all feedback with filtering by mode/level
+• Export feedback data to CSV
+• Real-time stats: total feedback, avg level, popular modes
+
+HOW IT WORKS:
+• Die in game → Feedback screen appears
+• Type optional comment (or just press Enter for stats only)
+• Press Enter to submit or ESC to skip
+• Then normal R/N restart options appear
+• Data saved securely to cloud
+
+DASHBOARD FEATURES:
+• Visit /feedback.html to view all player feedback
+• Filter by jump mode (mario, hollow, celeste, etc.)
+• Filter by level number
+• See statistics: avg level reached, completion rates
+• Export to CSV for deeper analysis
+• Beautiful dark theme matching game aesthetic
+
+TECHNICAL:
+• Vercel KV for simple, fast storage
+• Two API endpoints: /api/submit-feedback, /api/get-feedback
+• Async submission doesn't block gameplay
+• Graceful fallback if submission fails
+
+
+v2.1.0 - Feature: Narrative System - "You Just Want Out"
+─────────────────────────────────────────────────────────────
+📖 Philip K. Dick-inspired story revealed through gameplay!
+
+THE STORY:
+You are GROUNDED in an AI-controlled system. This is the era of AI.
+You're a fan of Philip K. Dick. You just want out.
+
+NEW FEATURES:
+• Fragmented narrative messages appear during gameplay
+• Terminal-style message display with glitch effects
+• Story reveals itself through level progression
+• Triggered by key moments:
+  - Level progression (20+ unique messages)
+  - Player deaths (existential questioning)
+  - Height milestones (escape attempts)
+  - Consumable collection (dopamine triggers)
+
+NARRATIVE THEMES:
+• Reality vs simulation (classic PKD)
+• AI control and behavioral loops
+• Pattern recognition and awareness
+• The illusion of progress
+• Desire for escape from the system
+
+VISUAL STYLE:
+• Green terminal text on dark background
+• Scanline/glitch effects for authenticity
+• Fade in/out transitions
+• Blinking cursor animation
+• Messages display for 3 seconds during gameplay
+
+TECHNICAL:
+• narrative.js - Story fragment database
+• Progressive revelation system
+• Non-intrusive overlay display
+• Tracks player stats for triggers
+
+
+v2.2.0 - Feature: Fully Functional Settings Menu
 ─────────────────────────────────────────────────────────────
 ⚙️ Complete settings menu implementation!
 

@@ -13,6 +13,7 @@
     "test:visual:headful": "node test/visual-test.js --headful"
   },
   "dependencies": {
+    "@vercel/kv": "^1.0.1",
     "express": "^4.18.2"
   },
   "author": "",

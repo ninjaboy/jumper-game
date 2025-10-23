@@ -32,8 +32,13 @@ class Game {
         };
         
         // Game state
-        this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'paused', 'finished', 'game_over'
+        this.gameState = 'start_screen'; // 'start_screen', 'settings', 'playing', 'paused', 'finished', 'game_over', 'feedback'
         this.isPaused = false;
+
+        // Feedback system
+        this.feedbackText = '';
+        this.feedbackSubmitting = false;
+        this.feedbackSubmitted = false;
 
         // Start screen and menu system
         this.selectedMenuItem = 0;
@@ -91,6 +96,14 @@ class Game {
         // Victory celebration system
         this.victoryParticles = [];
         this.victoryTimer = 0;
+
+        // Narrative message system (PKD-inspired)
+        this.narrativeMessage = null; // Current message being displayed
+        this.narrativeTimer = 0; // Display duration
+        this.narrativeMaxDuration = 180; // 3 seconds at 60fps
+        this.totalDeaths = 0; // Track deaths across all levels
+        this.totalConsumables = 0; // Track total consumables collected
+        this.maxHeightReached = 0; // Track max height for triggers
 
         this.lastTime = 0;
         this.isRunning = false;
@@ -165,6 +178,12 @@ class Game {
                 return;
             }
             
+            // Handle feedback screen
+            if (this.gameState === 'feedback') {
+                this.handleFeedbackInput(e);
+                return;
+            }
+
             // Handle restart and next level
             if (this.gameState === 'finished' || this.gameState === 'game_over') {
                 if (e.code === 'KeyR') {
@@ -520,6 +539,17 @@ class Game {
         this.restart();
     }
 
+    // Trigger narrative message display
+    triggerNarrativeMessage(trigger, value) {
+        if (typeof NARRATIVE === 'undefined') return;
+
+        const message = NARRATIVE.getNextMessage(trigger, value);
+        if (message) {
+            this.narrativeMessage = message;
+            this.narrativeTimer = 0;
+        }
+    }
+
     nextLevel() {
         // Stop all ambient sounds before going to next level
         if (this.soundManager) {
@@ -537,6 +567,9 @@ class Game {
         this.currentBias = this.getRandomBias();
         this.platforms = new PlatformManager(null, this.currentBias, this.currentLevel, this.soundManager);
         this.updateSeedDisplay();
+
+        // Trigger narrative message for level progression
+        this.triggerNarrativeMessage('level', this.currentLevel);
 
         // Update music mood to match new level bias
         if (this.soundManager) {
@@ -603,7 +636,15 @@ class Game {
 
             // Handle player death animation completion
             if (playerResult === 'death_complete') {
-                this.gameState = 'game_over';
+                // Track death and trigger narrative
+                this.totalDeaths++;
+                this.triggerNarrativeMessage('death', this.totalDeaths);
+
+                // Transition to feedback screen first
+                this.gameState = 'feedback';
+                this.feedbackText = '';
+                this.feedbackSubmitted = false;
+                this.feedbackSubmitting = false;
                 return;
             }
 
@@ -624,6 +665,22 @@ class Game {
                 this.soundManager.playVictory();
             } else if (collisionResult === 'game_over') {
                 // Death animation will start, game over will be handled by player update
+            }
+
+            // Track max height for narrative triggers
+            const currentHeight = this.physics.groundLevel - this.player.y;
+            if (currentHeight > this.maxHeightReached) {
+                this.maxHeightReached = currentHeight;
+                this.triggerNarrativeMessage('height', this.maxHeightReached);
+            }
+        }
+
+        // Update narrative message timer
+        if (this.narrativeMessage) {
+            this.narrativeTimer++;
+            if (this.narrativeTimer > this.narrativeMaxDuration) {
+                this.narrativeMessage = null;
+                this.narrativeTimer = 0;
             }
         }
 
@@ -921,6 +978,10 @@ class Game {
             case 'finished':
             case 'game_over':
                 this.renderGameScreen();
+                break;
+            case 'feedback':
+                this.renderGameScreen(); // Render game in background
+                this.renderFeedbackScreen(); // Overlay feedback form
                 break;
             case 'paused':
                 this.renderGameScreen(); // Render game in background
@@ -1363,6 +1424,58 @@ class Game {
         if (this.gameState === 'game_over' || (this.player.finalDeath && this.player.isDying)) {
             this.showDeathInstructions();
         }
+
+        // Render narrative message (PKD-inspired overlay)
+        if (this.narrativeMessage && this.gameState === 'playing') {
+            this.renderNarrativeMessage();
+        }
+    }
+
+    // ===== NARRATIVE MESSAGE RENDERING =====
+
+    renderNarrativeMessage() {
+        // Terminal/glitch effect styling
+        const fadeIn = Math.min(this.narrativeTimer / 30, 1); // Fade in over 0.5s
+        const fadeOut = this.narrativeTimer > this.narrativeMaxDuration - 30 ?
+            (this.narrativeMaxDuration - this.narrativeTimer) / 30 : 1;
+        const alpha = Math.min(fadeIn, fadeOut);
+
+        // Glitch effect on text
+        const glitch = Math.sin(this.narrativeTimer * 0.3) * 2;
+
+        // Semi-transparent dark box (terminal style)
+        this.ctx.fillStyle = `rgba(0, 0, 0, ${0.85 * alpha})`;
+        this.ctx.fillRect(50, this.canvas.height - 180, this.canvas.width - 100, 130);
+
+        // Border with scanline effect
+        this.ctx.strokeStyle = `rgba(0, 255, 100, ${0.6 * alpha})`;
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(50, this.canvas.height - 180, this.canvas.width - 100, 130);
+
+        // Terminal-style text
+        this.ctx.fillStyle = `rgba(0, 255, 100, ${alpha})`;
+        this.ctx.font = '16px monospace';
+        this.ctx.textAlign = 'left';
+
+        // Split message into lines and render
+        const lines = this.narrativeMessage.split('\n');
+        const lineHeight = 22;
+        const startY = this.canvas.height - 160;
+
+        for (let i = 0; i < lines.length; i++) {
+            // Add subtle glitch offset
+            const offset = i % 2 === 0 ? glitch : -glitch;
+            this.ctx.fillText(lines[i], 70 + offset, startY + i * lineHeight);
+        }
+
+        // Blinking cursor effect at end
+        if (Math.floor(this.narrativeTimer / 20) % 2 === 0) {
+            const lastLineY = startY + (lines.length - 1) * lineHeight;
+            const lastLineWidth = this.ctx.measureText(lines[lines.length - 1]).width;
+            this.ctx.fillText('█', 70 + lastLineWidth + 5, lastLineY);
+        }
+
+        this.ctx.textAlign = 'center'; // Reset
     }
 
     // ===== PAUSE MENU RENDERING =====
@@ -1588,6 +1701,147 @@ class Game {
         const scale = this.settings.pixelSize;
         this.retroCanvas.width = Math.floor(this.canvas.width / scale);
         this.retroCanvas.height = Math.floor(this.canvas.height / scale);
+    }
+
+    // ===== FEEDBACK SYSTEM =====
+
+    renderFeedbackScreen() {
+        // Dark semi-transparent overlay
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Feedback form container
+        const formWidth = 600;
+        const formHeight = 400;
+        const formX = (this.canvas.width - formWidth) / 2;
+        const formY = (this.canvas.height - formHeight) / 2;
+
+        // Form background
+        this.ctx.fillStyle = '#2c3e50';
+        this.ctx.fillRect(formX, formY, formWidth, formHeight);
+        this.ctx.strokeStyle = '#3498db';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(formX, formY, formWidth, formHeight);
+
+        // Title
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = '#ecf0f1';
+        this.ctx.font = 'bold 32px Arial';
+        this.ctx.fillText('How was your run?', this.canvas.width / 2, formY + 50);
+
+        // Show stats
+        this.ctx.font = '18px Arial';
+        this.ctx.fillStyle = '#bdc3c7';
+        this.ctx.fillText(`Level ${this.currentLevel} • ${this.player.jumpMode.toUpperCase()} • Seed: ${this.currentSeed}`, this.canvas.width / 2, formY + 100);
+
+        // Text area
+        const textAreaX = formX + 40;
+        const textAreaY = formY + 140;
+        const textAreaWidth = formWidth - 80;
+        const textAreaHeight = 120;
+
+        this.ctx.fillStyle = '#34495e';
+        this.ctx.fillRect(textAreaX, textAreaY, textAreaWidth, textAreaHeight);
+        this.ctx.strokeStyle = '#555';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(textAreaX, textAreaY, textAreaWidth, textAreaHeight);
+
+        // Feedback text or placeholder
+        this.ctx.textAlign = 'left';
+        this.ctx.font = '16px Arial';
+        if (this.feedbackText.length === 0) {
+            this.ctx.fillStyle = '#7f8c8d';
+            this.ctx.fillText('Share your thoughts (optional)...', textAreaX + 10, textAreaY + 30);
+        } else {
+            this.ctx.fillStyle = '#ecf0f1';
+            this.ctx.fillText(this.feedbackText.substring(0, 150), textAreaX + 10, textAreaY + 30);
+        }
+
+        // Status/Buttons
+        const buttonY = textAreaY + textAreaHeight + 50;
+        this.ctx.textAlign = 'center';
+
+        if (this.feedbackSubmitted) {
+            this.ctx.fillStyle = '#27ae60';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.fillText('✓ Thank you!', this.canvas.width / 2, buttonY);
+            this.ctx.fillStyle = '#95a5a6';
+            this.ctx.font = '16px Arial';
+            this.ctx.fillText('Press R to restart or N for new level', this.canvas.width / 2, buttonY + 35);
+        } else if (this.feedbackSubmitting) {
+            this.ctx.fillStyle = '#3498db';
+            this.ctx.font = '20px Arial';
+            this.ctx.fillText('Submitting...', this.canvas.width / 2, buttonY);
+        } else {
+            this.ctx.fillStyle = '#95a5a6';
+            this.ctx.font = '16px Arial';
+            this.ctx.fillText('Press ENTER to submit • ESC to skip', this.canvas.width / 2, buttonY);
+        }
+
+        this.ctx.textAlign = 'left';
+    }
+
+    handleFeedbackInput(e) {
+        if (this.feedbackSubmitted) {
+            if (e.code === 'KeyR') {
+                this.gameState = 'game_over';
+                this.restart();
+            } else if (e.code === 'KeyN') {
+                this.gameState = 'game_over';
+                this.generateNewLevel();
+            }
+            return;
+        }
+
+        if (this.feedbackSubmitting) return;
+
+        if (e.code === 'Escape') {
+            this.gameState = 'game_over';
+            return;
+        }
+
+        if (e.code === 'Enter') {
+            this.submitFeedback();
+            return;
+        }
+
+        if (e.code === 'Backspace') {
+            this.feedbackText = this.feedbackText.slice(0, -1);
+        } else if (e.code === 'Space') {
+            this.feedbackText += ' ';
+        } else if (e.key.length === 1 && this.feedbackText.length < 200) {
+            this.feedbackText += e.key;
+        }
+    }
+
+    async submitFeedback() {
+        this.feedbackSubmitting = true;
+
+        const feedbackData = {
+            timestamp: Date.now(),
+            level: this.currentLevel,
+            seed: this.currentSeed,
+            jumpMode: this.player.jumpMode,
+            levelBias: this.currentBias,
+            progress: Math.round((this.player.x / this.camera.levelWidth) * 100),
+            comment: this.feedbackText.trim()
+        };
+
+        try {
+            const response = await fetch('/api/submit-feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(feedbackData)
+            });
+
+            await response.json();
+            this.feedbackSubmitted = true;
+            this.feedbackSubmitting = false;
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            this.feedbackSubmitted = true;
+            this.feedbackSubmitting = false;
+        }
     }
 
     gameLoop(currentTime) {
