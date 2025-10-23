@@ -547,113 +547,221 @@ class PlatformManager {
     }
 
     /**
-     * Generate aesthetically pleasing platform layout using Fibonacci and Golden Ratio
+     * Generate chunk-based roguelike level using Fibonacci and Golden Ratio
+     * Proper architecture with meaningful chunks, not random platforms
      */
     generateFibonacciLevel() {
         const levelWidth = 3000;
         const groundLevel = 520;
-        const baseUnit = 30; // Base spacing unit
 
-        // Generate Fibonacci sequence for spacing
-        const fibSequence = this.generateFibonacci(12); // [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+        // Fibonacci sequence for chunk composition
+        const fib = this.generateFibonacci(12); // [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
 
-        // Get bias parameters (still use for hazard density, etc.)
-        const biasParams = this.getBiasParameters();
+        // Golden ratio height layers
+        const heights = {
+            veryHigh: groundLevel * 0.15,
+            high: groundLevel * 0.30,
+            midHigh: groundLevel * 0.45,
+            mid: groundLevel * 0.55,
+            midLow: groundLevel * 0.70,
+            low: groundLevel * 0.85
+        };
 
         // ====================
-        // 1. GROUND PLATFORMS WITH FIBONACCI GAPS AND PITS
+        // CHUNK-BASED LEVEL GENERATION
         // ====================
 
-        // Start with safe platform
+        let currentX = 0;
+        let currentHeight = groundLevel; // Track where we are vertically
+
+        // Start platform
         this.platforms.push(new Platform(0, groundLevel, 200, 80, 'normal'));
+        currentX = 220;
 
-        let currentX = 220;
-        let fibIndex = 0;
+        // Generate chunks until we reach the end
+        const chunkTypes = ['ground', 'pit', 'climb', 'gap', 'ladder', 'cluster'];
 
-        while (currentX < levelWidth - 500) {
-            // Alternating pattern: platform, gap (maybe pit), platform, gap, etc.
-            const platformWidth = fibSequence[fibIndex % 8] * baseUnit; // Use first 8 Fibonacci numbers
-            const gapSize = fibSequence[(fibIndex + 1) % 8] * baseUnit;
+        while (currentX < levelWidth - 600) {
+            // Choose chunk type (weighted selection)
+            const roll = this.rng.random();
+            let chunkType;
 
-            // Create ground platform
-            this.platforms.push(new Platform(currentX, groundLevel, platformWidth, 80, 'normal'));
-            currentX += platformWidth;
+            if (roll < 0.25) chunkType = 'ground';
+            else if (roll < 0.40) chunkType = 'pit';
+            else if (roll < 0.55) chunkType = 'climb';
+            else if (roll < 0.70) chunkType = 'gap';
+            else if (roll < 0.85) chunkType = 'ladder';
+            else chunkType = 'cluster';
 
-            // Sometimes create a pit in the gap
-            const pitChance = 0.4; // 40% chance of pit
-            if (this.rng.random() < pitChance && gapSize > 60) {
-                const pitDepth = fibSequence[(fibIndex + 2) % 6] * 10; // Fibonacci depth (55, 89, 144 pixels)
-                this.pits.push(new Pit(currentX, gapSize, pitDepth));
-            }
-
-            currentX += gapSize;
-            fibIndex++;
+            // Generate the chosen chunk
+            const chunkResult = this.generateChunk(chunkType, currentX, currentHeight, fib, heights, groundLevel);
+            currentX = chunkResult.exitX;
+            currentHeight = chunkResult.exitHeight;
         }
 
-        // ====================
-        // 2. FLOATING PLATFORMS USING GOLDEN RATIO VERTICAL DIVISIONS
-        // ====================
-
-        // Divide vertical space using golden ratio recursively
-        const heightLayers = this.generateGoldenHeightLayers(groundLevel);
-
-        // Generate platform groups in Fibonacci counts: 1, 1, 2, 3, 5, 8...
-        let xPosition = 300;
-        const groupPattern = [1, 1, 2, 3, 5, 8]; // Fibonacci group sizes
-
-        for (let groupIndex = 0; groupIndex < groupPattern.length && xPosition < levelWidth - 500; groupIndex++) {
-            const platformsInGroup = groupPattern[groupIndex];
-            const groupSpacing = fibSequence[groupIndex + 3] * baseUnit; // Use larger Fibonacci numbers for group spacing
-
-            for (let i = 0; i < platformsInGroup; i++) {
-                // Choose height from golden ratio layers
-                const layerIndex = (groupIndex + i) % heightLayers.length;
-                const y = heightLayers[layerIndex];
-
-                // Platform width from Fibonacci
-                const width = fibSequence[(i + 4) % 8] * 10; // 55-144px wide
-                const height = 20;
-
-                // Vary platform types
-                let type = 'normal';
-                const typeRoll = this.rng.random();
-                if (typeRoll < 0.10) type = 'ice';
-                else if (typeRoll < 0.18) type = 'moving';
-                else if (typeRoll < 0.25) type = 'spring';
-
-                this.platforms.push(new Platform(xPosition, y, width, height, type));
-
-                // Spacing within group uses smaller Fibonacci numbers
-                xPosition += fibSequence[(i + 1) % 6] * baseUnit;
-            }
-
-            // Larger gap between groups
-            xPosition += groupSpacing;
-        }
-
-        // ====================
-        // 3. LADDERS CONNECTING HEIGHT LAYERS
-        // ====================
-
-        // Place ladders to connect different height layers
-        this.generateFibonacciLadders(levelWidth, groundLevel, heightLayers);
-
-        // ====================
-        // 4. HAZARDS (using existing generation but less dense for aesthetics)
-        // ====================
-
-        this.generateHazards(levelWidth);
-        this.generateAdvancedHazards(levelWidth, biasParams);
-
-        // ====================
-        // 5. START AND FINISH FLAGS
-        // ====================
-
+        // Final safe platform and finish
+        this.platforms.push(new Platform(levelWidth - 300, groundLevel, 300, 80, 'normal'));
         this.startFlag = {x: 50, y: groundLevel - 100, width: 20, height: 100};
         this.finishFlag = {x: levelWidth - 150, y: groundLevel - 100, width: 20, height: 100};
 
-        // Final platform at the end
-        this.platforms.push(new Platform(levelWidth - 300, groundLevel, 300, 80, 'normal'));
+        // Add hazards last (so they don't interfere with chunk logic)
+        const biasParams = this.getBiasParameters();
+        this.generateHazards(levelWidth);
+        this.generateAdvancedHazards(levelWidth, biasParams);
+    }
+
+    /**
+     * Generate a specific chunk type
+     * Returns {exitX, exitHeight} for next chunk connection
+     */
+    generateChunk(type, startX, startHeight, fib, heights, groundLevel) {
+        switch(type) {
+            case 'ground':
+                return this.generateGroundChunk(startX, startHeight, fib, groundLevel);
+            case 'pit':
+                return this.generatePitChunk(startX, startHeight, fib, groundLevel);
+            case 'climb':
+                return this.generateClimbChunk(startX, startHeight, fib, heights, groundLevel);
+            case 'gap':
+                return this.generateGapChunk(startX, startHeight, fib, groundLevel);
+            case 'ladder':
+                return this.generateLadderChunk(startX, startHeight, fib, heights, groundLevel);
+            case 'cluster':
+                return this.generateClusterChunk(startX, startHeight, fib, heights, groundLevel);
+            default:
+                return this.generateGroundChunk(startX, startHeight, fib, groundLevel);
+        }
+    }
+
+    /**
+     * GROUND CHUNK: Simple horizontal ground platform
+     */
+    generateGroundChunk(startX, startHeight, fib, groundLevel) {
+        const width = fib[this.rng.randomInt(4, 6)] * 20; // 100-260px
+        this.platforms.push(new Platform(startX, groundLevel, width, 80, 'normal'));
+
+        return {
+            exitX: startX + width + 30, // Small gap after
+            exitHeight: groundLevel
+        };
+    }
+
+    /**
+     * PIT CHUNK: Ground platform, pit, ground platform
+     */
+    generatePitChunk(startX, startHeight, fib, groundLevel) {
+        // Left platform
+        const leftWidth = fib[3] * 20; // 60px
+        this.platforms.push(new Platform(startX, groundLevel, leftWidth, 80, 'normal'));
+
+        // Pit in middle
+        const pitWidth = fib[this.rng.randomInt(5, 7)] * 10; // 80-210px
+        const pitDepth = fib[this.rng.randomInt(5, 8)] * 10; // 80-340px deep
+        const pitX = startX + leftWidth;
+        this.pits.push(new Pit(pitX, pitWidth, pitDepth));
+
+        // Right platform
+        const rightX = pitX + pitWidth;
+        const rightWidth = fib[3] * 20; // 60px
+        this.platforms.push(new Platform(rightX, groundLevel, rightWidth, 80, 'normal'));
+
+        return {
+            exitX: rightX + rightWidth + 20,
+            exitHeight: groundLevel
+        };
+    }
+
+    /**
+     * CLIMB CHUNK: Ascending staircase of platforms
+     */
+    generateClimbChunk(startX, startHeight, fib, heights, groundLevel) {
+        const steps = fib[this.rng.randomInt(2, 4)]; // 2, 3, or 5 steps
+        let currentX = startX;
+        let currentY = groundLevel;
+
+        for (let i = 0; i < steps; i++) {
+            const stepWidth = fib[3] * 10; // 30px wide
+            const stepHeight = 20;
+            const stepUp = fib[4] * 10; // 50px up each step
+
+            currentY -= stepUp;
+            this.platforms.push(new Platform(currentX, currentY, stepWidth, stepHeight, 'normal'));
+            currentX += stepWidth + fib[2] * 15; // 30px spacing
+        }
+
+        return {
+            exitX: currentX,
+            exitHeight: currentY
+        };
+    }
+
+    /**
+     * GAP CHUNK: Wide horizontal gap requiring jump
+     */
+    generateGapChunk(startX, startHeight, fib, groundLevel) {
+        // Left platform
+        const leftWidth = fib[4] * 15; // 75px
+        this.platforms.push(new Platform(startX, startHeight, leftWidth, 20, 'normal'));
+
+        // Gap (no pit, just empty space)
+        const gapWidth = fib[this.rng.randomInt(6, 8)] * 10; // 130-210px
+
+        // Right platform
+        const rightX = startX + leftWidth + gapWidth;
+        const rightWidth = fib[4] * 15; // 75px
+        this.platforms.push(new Platform(rightX, startHeight, rightWidth, 20, 'normal'));
+
+        return {
+            exitX: rightX + rightWidth + 20,
+            exitHeight: startHeight
+        };
+    }
+
+    /**
+     * LADDER CHUNK: Vertical ladder connecting heights
+     */
+    generateLadderChunk(startX, startHeight, fib, heights, groundLevel) {
+        // Platform at bottom
+        const bottomWidth = fib[4] * 15; // 75px
+        this.platforms.push(new Platform(startX, groundLevel, bottomWidth, 80, 'normal'));
+
+        // Ladder in middle
+        const ladderX = startX + bottomWidth/2 - 20;
+        const targetHeight = heights.midHigh; // Climb to mid-high layer
+        const ladderHeight = groundLevel - targetHeight;
+        this.ladders.push(new Ladder(ladderX, targetHeight, ladderHeight));
+
+        // Platform at top
+        const topWidth = fib[4] * 15; // 75px
+        const topX = startX + bottomWidth/2 - topWidth/2;
+        this.platforms.push(new Platform(topX, targetHeight - 20, topWidth, 20, 'normal'));
+
+        return {
+            exitX: topX + topWidth + 30,
+            exitHeight: targetHeight - 20
+        };
+    }
+
+    /**
+     * CLUSTER CHUNK: Group of platforms in Fibonacci count
+     */
+    generateClusterChunk(startX, startHeight, fib, heights, groundLevel) {
+        const count = fib[this.rng.randomInt(2, 4)]; // 2, 3, or 5 platforms
+        let currentX = startX;
+        const heightOptions = [heights.high, heights.midHigh, heights.mid, heights.midLow];
+
+        for (let i = 0; i < count; i++) {
+            const platformWidth = fib[this.rng.randomInt(3, 5)] * 10; // 30-80px
+            const platformY = heightOptions[i % heightOptions.length];
+
+            this.platforms.push(new Platform(currentX, platformY, platformWidth, 20, 'normal'));
+            currentX += platformWidth + fib[3] * 15; // 45px spacing
+        }
+
+        return {
+            exitX: currentX,
+            exitHeight: heightOptions[count % heightOptions.length]
+        };
     }
 
     /**
@@ -679,44 +787,7 @@ class PlatformManager {
         return layers;
     }
 
-    /**
-     * Generate ladders using Fibonacci spacing
-     * Ladders connect ground to higher platforms
-     */
-    generateFibonacciLadders(levelWidth, groundLevel, heightLayers) {
-        const fibSpacing = this.generateFibonacci(8);
-        const baseUnit = 35;
-
-        let xPosition = 400;
-        let fibIndex = 3; // Start with larger spacing
-
-        while (xPosition < levelWidth - 600) {
-            // Find a platform below this position for ladder base
-            const nearbyPlatforms = this.platforms.filter(p =>
-                Math.abs(p.x - xPosition) < 150 &&
-                p.y >= groundLevel - 200 &&
-                p.y < groundLevel
-            );
-
-            if (nearbyPlatforms.length > 0) {
-                // Choose a random platform from nearby ones
-                const basePlatform = nearbyPlatforms[this.rng.randomInt(0, nearbyPlatforms.length - 1)];
-
-                // Ladder height reaches to a higher platform or layer
-                const targetHeight = heightLayers[this.rng.randomInt(0, heightLayers.length - 1)];
-                const ladderHeight = basePlatform.y - targetHeight;
-
-                if (ladderHeight > 80 && ladderHeight < 400) { // Reasonable ladder heights
-                    const ladderX = basePlatform.x + basePlatform.width / 2 - 20;
-                    this.ladders.push(new Ladder(ladderX, targetHeight, ladderHeight));
-                }
-            }
-
-            // Move to next position using Fibonacci spacing
-            xPosition += fibSpacing[fibIndex % 8] * baseUnit;
-            fibIndex++;
-        }
-    }
+    // Removed old generateFibonacciLadders - now using chunk-based generation
 
     generateRandomLevel() {
         const levelWidth = 3000;
