@@ -1298,6 +1298,43 @@ class PlatformManager {
                     hazardChance: clamp(0.7 + (this.level - 1) * 0.05, 0, 1),
                     highPlatforms: { min: 4, max: 8 }
                 };
+            case 'spike_gauntlet':
+                return {
+                    name: 'Spike Gauntlet',
+                    gapSize: { min: 80, max: 160 },
+                    platformWidth: { min: 120, max: 200 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.4, // Moderate hazard chance, but mostly spikes
+                    spikeChance: 0.95, // Almost all hazards are spikes
+                    highPlatforms: { min: 4, max: 8 }
+                };
+            case 'toxic_hell':
+                return {
+                    name: 'Toxic Hell',
+                    gapSize: { min: 60, max: 150 },
+                    platformWidth: { min: 140, max: 220 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.5, // Moderate hazard chance
+                    poisonChance: 0.9, // Almost all hazards are poison clouds
+                    highPlatforms: { min: 5, max: 9 }
+                };
+            case 'blade_runner':
+                return {
+                    name: 'Blade Runner',
+                    gapSize: { min: 70, max: 140 },
+                    platformWidth: { min: 130, max: 210 },
+                    platformsPerSection: { min: 2, max: 4 },
+                    hazardChance: 0.6, // Moderate-high hazard chance
+                    sawChance: 0.85, // Most hazards are saw blades
+                    highPlatforms: { min: 4, max: 8 }
+                };
+            case 'vertical_climb':
+                return {
+                    name: 'Vertical Climb',
+                    // Vertical levels use different generation, these params are mostly ignored
+                    hazardChance: 0.7,
+                    highPlatforms: { min: 30, max: 30 } // 30 floors tall
+                };
             default: // normal
                 return {
                     name: 'Normal',
@@ -1346,34 +1383,70 @@ class PlatformManager {
             const sectionStart = section * sectionWidth;
             const sectionEnd = (section + 1) * sectionWidth;
 
-            // Randomly choose hazard type for this section based on bias
+            // Check if we should spawn a hazard in this section
             const hazardRoll = this.rng.random();
+            if (hazardRoll >= biasParams.hazardChance) {
+                continue; // No hazard in this section
+            }
 
-            if (hazardRoll < 0.3 * biasParams.hazardChance) {
-                // Add saw blades
-                const sawCount = this.rng.randomInt(1, 3);
-                for (let i = 0; i < sawCount; i++) {
-                    const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
-                    const y = this.rng.randomInt(350, 450);
-                    this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
+            // Determine which type of hazard based on bias parameters
+            const typeRoll = this.rng.random();
+
+            // Check for bias-specific hazard chances
+            if (biasParams.spikeChance && typeRoll < biasParams.spikeChance) {
+                // Spawn animated spikes
+                const spikeCount = this.rng.randomInt(2, 4);
+                for (let i = 0; i < spikeCount; i++) {
+                    const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 80);
+                    this.spikes.push(new AnimatedSpike(x, 480, 30, 40));
                 }
-            } else if (hazardRoll < 0.5 * biasParams.hazardChance) {
-                // Add lava pits
-                const lavaCount = this.rng.randomInt(1, 2);
-                for (let i = 0; i < lavaCount; i++) {
-                    const x = this.rng.randomInt(sectionStart + 30, sectionEnd - 100);
-                    const width = this.rng.randomInt(60, 120);
-                    this.lavaPits.push(new LavaPit(x, 490, width));
-                }
-            } else if (hazardRoll < biasParams.hazardChance) {
-                // Add moving poison clouds with different patterns
-                const poisonCount = this.rng.randomInt(1, 2);
+            } else if (biasParams.poisonChance && typeRoll < biasParams.poisonChance) {
+                // Spawn moving poison clouds
+                const poisonCount = this.rng.randomInt(2, 3);
                 for (let i = 0; i < poisonCount; i++) {
                     const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
                     const y = this.rng.randomInt(200, 350);
                     const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
                     const pattern = this.rng.choice(patterns);
                     this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
+                }
+            } else if (biasParams.sawChance && typeRoll < biasParams.sawChance) {
+                // Spawn saw blades
+                const sawCount = this.rng.randomInt(2, 4);
+                for (let i = 0; i < sawCount; i++) {
+                    const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
+                    const y = this.rng.randomInt(350, 450);
+                    this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
+                }
+            } else {
+                // Default mixed hazards (for normal bias)
+                const mixedRoll = this.rng.random();
+                if (mixedRoll < 0.3) {
+                    // Saw blades
+                    const sawCount = this.rng.randomInt(1, 3);
+                    for (let i = 0; i < sawCount; i++) {
+                        const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
+                        const y = this.rng.randomInt(350, 450);
+                        this.sawBlades.push(new SawBlade(x, y, this.rng.randomInt(15, 25)));
+                    }
+                } else if (mixedRoll < 0.5) {
+                    // Lava pits
+                    const lavaCount = this.rng.randomInt(1, 2);
+                    for (let i = 0; i < lavaCount; i++) {
+                        const x = this.rng.randomInt(sectionStart + 30, sectionEnd - 100);
+                        const width = this.rng.randomInt(60, 120);
+                        this.lavaPits.push(new LavaPit(x, 490, width));
+                    }
+                } else {
+                    // Moving poison clouds
+                    const poisonCount = this.rng.randomInt(1, 2);
+                    for (let i = 0; i < poisonCount; i++) {
+                        const x = this.rng.randomInt(sectionStart + 50, sectionEnd - 50);
+                        const y = this.rng.randomInt(200, 350);
+                        const patterns = ['horizontal', 'vertical', 'circle', 'figure8'];
+                        const pattern = this.rng.choice(patterns);
+                        this.poisonClouds.push(new MovingPoisonCloud(x, y, this.rng.randomInt(40, 60), pattern));
+                    }
                 }
             }
         }
