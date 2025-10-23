@@ -1751,6 +1751,12 @@ class PlatformManager {
                     player.y = platform.y - player.height;
                     player.velocityY = 0;
                     player.onGround = true;
+
+                    // Store reference to current platform
+                    player.currentPlatform = platform;
+
+                    // Apply strong friction to one-way platforms (same as normal)
+                    player.velocityX *= 0.7;
                 }
                 continue; // Skip other collision checks for one-way platforms
             }
